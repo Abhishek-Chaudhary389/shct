@@ -1,8 +1,23 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import logoImg from '../assets/shct.png'; // अपना लोगो इम्पोर्ट करें (पाथ चेक कर लें)
+import React, { useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import logoImg from '../../assets/shct.png'; // अपना लोगो इम्पोर्ट करें (पाथ चेक कर लें)
 
 const Login = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  
+  const fromPath = location.state?.from?.pathname || '/user-dashboard';
+  const alertMessage = location.state?.message;
+
+  const [aadhaar, setAadhaar] = useState('');
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    localStorage.setItem('isLoggedIn', 'true');
+    localStorage.setItem('userAadhaar', aadhaar);
+    navigate(fromPath, { replace: true });
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans">
       
@@ -23,11 +38,19 @@ const Login = () => {
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-10 px-4 shadow-2xl sm:rounded-2xl sm:px-10 border border-gray-100 relative overflow-hidden">
           
+          {/* Alert message when redirected */}
+          {alertMessage && (
+            <div className="mb-6 p-3.5 bg-amber-50 border-l-4 border-amber-500 text-amber-800 rounded-lg text-sm font-semibold flex items-center gap-2 shadow-sm">
+              <span className="text-lg">🔒</span>
+              <span>{alertMessage}</span>
+            </div>
+          )}
+
           {/* Background Decorative Shapes */}
           <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-[#087889] opacity-10 rounded-full blur-xl"></div>
           <div className="absolute bottom-0 left-0 -mb-4 -ml-4 w-24 h-24 bg-[#f08519] opacity-10 rounded-full blur-xl"></div>
 
-          <form className="space-y-6 relative z-10" onSubmit={(e) => e.preventDefault()}>
+          <form className="space-y-6 relative z-10" onSubmit={handleSubmit}>
             
             {/* Aadhar Number Input */}
             <div>
@@ -40,6 +63,8 @@ const Login = () => {
                 </div>
                 <input 
                   type="text" 
+                  value={aadhaar}
+                  onChange={(e) => setAadhaar(e.target.value)}
                   className="w-full pl-10 px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#087889] focus:border-[#087889] transition-colors" 
                   placeholder="अपना 12 अंकों का आधार नंबर डालें" 
                   required

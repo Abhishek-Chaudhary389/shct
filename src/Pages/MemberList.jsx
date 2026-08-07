@@ -1,52 +1,32 @@
- import React, { useState } from 'react';
+ import React, { useState, useEffect } from 'react';
+import { getApprovedMembers } from '../services/dataService';
 
 const MemberList = () => {
-  // Theme Colors
   const logoTeal = "#087889";
   const logoOrange = "#f08519";
 
-  // Dummy Data (Group/Pool वाला सेक्शन यहाँ से हटा दिया गया है)
-  const membersData = [
-    {
-      sno: "109050",
-      uniqueId: "3118904024",
-      name: "Rohtas Devi",
-      guardian: "Vijay pal singh",
-      occupation: "Housewife",
-      workAddress: "Village Amrtpur post paroli suhagpur district eath up",
-      district: "Etah",
-      block: "JAITHRA",
-      status: "Activate",
-      permanentAddress: "Village amrtpur post paroli suhagpur district eath up",
-      submitDate: "2026-08-01 00:00"
-    },
-    {
-      sno: "109049",
-      uniqueId: "9552474709",
-      name: "Ramprakesh",
-      guardian: "Vijay Bahadur",
-      occupation: "Private Job",
-      workAddress: "Mathiya colony roza shahjahanpur",
-      district: "Shahjahanpur",
-      block: "BHAWALKHERA",
-      status: "Activate",
-      permanentAddress: "Mathiya Colony Roza shahjahanpur up",
-      submitDate: "2026-08-01 00:00"
-    },
-    {
-      sno: "109048",
-      uniqueId: "6494755378",
-      name: "Pallavi",
-      guardian: "Jaydev Singh",
-      occupation: "Student",
-      workAddress: "Village Alipura Kalan Post Jajroo District",
-      district: "Amroha",
-      block: "AMROHA",
-      status: "Activate",
-      permanentAddress: "Village Alipura Kalan Post Jajroo District Amroha",
-      submitDate: "2026-08-01 00:00"
-    }
-  ];
+  const [dynamicApproved, setDynamicApproved] = useState([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setDynamicApproved(await getApprovedMembers());
+    };
+    fetchData();
+  }, []);
+
+  const allMembers = dynamicApproved.map((item, idx) => ({
+      sno: item.sno || String(idx + 109051),
+      uniqueId: item.uniqueId || '3118904099',
+      name: item.name,
+      guardian: item.fatherName || 'N/A',
+      occupation: item.occupation || 'Member',
+      workAddress: item.address || item.district || 'N/A',
+      district: item.district || 'Khalilabad',
+      block: item.block || 'Sant Kabir Nagar',
+      status: 'Activate',
+      permanentAddress: item.address || 'N/A',
+      submitDate: item.joinedDate || new Date().toISOString().split('T')[0]
+    }));
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans pb-12">
@@ -140,13 +120,10 @@ const MemberList = () => {
                   <th className="p-4 border-r border-teal-600 font-semibold">ब्लॉक</th>
                   <th className="p-4 border-r border-teal-600 font-semibold">Status</th>
                   <th className="p-4 border-r border-teal-600 font-semibold">स्थाई पता</th>
-                  <th className="p-4 font-semibold">Submit Date</th>
                 </tr>
               </thead>
-              
-              {/* Table Body */}
               <tbody className="text-sm text-gray-700">
-                {membersData.map((member, index) => (
+                {allMembers.map((member, index) => (
                   <tr key={index} className="border-b border-gray-100 hover:bg-teal-50/50 transition-colors">
                     <td className="p-4 border-r border-gray-100">{member.sno}</td>
                     <td className="p-4 border-r border-gray-100 font-mono font-medium text-gray-900">{member.uniqueId}</td>

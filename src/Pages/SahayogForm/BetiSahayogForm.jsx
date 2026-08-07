@@ -1,4 +1,7 @@
- import React, { useState } from 'react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { addBetiSahayog } from '../../services/dataService';
+import { compressImage } from '../../utils/imageCompressor';
 
 const BetiSahayogForm = () => {
   // Theme Colors
@@ -12,7 +15,10 @@ const BetiSahayogForm = () => {
     aadhaarNumber: '',
     daughterName: '',
     marriageDate: '',
-    address: ''
+    district: '',
+    block: '',
+    address: '',
+    documentImage: ''
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -24,14 +30,29 @@ const BetiSahayogForm = () => {
     setFormData({ ...formData, [name]: value });
   };
 
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      try {
+        const compressedBase64 = await compressImage(file);
+        setFormData({ ...formData, documentImage: compressedBase64 });
+      } catch (error) {
+        console.error("Error compressing image:", error);
+      }
+    }
+  };
+
   // Handle Form Submit
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // यहाँ हम API कॉल (Backend) का नाटक (Simulate) कर रहे हैं
-    setTimeout(() => {
-      console.log("Data sent to Admin Panel:", formData);
+    const mockUniqueId = `UID-${Math.floor(10000 + Math.random() * 90000)}`;
+    const submissionData = { ...formData, uniqueId: mockUniqueId };
+
+    try {
+      await addBetiSahayog(submissionData);
+      console.log("Data sent to Admin Panel:", submissionData);
       setIsSubmitting(false);
       setSubmitSuccess(true);
       
@@ -44,10 +65,17 @@ const BetiSahayogForm = () => {
           aadhaarNumber: '',
           daughterName: '',
           marriageDate: '',
-          address: ''
+          district: '',
+          block: '',
+          address: '',
+          documentImage: ''
         });
       }, 3000);
-    }, 1500); // 1.5 सेकंड का लोडिंग इफ़ेक्ट
+    } catch(e) {
+      console.error(e);
+      setIsSubmitting(false);
+      alert('Error submitting form');
+    }
   };
 
   return (
@@ -152,6 +180,34 @@ const BetiSahayogForm = () => {
                   />
                 </div>
 
+                {/* District */}
+                <div className="space-y-1">
+                  <label className="text-sm font-bold text-gray-700">स्थाई निवासी जिला (District) <span className="text-red-500">*</span></label>
+                  <input 
+                    type="text" 
+                    name="district"
+                    value={formData.district}
+                    onChange={handleChange}
+                    required
+                    placeholder="अपने जिले का नाम लिखें"
+                    className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#087889] focus:border-transparent outline-none transition-all bg-gray-50 focus:bg-white"
+                  />
+                </div>
+
+                {/* Block */}
+                <div className="space-y-1">
+                  <label className="text-sm font-bold text-gray-700">ब्लॉक (Block) <span className="text-red-500">*</span></label>
+                  <input 
+                    type="text" 
+                    name="block"
+                    value={formData.block}
+                    onChange={handleChange}
+                    required
+                    placeholder="अपने ब्लॉक का नाम लिखें"
+                    className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#087889] focus:border-transparent outline-none transition-all bg-gray-50 focus:bg-white"
+                  />
+                </div>
+
                 {/* Address (Full Width) */}
                 <div className="space-y-1 md:col-span-2">
                   <label className="text-sm font-bold text-gray-700">पूरा पता (Full Address) <span className="text-red-500">*</span></label>
@@ -161,9 +217,32 @@ const BetiSahayogForm = () => {
                     onChange={handleChange}
                     required
                     rows="3"
-                    placeholder="ग्राम, पोस्ट, जिला, पिनकोड सहित पूरा पता लिखें"
+                    placeholder="ग्राम, पोस्ट, पिनकोड सहित पूरा पता लिखें"
                     className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#087889] focus:border-transparent outline-none transition-all bg-gray-50 focus:bg-white resize-none"
                   ></textarea>
+                </div>
+
+                {/* Document Upload */}
+                <div className="space-y-1 md:col-span-2">
+                  <label className="text-sm font-bold text-gray-700">विवाह कार्ड / प्रमाण (Marriage Card Image)</label>
+                  <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
+                    <div className="space-y-1 text-center">
+                      <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                        <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                      <div className="flex text-sm text-gray-600 justify-center">
+                        <label className="relative cursor-pointer bg-white rounded-md font-medium text-[#087889] hover:text-[#06616e] focus-within:outline-none px-2 py-1">
+                          <span>फाइल चुनें (Upload a file)</span>
+                          <input name="documentImage" type="file" className="sr-only" onChange={handleFileChange} accept="image/*,.pdf" />
+                        </label>
+                      </div>
+                      <p className="text-xs text-gray-500">
+                        {formData.documentImage ? (
+                          <span className="text-green-600 font-bold">Image Selected (Preview Ready)</span>
+                        ) : "PNG, JPG up to 5MB"}
+                      </p>
+                    </div>
+                  </div>
                 </div>
 
               </div>

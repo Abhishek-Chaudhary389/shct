@@ -1,8 +1,8 @@
  import React, { useState, useEffect } from 'react';
 // Asset folder se teeno photos import kar rahe hain
-import heroImg1 from '../assets/ngo1.jpg';
-import heroImg2 from '../assets/ngo2.jpg';
-import heroImg3 from '../assets/ngo3.jpg';
+import heroImg1 from '../../assets/ngo1.jpg';
+import heroImg2 from '../../assets/ngo2.jpg';
+import heroImg3 from '../../assets/ngo3.jpg';
 
 const Hero = () => {
   // Images ka array bana liya hai slider ke liye
@@ -63,7 +63,7 @@ const Hero = () => {
             साइलेंट हेल्प चैरिटेबल
           </h1>
           <h1 className="text-4xl lg:text-[46px] font-bold text-white leading-[1.3] mb-5">
-            टीम <span className="text-[#f08519]">(SHCT)</span> उत्तर प्रदेश
+            ट्रस्ट <span className="text-[#f08519]">(SHCT)</span> उत्तर प्रदेश
           </h1>
           
           {/* Tagline */}
@@ -72,7 +72,7 @@ const Hero = () => {
           </h2>
           
           <p className="text-teal-50 text-sm md:text-base font-medium mb-8">
-            द्वारा संचालित- साइलेंट हेल्प चैरिटेबल ट्रस्ट, रजि0न0 (आपका नंबर)
+            साइलेंट हेल्प चैरिटेबल ट्रस्ट, रजि0न0 ( 57/2026 )
           </p>
 
           {/* Buttons */}

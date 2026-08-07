@@ -1,30 +1,19 @@
- import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { getAnnualDonations } from '../services/dataService';
 
 const AnnualDonationList = () => {
   const logoTeal = "#087889";
 
-  const donationData = [
-    {
-      sno: "19978",
-      name: "Meraj Hussain",
-      uniqueId: "40841982",
-      amount: "50",
-      trustName: "FAST RELIEF CHARITABLE TRUST",
-      district: "Mirzapur",
-      block: "PAHARI",
-      sahyogDate: "2026-08-01"
-    },
-    {
-      sno: "19977",
-      name: "Panchanand yadav",
-      uniqueId: "28401357",
-      amount: "50",
-      trustName: "FAST RELIEF CHARITABLE TRUST",
-      district: "Ballia",
-      block: "PANDAH",
-      sahyogDate: "2026-08-01"
-    }
-  ];
+  const [dynamicDonations, setDynamicDonations] = useState([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setDynamicDonations(await getAnnualDonations());
+    };
+    fetchData();
+  }, []);
+
+  const donationData = dynamicDonations;
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans pb-12">

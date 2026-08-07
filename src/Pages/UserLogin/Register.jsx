@@ -1,6 +1,51 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { addPendingRegistration } from '../../services/dataService';
+import { compressImage } from '../../utils/imageCompressor';
 
 const Register = () => {
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    name: '', aadhaar: '', fatherName: '', dob: '', password: '', mobile: '',
+    gender: '', occupation: '', district: '', block: '', email: '', address: '',
+    nomineeName: '', nomineeRelation: '', nomineeMobile: '', transactionId: '',
+    referralCode: '', receiptUrl: ''
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      try {
+        const compressedBase64 = await compressImage(file);
+        setFormData({ ...formData, receiptUrl: compressedBase64 });
+      } catch (error) {
+        console.error("Error compressing image:", error);
+      }
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    
+    try {
+      await addPendingRegistration(formData);
+      setTimeout(() => {
+        setIsSubmitting(false);
+        alert('आपका पंजीकरण सफलतापुर्वक हो गया है। कृपया एडमिन अप्रूवल का इंतज़ार करें।');
+        navigate('/');
+      }, 1500);
+    } catch (error) {
+      setIsSubmitting(false);
+      alert('पंजीकरण में त्रुटि आई। कृपया पुनः प्रयास करें।');
+      console.error(error);
+    }
+  };
   // Theme Colors
   const themeTeal = "#087889";
   const themeOrange = "#f08519";
@@ -17,7 +62,7 @@ const Register = () => {
             नया पंजीकरण (New Registration)
           </h2>
           <p className="text-teal-100 mt-2 text-sm relative z-10">
-            SHCT परिवार से जुड़ने के लिए कृपया नीचे दिया गया फॉर्म सही-सही भरें।
+            SHCT परिवार से जुड़ने के लिए कृपया नीचे दिया गया फॉर्म सही-सही भरें।
           </p>
         </div>
 
@@ -28,7 +73,6 @@ const Register = () => {
             {/* QR Code */}
             <div className="flex flex-col items-center justify-center bg-white p-4 rounded-lg shadow-sm border border-gray-100 w-full md:w-1/3">
               <h3 className="font-bold text-gray-800 mb-2 tracking-widest uppercase text-sm">SCAN & PAY</h3>
-              {/* Dummy QR Code */}
               <img 
                 src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=upi://pay?pa=shct@sbi&pn=SHCT" 
                 alt="QR Code" 
@@ -53,7 +97,7 @@ const Register = () => {
           </div>
 
           {/* ================= REGISTRATION FORM ================= */}
-          <form className="space-y-10" onSubmit={(e) => e.preventDefault()}>
+          <form className="space-y-10" onSubmit={handleSubmit}>
             
             {/* --- SECTION 1: व्यक्तिगत जानकारी --- */}
             <div>
@@ -63,32 +107,32 @@ const Register = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1">नाम (आधार कार्ड के अनुसार) <span className="text-red-500">*</span></label>
-                  <input type="text" className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#087889] focus:border-[#087889] transition-colors" placeholder="अपना नाम दर्ज करें" />
+                  <input type="text" name="name" value={formData.name} onChange={handleChange} required className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#087889] focus:border-[#087889] transition-colors" placeholder="अपना नाम दर्ज करें" />
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1">आधार कार्ड नंबर <span className="text-red-500">*</span></label>
-                  <input type="text" className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#087889] focus:border-[#087889] transition-colors" placeholder="12 अंकों का आधार नंबर" />
+                  <input type="text" name="aadhaar" value={formData.aadhaar} onChange={handleChange} required className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#087889] focus:border-[#087889] transition-colors" placeholder="12 अंकों का आधार नंबर" />
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1">पिता/पति का नाम <span className="text-red-500">*</span></label>
-                  <input type="text" className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#087889] focus:border-[#087889] transition-colors" placeholder="पिता या पति का नाम" />
+                  <input type="text" name="fatherName" value={formData.fatherName} onChange={handleChange} required className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#087889] focus:border-[#087889] transition-colors" placeholder="पिता या पति का नाम" />
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1">जन्म तिथि (आधार कार्ड के अनुसार) <span className="text-red-500">*</span></label>
-                  <input type="date" className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#087889] focus:border-[#087889] transition-colors" />
+                  <input type="date" name="dob" value={formData.dob} onChange={handleChange} required className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#087889] focus:border-[#087889] transition-colors" />
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1">पासवर्ड बनाएं <span className="text-red-500">*</span></label>
-                  <input type="password" className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#087889] focus:border-[#087889] transition-colors" placeholder="सुरक्षित पासवर्ड बनाएं" />
+                  <input type="password" name="password" value={formData.password} onChange={handleChange} required className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#087889] focus:border-[#087889] transition-colors" placeholder="सुरक्षित पासवर्ड बनाएं" />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-1">मोबाइल नंबर <span className="text-red-500">*</span></label>
-                    <input type="tel" className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#087889] focus:border-[#087889] transition-colors" placeholder="10 अंकों का नंबर" />
+                    <input type="tel" name="mobile" value={formData.mobile} onChange={handleChange} required className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#087889] focus:border-[#087889] transition-colors" placeholder="10 अंकों का नंबर" />
                   </div>
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-1">जेंडर <span className="text-red-500">*</span></label>
-                    <select className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#087889] focus:border-[#087889] transition-colors">
+                    <select name="gender" value={formData.gender} onChange={handleChange} required className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#087889] focus:border-[#087889] transition-colors">
                       <option value="">Choose...</option>
                       <option value="male">Male (पुरुष)</option>
                       <option value="female">Female (महिला)</option>
@@ -105,13 +149,12 @@ const Register = () => {
                 <span className="mr-2">🏢</span> व्यवसाय एवं पता
               </h3>
               
-              {/* Radio Buttons for Occupation */}
               <div className="mb-6">
                 <label className="block text-sm font-semibold text-gray-700 mb-3">व्यवसाय <span className="text-red-500">*</span></label>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   {['Government Job', 'Private Job', 'Business', 'Agriculture', 'Housewife', 'Student', 'Contract Workers', 'Public Rep.'].map((job) => (
                     <label key={job} className="flex items-center space-x-2 text-sm text-gray-700 cursor-pointer p-2 border border-gray-200 rounded-md hover:bg-teal-50 transition-colors">
-                      <input type="radio" name="occupation" className="text-[#087889] focus:ring-[#087889] h-4 w-4" />
+                      <input type="radio" name="occupation" value={job} checked={formData.occupation === job} onChange={handleChange} required className="text-[#087889] focus:ring-[#087889] h-4 w-4" />
                       <span>{job}</span>
                     </label>
                   ))}
@@ -127,25 +170,26 @@ const Register = () => {
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1">स्थाई निवासी जिला <span className="text-red-500">*</span></label>
-                  <select className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#087889] focus:border-[#087889] transition-colors">
+                  <select name="district" value={formData.district} onChange={handleChange} required className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#087889] focus:border-[#087889] transition-colors">
                     <option value="">Select District</option>
                     <option value="gorakhpur">Gorakhpur</option>
                     <option value="maharajganj">Maharajganj</option>
+                    <option value="basti">Basti</option>
+                    <option value="sant kabir nagar">Sant Kabir Nagar</option>
+                    <option value="lucknow">Lucknow</option>
                   </select>
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1">स्थाई निवासी ब्लॉक <span className="text-red-500">*</span></label>
-                  <select className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#087889] focus:border-[#087889] transition-colors">
-                    <option value="">Select Block</option>
-                  </select>
+                  <input type="text" name="block" value={formData.block} onChange={handleChange} required className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#087889] focus:border-[#087889] transition-colors" placeholder="Block Name" />
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1">ईमेल (वैकल्पिक)</label>
-                  <input type="email" className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#087889] focus:border-[#087889] transition-colors" placeholder="अपना ईमेल दर्ज करें" />
+                  <input type="email" name="email" value={formData.email} onChange={handleChange} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#087889] focus:border-[#087889] transition-colors" placeholder="अपना ईमेल दर्ज करें" />
                 </div>
                 <div className="md:col-span-2">
                   <label className="block text-sm font-semibold text-gray-700 mb-1">स्थाई पता <span className="text-red-500">*</span></label>
-                  <textarea rows="3" className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#087889] focus:border-[#087889] transition-colors resize-none" placeholder="कृपया अपना स्थाई पता दर्ज करें"></textarea>
+                  <textarea rows="3" name="address" value={formData.address} onChange={handleChange} required className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#087889] focus:border-[#087889] transition-colors resize-none" placeholder="कृपया अपना स्थाई पता दर्ज करें"></textarea>
                 </div>
               </div>
             </div>
@@ -158,27 +202,28 @@ const Register = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1">नॉमिनी का नाम <span className="text-red-500">*</span></label>
-                  <input type="text" className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#087889] focus:border-[#087889] transition-colors" placeholder="नॉमिनी का नाम" />
+                  <input type="text" name="nomineeName" value={formData.nomineeName} onChange={handleChange} required className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#087889] focus:border-[#087889] transition-colors" placeholder="नॉमिनी का नाम" />
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1">नॉमिनी से संबंध <span className="text-red-500">*</span></label>
-                  <input type="text" className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#087889] focus:border-[#087889] transition-colors" placeholder="जैसे- बेटा, पत्नी, भाई" />
+                  <input type="text" name="nomineeRelation" value={formData.nomineeRelation} onChange={handleChange} required className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#087889] focus:border-[#087889] transition-colors" placeholder="जैसे- बेटा, पत्नी, भाई" />
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1">नॉमिनी का मोबाइल नंबर <span className="text-red-500">*</span></label>
-                  <input type="tel" className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#087889] focus:border-[#087889] transition-colors" placeholder="नॉमिनी का मोबाइल नंबर" />
+                  <input type="tel" name="nomineeMobile" value={formData.nomineeMobile} onChange={handleChange} required className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#087889] focus:border-[#087889] transition-colors" placeholder="नॉमिनी का मोबाइल नंबर" />
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1">Transaction ID <span className="text-red-500">*</span></label>
-                  <input type="text" className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#087889] focus:border-[#087889] transition-colors font-mono" placeholder="Payment Transaction ID" />
+                  <input type="text" name="transactionId" value={formData.transactionId} onChange={handleChange} required className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#087889] focus:border-[#087889] transition-colors font-mono" placeholder="Payment Transaction ID" />
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1">रेफर कोड (वैकल्पिक)</label>
-                  <input type="text" className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#087889] focus:border-[#087889] transition-colors" placeholder="रेफर करने वाले का यूनिक ID (10 अंक)" />
+                  <input type="text" name="referralCode" value={formData.referralCode} onChange={handleChange} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#087889] focus:border-[#087889] transition-colors" placeholder="रेफर करने वाले का यूनिक ID (10 अंक)" />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">ट्रस्ट को 50 रुपए दान (Payment Receipt) <span className="text-red-500">*</span></label>
-                  <input type="file" className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#087889] file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-[#087889] hover:file:bg-teal-100 transition-colors" />
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">ट्रस्ट को 200 रुपए दान (Payment Receipt) <span className="text-red-500">*</span></label>
+                  <input type="file" onChange={handleFileChange} required accept="image/*" className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#087889] file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-[#087889] hover:file:bg-teal-100 transition-colors" />
+                  {formData.receiptUrl && <p className="text-xs text-green-600 mt-1 font-bold">Image Selected</p>}
                 </div>
               </div>
             </div>
@@ -193,13 +238,14 @@ const Register = () => {
               </label>
 
               <div className="mt-8 text-center">
-                <button type="submit" className="w-full md:w-auto px-16 py-4 bg-[#087889] hover:bg-[#06616e] text-white text-lg font-bold rounded-xl shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1">
-                  REGISTER NOW
+                <button type="submit" disabled={isSubmitting} className={`w-full md:w-auto px-16 py-4 bg-[#087889] hover:bg-[#06616e] text-white text-lg font-bold rounded-xl shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1 ${isSubmitting ? 'opacity-70 cursor-not-allowed' : ''}`}>
+                  {isSubmitting ? 'SUBMITTING...' : 'REGISTER NOW'}
                 </button>
               </div>
             </div>
 
           </form>
+
         </div>
       </div>
     </div>
