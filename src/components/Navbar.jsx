@@ -50,7 +50,7 @@ const Navbar = () => {
         {/* LEFT COLUMN: Logo Container */}
         <div className="w-[195px] bg-white flex items-center justify-center border-r border-gray-100 shrink-0">
           <Link to="/" className="h-[110px] w-[160px] flex items-center justify-center cursor-pointer transition-transform hover:scale-105">
-             <img src={logoImg} alt="Silent Help Logo" className="h-full w-full object-contain scale-[1.35]" />
+             <img src={logoImg} alt="Silent Help Logo" className="h-full w-full object-contain scale-[1.15]" />
           </Link>
         </div>
 
@@ -219,7 +219,7 @@ const Navbar = () => {
       <div className="lg:hidden w-full flex flex-col">
         <div className="flex justify-between items-center p-3 bg-white border-b">
           <Link to="/" onClick={() => setIsMobileMenuOpen(false)} className="h-20 w-28 flex items-center justify-center cursor-pointer">
-             <img src={logoImg} alt="Logo" className="h-full w-full object-contain scale-[1.25]" />
+             <img src={logoImg} alt="Logo" className="h-full w-full object-contain scale-[1.10]" />
           </Link>
           <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-2 text-gray-600 focus:outline-none">
             <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={isMobileMenuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"}></path></svg>
