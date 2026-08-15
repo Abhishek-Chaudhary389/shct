@@ -10,12 +10,23 @@ import {
   getBetiSahayogList,
   getNidhanSahayogList,
   getGreenParyavaranList,
-  updateSahayogStatus
+  updateSahayogStatus,
+  getHomeAlerts,
+  addHomeAlert,
+  updateHomeAlertStatus,
+  deleteHomeAlert,
+  getHomePageSettings,
+  saveHomePageSettings,
+  getBetiSahyogReceipts,
+  updateBetiReceiptStatus,
+  getNidhanSahyogReceipts,
+  updateNidhanReceiptStatus
 } from '../../services/dataService';
+import { compressImage } from '../../utils/imageCompressor';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('pending'); // 'pending' | 'approved' | 'donations' | 'beti' | 'nidhan' | 'green'
+  const [activeTab, setActiveTab] = useState('pending'); // 'pending' | 'approved' | 'donations' | 'beti' | 'nidhan' | 'green' | 'settings'
   
   const [pendingList, setPendingList] = useState([]);
   const [approvedList, setApprovedList] = useState([]);
@@ -24,12 +35,31 @@ const AdminDashboard = () => {
   const [betiList, setBetiList] = useState([]);
   const [nidhanList, setNidhanList] = useState([]);
   const [greenList, setGreenList] = useState([]);
+  const [homeAlertsList, setHomeAlertsList] = useState([]);
+  const [betiReceiptsList, setBetiReceiptsList] = useState([]);
+  const [nidhanReceiptsList, setNidhanReceiptsList] = useState([]);
+
+  const [homeSettings, setHomeSettings] = useState({
+    headerTitle: '',
+    alertTitle: '',
+    alertPoints: '',
+    instructionTitle: '',
+    instructionText: '',
+    instructionNote: ''
+  });
 
   const [isSahayataMenuOpen, setIsSahayataMenuOpen] = useState(false);
 
   const [notification, setNotification] = useState('');
   const [selectedReceipt, setSelectedReceipt] = useState(null);
   const [selectedGroups, setSelectedGroups] = useState({});
+
+  const [newHomeAlert, setNewHomeAlert] = useState({
+    group: '', member: '', uniqueId: '', date: '', address: '', 
+    daughter: '', marriageDate: '', accName: '', accNo: '', 
+    ifsc: '', branch: '', bank: '', minSupport: '50 रुपए', qrCodeBase64: '',
+    type: 'beti'
+  });
 
   // Check Admin Login
   useEffect(() => {
@@ -46,8 +76,51 @@ const AdminDashboard = () => {
     setApprovedList(await getApprovedMembers());
     setDonationsList(await getAnnualDonations());
     setBetiList(await getBetiSahayogList());
-    setNidhanList(await getNidhanSahayogList());
+    setNidhanList(await getNidhanSahyogList());
     setGreenList(await getGreenParyavaranList());
+    setHomeAlertsList(await getHomeAlerts());
+    setHomeSettings(await getHomePageSettings());
+    setBetiReceiptsList(await getBetiSahyogReceipts());
+    setNidhanReceiptsList(await getNidhanSahyogReceipts());
+  };
+
+  const handleSaveHomeSettings = async (e) => {
+    e.preventDefault();
+    try {
+      await saveHomePageSettings(homeSettings);
+      setNotification('✅ होम पेज सेटिंग्स सफलतापूर्वक सहेज ली गई हैं!');
+      setTimeout(() => setNotification(''), 4000);
+    } catch (err) {
+      console.error(err);
+      setNotification('❌ सेटिंग्स सहेजने में विफल।');
+      setTimeout(() => setNotification(''), 4000);
+    }
+  };
+
+  const handleBetiReceiptAction = async (id, status) => {
+    try {
+      await updateBetiReceiptStatus(id, status);
+      setNotification(`✅ रसीद स्थिति सफलतापूर्वक ${status === 'APPROVED' ? 'स्वीकृत' : 'अस्वीकृत'} कर दी गई है!`);
+      await loadData();
+      setTimeout(() => setNotification(''), 4000);
+    } catch (err) {
+      console.error(err);
+      setNotification('❌ स्थिति अपडेट करने में त्रुटि आई।');
+      setTimeout(() => setNotification(''), 4000);
+    }
+  };
+
+  const handleNidhanReceiptAction = async (id, status) => {
+    try {
+      await updateNidhanReceiptStatus(id, status);
+      setNotification(`✅ रसीद स्थिति सफलतापूर्वक ${status === 'APPROVED' ? 'स्वीकृत' : 'अस्वीकृत'} कर दी गई है!`);
+      await loadData();
+      setTimeout(() => setNotification(''), 4000);
+    } catch (err) {
+      console.error(err);
+      setNotification('❌ स्थिति अपडेट करने में त्रुटि आई।');
+      setTimeout(() => setNotification(''), 4000);
+    }
   };
 
   const handleLogout = () => {
@@ -90,6 +163,57 @@ const AdminDashboard = () => {
       setTimeout(() => setNotification(''), 3000);
     } catch(e) {
       console.error(e);
+    }
+  };
+
+  const handleToggleHomeAlert = async (id, currentStatus) => {
+    try {
+      await updateHomeAlertStatus(id, !currentStatus);
+      await loadData();
+      setNotification(`होम पेज अलर्ट स्टेटस अपडेट कर दिया गया है।`);
+      setTimeout(() => setNotification(''), 3000);
+    } catch(e) {
+      console.error(e);
+    }
+  };
+
+  const handleDeleteHomeAlert = async (id) => {
+    if(window.confirm('क्या आप सच में इस अलर्ट को डिलीट करना चाहते हैं?')) {
+      try {
+        await deleteHomeAlert(id);
+        await loadData();
+        setNotification('अलर्ट हटा दिया गया है।');
+        setTimeout(() => setNotification(''), 3000);
+      } catch(e) {
+        console.error(e);
+      }
+    }
+  };
+
+  const handleCreateHomeAlert = async (e) => {
+    e.preventDefault();
+    try {
+      await addHomeAlert(newHomeAlert);
+      setNewHomeAlert({ group: '', member: '', uniqueId: '', date: '', address: '', daughter: '', marriageDate: '', accName: '', accNo: '', ifsc: '', branch: '', bank: '', minSupport: '50 रुपए', qrCodeBase64: '', type: 'beti' });
+      await loadData();
+      setNotification('नया होम पेज अलर्ट सफलतापूर्वक जोड़ दिया गया है!');
+      setTimeout(() => setNotification(''), 3000);
+    } catch (error) {
+      console.error(error);
+      setNotification('अलर्ट जोड़ने में समस्या आई।');
+      setTimeout(() => setNotification(''), 3000);
+    }
+  };
+
+  const handleQrUpload = async (e) => {
+    const file = e.target.files[0];
+    if(file) {
+      try {
+        const base64 = await compressImage(file);
+        setNewHomeAlert(prev => ({...prev, qrCodeBase64: base64}));
+      } catch(err) {
+        console.error("Image compression error", err);
+      }
     }
   };
 
@@ -159,11 +283,53 @@ const AdminDashboard = () => {
               </button>
 
               <button 
+                onClick={() => setActiveTab('home_alerts')}
+                className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl font-bold text-sm transition-all shadow-sm ${activeTab === 'home_alerts' ? 'bg-[#087889] text-white border border-teal-500/30' : 'text-gray-300 hover:bg-gray-800 hover:text-white'}`}
+              >
+                <span className="text-lg">📢</span> 
+                <span className="text-left flex-1">Home Alerts</span>
+              </button>
+
+              <button 
+                onClick={() => setActiveTab('settings')}
+                className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl font-bold text-sm transition-all shadow-sm ${activeTab === 'settings' ? 'bg-[#087889] text-white border border-teal-500/30' : 'text-gray-300 hover:bg-gray-800 hover:text-white'}`}
+              >
+                <span className="text-lg">⚙️</span> 
+                <span className="text-left flex-1">Home Settings</span>
+              </button>
+
+              <button 
                 onClick={() => setActiveTab('donations')}
                 className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl font-bold text-sm transition-all shadow-sm ${activeTab === 'donations' ? 'bg-[#087889] text-white border border-teal-500/30' : 'text-gray-300 hover:bg-gray-800 hover:text-white'}`}
               >
                 <span className="text-lg">📜</span> 
                 <span className="text-left flex-1 leading-tight">Annual Donation List</span>
+              </button>
+
+              <button 
+                onClick={() => setActiveTab('beti_receipts')}
+                className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl font-bold text-sm transition-all shadow-sm ${activeTab === 'beti_receipts' ? 'bg-[#087889] text-white border border-teal-500/30' : 'text-gray-300 hover:bg-gray-800 hover:text-white'}`}
+              >
+                <span className="text-lg">🧾</span> 
+                <span className="text-left flex-1">Beti Receipts</span>
+                {betiReceiptsList.filter(r => r.status === 'PENDING').length > 0 && (
+                  <span className="bg-[#f08519] text-white text-[10px] px-2 py-0.5 rounded-full font-black">
+                    {betiReceiptsList.filter(r => r.status === 'PENDING').length}
+                  </span>
+                )}
+              </button>
+
+              <button 
+                onClick={() => setActiveTab('nidhan_receipts')}
+                className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl font-bold text-sm transition-all shadow-sm ${activeTab === 'nidhan_receipts' ? 'bg-[#087889] text-white border border-teal-500/30' : 'text-gray-300 hover:bg-gray-800 hover:text-white'}`}
+              >
+                <span className="text-lg">🧾</span> 
+                <span className="text-left flex-1">Nidhan Receipts</span>
+                {nidhanReceiptsList.filter(r => r.status === 'PENDING').length > 0 && (
+                  <span className="bg-[#f08519] text-white text-[10px] px-2 py-0.5 rounded-full font-black">
+                    {nidhanReceiptsList.filter(r => r.status === 'PENDING').length}
+                  </span>
+                )}
               </button>
 
               {/* SAHAYATA LIST ACCORDION */}
@@ -671,6 +837,443 @@ const AdminDashboard = () => {
                     </tbody>
                   </table>
                 </div>
+              </div>
+            )}
+
+            {/* TAB: HOME ALERTS */}
+            {activeTab === 'home_alerts' && (
+              <div className="space-y-6">
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                  <div className="flex justify-between items-center border-b border-gray-100 pb-4 mb-4">
+                    <h3 className="text-xl font-extrabold text-gray-800">नया होम पेज अलर्ट बनाएँ</h3>
+                  </div>
+                  <form onSubmit={handleCreateHomeAlert} className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                    <div>
+                      <label className="block text-gray-700 font-bold mb-1">अलर्ट प्रकार (Alert Type)</label>
+                      <select 
+                        required
+                        value={newHomeAlert.type || 'beti'} 
+                        onChange={(e) => setNewHomeAlert({...newHomeAlert, type: e.target.value})} 
+                        className="w-full px-3 py-2 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#087889] font-semibold text-gray-700"
+                      >
+                        <option value="beti">बेटी विवाह सहायता योजना</option>
+                        <option value="nidhan">मृत्यु सहायता योजना</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-gray-700 font-bold mb-1">Group</label>
+                      <select 
+                        required 
+                        value={newHomeAlert.group} 
+                        onChange={(e) => setNewHomeAlert({...newHomeAlert, group: e.target.value})} 
+                        className="w-full px-3 py-2 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#087889] font-semibold text-gray-700"
+                      >
+                        <option value="">ग्रुप चुनें (Select Group)</option>
+                        {Array.from({length: 26}, (_, i) => String.fromCharCode(65 + i)).map(char => (
+                          <option key={char} value={char}>Group {char}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div><label className="block text-gray-700 font-bold mb-1">सदस्य का नाम</label><input type="text" required value={newHomeAlert.member} onChange={(e) => setNewHomeAlert({...newHomeAlert, member: e.target.value})} className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#087889]"/></div>
+                    <div><label className="block text-gray-700 font-bold mb-1">यूनिक आईडी</label><input type="text" required value={newHomeAlert.uniqueId} onChange={(e) => setNewHomeAlert({...newHomeAlert, uniqueId: e.target.value})} className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#087889]"/></div>
+                    
+                    <div><label className="block text-gray-700 font-bold mb-1">सदस्यता तिथि</label><input type="text" required value={newHomeAlert.date} onChange={(e) => setNewHomeAlert({...newHomeAlert, date: e.target.value})} placeholder="DD/MM/YYYY" className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#087889]"/></div>
+                    <div><label className="block text-gray-700 font-bold mb-1">जिला, ब्लॉक</label><input type="text" required value={newHomeAlert.address} onChange={(e) => setNewHomeAlert({...newHomeAlert, address: e.target.value})} className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#087889]"/></div>
+                    <div>
+                      <label className="block text-gray-700 font-bold mb-1">
+                        {newHomeAlert.type === 'nidhan' ? "मृतक का नाम" : "बेटी का नाम"}
+                      </label>
+                      <input type="text" required value={newHomeAlert.daughter} onChange={(e) => setNewHomeAlert({...newHomeAlert, daughter: e.target.value})} className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#087889]"/>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-gray-700 font-bold mb-1">
+                        {newHomeAlert.type === 'nidhan' ? "निधन तिथि" : "विवाह तिथि"}
+                      </label>
+                      <input type="text" required value={newHomeAlert.marriageDate} onChange={(e) => setNewHomeAlert({...newHomeAlert, marriageDate: e.target.value})} placeholder="DD/MM/YYYY" className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#087889]"/>
+                    </div>
+                    <div><label className="block text-gray-700 font-bold mb-1">A/C Name</label><input type="text" required value={newHomeAlert.accName} onChange={(e) => setNewHomeAlert({...newHomeAlert, accName: e.target.value})} className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#087889]"/></div>
+                    <div><label className="block text-gray-700 font-bold mb-1">A/C Number</label><input type="text" required value={newHomeAlert.accNo} onChange={(e) => setNewHomeAlert({...newHomeAlert, accNo: e.target.value})} className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#087889]"/></div>
+                    
+                    <div><label className="block text-gray-700 font-bold mb-1">IFSC</label><input type="text" required value={newHomeAlert.ifsc} onChange={(e) => setNewHomeAlert({...newHomeAlert, ifsc: e.target.value})} className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#087889]"/></div>
+                    <div><label className="block text-gray-700 font-bold mb-1">Branch</label><input type="text" required value={newHomeAlert.branch} onChange={(e) => setNewHomeAlert({...newHomeAlert, branch: e.target.value})} className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#087889]"/></div>
+                    <div><label className="block text-gray-700 font-bold mb-1">Bank Name</label><input type="text" required value={newHomeAlert.bank} onChange={(e) => setNewHomeAlert({...newHomeAlert, bank: e.target.value})} className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#087889]"/></div>
+                    
+                    <div><label className="block text-gray-700 font-bold mb-1">Minimum Support</label><input type="text" required value={newHomeAlert.minSupport} onChange={(e) => setNewHomeAlert({...newHomeAlert, minSupport: e.target.value})} className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#087889]"/></div>
+                    <div className="md:col-span-2">
+                      <label className="block text-gray-700 font-bold mb-1">QR Code Image</label>
+                      <input type="file" accept="image/*" onChange={handleQrUpload} className="w-full px-3 py-1.5 border rounded-lg text-sm bg-gray-50"/>
+                      {newHomeAlert.qrCodeBase64 && <span className="text-xs text-green-600 mt-1 block">✅ Image Attached</span>}
+                    </div>
+
+                    <div className="md:col-span-3 mt-4 text-right border-t border-gray-100 pt-4">
+                      <button type="submit" className="px-6 py-2.5 bg-[#087889] text-white font-bold rounded-lg shadow hover:bg-[#06616e] transition-colors">
+                        अलर्ट सेव करें
+                      </button>
+                    </div>
+                  </form>
+                </div>
+
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 overflow-x-auto">
+                  <h3 className="text-xl font-extrabold text-gray-800 mb-4">मौजूदा अलर्ट्स (Manage Alerts)</h3>
+                  <table className="w-full text-left border-collapse min-w-[800px]">
+                    <thead>
+                      <tr className="bg-gray-50 text-gray-700 text-xs font-extrabold uppercase border-b border-gray-200">
+                        <th className="py-3 px-4">Group</th>
+                        <th className="py-3 px-4">अलर्ट प्रकार (Type)</th>
+                        <th className="py-3 px-4">सदस्य</th>
+                        <th className="py-3 px-4">तिथि (Date)</th>
+                        <th className="py-3 px-4 text-center">QR</th>
+                        <th className="py-3 px-4 text-center">होम पेज स्टेटस</th>
+                        <th className="py-3 px-4 text-center">एक्शन</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100 text-sm font-medium">
+                      {homeAlertsList.map(alert => (
+                        <tr key={alert.id} className="hover:bg-gray-50/50">
+                          <td className="py-3 px-4 font-bold text-[#087889]">Group - {alert.group}</td>
+                          <td className="py-3 px-4">
+                            <span className={`px-2 py-0.5 rounded text-xs font-bold ${alert.type === 'nidhan' ? 'bg-red-100 text-red-700' : 'bg-pink-100 text-pink-700'}`}>
+                              {alert.type === 'nidhan' ? 'निधन सहायता' : 'बेटी विवाह'}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4">{alert.member} <br/><span className="text-xs text-gray-500">{alert.uniqueId}</span></td>
+                          <td className="py-3 px-4">
+                            {alert.marriageDate} <br/>
+                            <span className="text-xs text-gray-400">
+                              {alert.type === 'nidhan' ? 'निधन व्यक्ति: ' : 'बेटी: '} {alert.daughter}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 text-center">
+                            {alert.qrCodeBase64 ? <button onClick={() => setSelectedReceipt(alert.qrCodeBase64)} className="text-blue-600 underline text-xs">View QR</button> : <span className="text-gray-400 text-xs">No QR</span>}
+                          </td>
+                          <td className="py-3 px-4 text-center">
+                            <button 
+                              onClick={() => handleToggleHomeAlert(alert.id, alert.isActive)}
+                              className={`px-3 py-1 rounded-full text-xs font-bold shadow-sm transition-colors ${alert.isActive ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                            >
+                              {alert.isActive ? '✅ Live (दिख रहा है)' : '❌ Hidden (छिपा है)'}
+                            </button>
+                          </td>
+                          <td className="py-3 px-4 text-center">
+                            <button onClick={() => handleDeleteHomeAlert(alert.id)} className="text-red-500 hover:text-red-700 p-2" title="Delete">🗑️</button>
+                          </td>
+                        </tr>
+                      ))}
+                      {homeAlertsList.length === 0 && <tr><td colSpan="7" className="text-center py-6 text-gray-500">कोई अलर्ट मौजूद नहीं है</td></tr>}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* TAB: BETI RECEIPTS VERIFICATION */}
+            {activeTab === 'beti_receipts' && (
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                <div className="flex justify-between items-center border-b border-gray-100 pb-4 mb-6">
+                  <div>
+                    <h3 className="text-xl font-extrabold text-gray-800">बेटी विवाह सहयोग रसीदें (Beti Sahyog Receipts)</h3>
+                    <p className="text-xs text-gray-500 mt-1">सदस्यों द्वारा अपलोड की गई सहयोग भुगतान रसीदों का सत्यापन करें।</p>
+                  </div>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse min-w-[1000px]">
+                    <thead>
+                      <tr className="bg-gray-50 text-gray-700 text-xs font-extrabold uppercase border-b border-gray-200">
+                        <th className="py-3 px-4">सहयोगकर्ता (Donor)</th>
+                        <th className="py-3 px-4">लाभार्थी (Beneficiary)</th>
+                        <th className="py-3 px-4">ट्रांजेक्शन (Transaction Details)</th>
+                        <th className="py-3 px-4 text-center">भुगतान रसीद</th>
+                        <th className="py-3 px-4 text-center">स्थिति (Status)</th>
+                        <th className="py-3 px-4 text-right">एक्शन</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100 text-sm font-medium">
+                      {betiReceiptsList.map((receipt) => (
+                        <tr key={receipt.id} className="hover:bg-gray-50/50">
+                          <td className="py-3 px-4">
+                            <span className="font-bold text-gray-800">{receipt.donorName}</span>
+                            <div className="text-xs text-gray-500 font-semibold mt-0.5">ID: {receipt.donorUniqueId} | Mob: {receipt.donorMobile}</div>
+                          </td>
+                          <td className="py-3 px-4">
+                            <span className="font-bold text-teal-700">{receipt.beneficiaryName}</span>
+                            <div className="text-xs text-gray-500 font-semibold mt-0.5">ID: {receipt.beneficiaryUniqueId} | Group: {receipt.group}</div>
+                          </td>
+                          <td className="py-3 px-4 text-xs font-bold text-gray-600">
+                            <div>Amt: <span className="text-teal-700 font-extrabold">₹ {receipt.amount}</span></div>
+                            <div className="mt-1 font-mono text-[10px] break-all">Txn: {receipt.transactionId}</div>
+                            <div className="text-gray-400 font-medium mt-0.5">Date: {receipt.date}</div>
+                          </td>
+                          <td className="py-3 px-4 text-center">
+                            {receipt.receiptImage ? (
+                              <button 
+                                onClick={() => setSelectedReceipt(receipt.receiptImage)}
+                                className="px-3 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-lg text-xs font-bold transition-colors"
+                              >
+                                👁️ रसीद देखें
+                              </button>
+                            ) : (
+                              <span className="text-gray-400 text-xs">No Image</span>
+                            )}
+                          </td>
+                          <td className="py-3 px-4 text-center">
+                            <span className={`px-2.5 py-1 text-[11px] font-black rounded-full shadow-sm ${
+                              receipt.status === 'APPROVED' ? 'bg-green-100 text-green-700' :
+                              receipt.status === 'REJECTED' ? 'bg-red-100 text-red-700' :
+                              'bg-amber-100 text-amber-700'
+                            }`}>
+                              {receipt.status === 'APPROVED' ? 'स्वीकृत' :
+                               receipt.status === 'REJECTED' ? 'अस्वीकृत' :
+                               'लंबित'}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 text-right">
+                            <div className="flex justify-end gap-2">
+                              {receipt.status !== 'APPROVED' && (
+                                <button 
+                                  onClick={() => handleBetiReceiptAction(receipt.id, 'APPROVED')} 
+                                  className="p-2 bg-green-50 text-green-600 hover:bg-green-100 rounded-lg transition-colors" 
+                                  title="Approve"
+                                >
+                                  ✅
+                                </button>
+                              )}
+                              {receipt.status !== 'REJECTED' && (
+                                <button 
+                                  onClick={() => handleBetiReceiptAction(receipt.id, 'REJECTED')} 
+                                  className="p-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg transition-colors" 
+                                  title="Reject"
+                                >
+                                  ❌
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                      {betiReceiptsList.length === 0 && (
+                        <tr>
+                          <td colSpan="6" className="text-center py-8 text-gray-500 font-bold">
+                            कोई रसीद अपलोड नहीं की गई है
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* TAB: NIDHAN RECEIPTS VERIFICATION */}
+            {activeTab === 'nidhan_receipts' && (
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                <div className="flex justify-between items-center border-b border-gray-100 pb-4 mb-6">
+                  <div>
+                    <h3 className="text-xl font-extrabold text-gray-800">मृत्यु सहयोग रसीदें (Nidhan Sahyog Receipts)</h3>
+                    <p className="text-xs text-gray-500 mt-1">सदस्यों द्वारा अपलोड की गई सहयोग भुगतान रसीदों का सत्यापन करें।</p>
+                  </div>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse min-w-[1000px]">
+                    <thead>
+                      <tr className="bg-gray-50 text-gray-700 text-xs font-extrabold uppercase border-b border-gray-200">
+                        <th className="py-3 px-4">सहयोगकर्ता (Donor)</th>
+                        <th className="py-3 px-4">लाभार्थी (Beneficiary)</th>
+                        <th className="py-3 px-4">ट्रांजेक्शन (Transaction Details)</th>
+                        <th className="py-3 px-4 text-center">भुगतान रसीद</th>
+                        <th className="py-3 px-4 text-center">स्थिति (Status)</th>
+                        <th className="py-3 px-4 text-right">एक्शन</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100 text-sm font-medium">
+                      {nidhanReceiptsList.map((receipt) => (
+                        <tr key={receipt.id} className="hover:bg-gray-50/50">
+                          <td className="py-3 px-4">
+                            <span className="font-bold text-gray-800">{receipt.donorName}</span>
+                            <div className="text-xs text-gray-500 font-semibold mt-0.5">ID: {receipt.donorUniqueId} | Mob: {receipt.donorMobile}</div>
+                          </td>
+                          <td className="py-3 px-4">
+                            <span className="font-bold text-teal-700">{receipt.beneficiaryName}</span>
+                            <div className="text-xs text-gray-500 font-semibold mt-0.5">ID: {receipt.beneficiaryUniqueId} | Group: {receipt.group}</div>
+                          </td>
+                          <td className="py-3 px-4 text-xs font-bold text-gray-600">
+                            <div>Amt: <span className="text-teal-700 font-extrabold">₹ {receipt.amount}</span></div>
+                            <div className="mt-1 font-mono text-[10px] break-all">Txn: {receipt.transactionId}</div>
+                            <div className="text-gray-400 font-medium mt-0.5">Date: {receipt.date}</div>
+                          </td>
+                          <td className="py-3 px-4 text-center">
+                            {receipt.receiptImage ? (
+                              <button 
+                                onClick={() => setSelectedReceipt(receipt.receiptImage)}
+                                className="px-3 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-lg text-xs font-bold transition-colors"
+                              >
+                                👁️ रसीद देखें
+                              </button>
+                            ) : (
+                              <span className="text-gray-400 text-xs">No Image</span>
+                            )}
+                          </td>
+                          <td className="py-3 px-4 text-center">
+                            <span className={`px-2.5 py-1 text-[11px] font-black rounded-full shadow-sm ${
+                              receipt.status === 'APPROVED' ? 'bg-green-100 text-green-700' :
+                              receipt.status === 'REJECTED' ? 'bg-red-100 text-red-700' :
+                              'bg-amber-100 text-amber-700'
+                            }`}>
+                              {receipt.status === 'APPROVED' ? 'स्वीकृत' :
+                               receipt.status === 'REJECTED' ? 'अस्वीकृत' :
+                               'लंबित'}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 text-right">
+                            <div className="flex justify-end gap-2">
+                              {receipt.status !== 'APPROVED' && (
+                                <button 
+                                  onClick={() => handleNidhanReceiptAction(receipt.id, 'APPROVED')} 
+                                  className="p-2 bg-green-50 text-green-600 hover:bg-green-100 rounded-lg transition-colors" 
+                                  title="Approve"
+                                >
+                                  ✅
+                                </button>
+                              )}
+                              {receipt.status !== 'REJECTED' && (
+                                <button 
+                                  onClick={() => handleNidhanReceiptAction(receipt.id, 'REJECTED')} 
+                                  className="p-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg transition-colors" 
+                                  title="Reject"
+                                >
+                                  ❌
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                      {nidhanReceiptsList.length === 0 && (
+                        <tr>
+                          <td colSpan="6" className="text-center py-8 text-gray-500 font-bold">
+                            कोई रसीद अपलोड नहीं की गई है
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* TAB: HOME SETTINGS */}
+            {activeTab === 'settings' && (
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                <div className="flex justify-between items-center border-b border-gray-100 pb-4 mb-6">
+                  <div>
+                    <h3 className="text-xl font-extrabold text-gray-800">होम पेज सेटिंग्स (Manage Home Settings)</h3>
+                    <p className="text-xs text-gray-500 mt-1">यहाँ से आप मुख्य वेबसाइट के होम पेज शीर्षक, अलर्ट्स और निर्देशों को बदल सकते हैं।</p>
+                  </div>
+                </div>
+
+                <form onSubmit={handleSaveHomeSettings} className="space-y-6 text-sm">
+                  {/* 1. Header Banner Title */}
+                  <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                    <h4 className="font-bold text-gray-800 mb-3 text-base flex items-center gap-2">
+                      <span>🏷️</span> मुख्य बैनर शीर्षक (Header Banner Title)
+                    </h4>
+                    <div>
+                      <label className="block text-gray-700 font-bold mb-1">मुख्य शीर्षक (Main Banner Title)</label>
+                      <input 
+                        type="text" 
+                        required 
+                        value={homeSettings.headerTitle} 
+                        onChange={(e) => setHomeSettings({...homeSettings, headerTitle: e.target.value})} 
+                        className="w-full px-3 py-2 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#087889]"
+                        placeholder="जैसे: बेटी विवाह सहायता योजना"
+                      />
+                    </div>
+                  </div>
+
+                  {/* 2. Alert Box Config */}
+                  <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                    <h4 className="font-bold text-gray-800 mb-3 text-base flex items-center gap-2">
+                      <span>🔔</span> सहयोग अलर्ट बॉक्स (Cooperation Alert Box)
+                    </h4>
+                    <div className="grid grid-cols-1 gap-4">
+                      <div>
+                        <label className="block text-gray-700 font-bold mb-1">अलर्ट बॉक्स शीर्षक (Alert Box Title)</label>
+                        <input 
+                          type="text" 
+                          required 
+                          value={homeSettings.alertTitle} 
+                          onChange={(e) => setHomeSettings({...homeSettings, alertTitle: e.target.value})} 
+                          className="w-full px-3 py-2 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#087889]"
+                          placeholder="जैसे: सहयोग अलर्ट - 1"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-gray-700 font-bold mb-1">अलर्ट बिंदु / विवरण (Alert Points - एक लाइन में एक बिंदु लिखें)</label>
+                        <textarea 
+                          required 
+                          rows={4}
+                          value={homeSettings.alertPoints} 
+                          onChange={(e) => setHomeSettings({...homeSettings, alertPoints: e.target.value})} 
+                          className="w-full px-3 py-2 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#087889] font-medium"
+                          placeholder="सहयोग की अंतिम तिथि: 10 जुलाई से 26 जुलाई 2026 तक&#10;नियम: 1 ट्रांजेक्शन = 1 रसीद अपलोड"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 3. Instructions Box Config */}
+                  <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                    <h4 className="font-bold text-gray-800 mb-3 text-base flex items-center gap-2">
+                      <span>💡</span> महत्वपूर्ण निर्देश बॉक्स (Instructions Box)
+                    </h4>
+                    <div className="grid grid-cols-1 gap-4">
+                      <div>
+                        <label className="block text-gray-700 font-bold mb-1">निर्देश शीर्षक (Instruction Title)</label>
+                        <input 
+                          type="text" 
+                          required 
+                          value={homeSettings.instructionTitle} 
+                          onChange={(e) => setHomeSettings({...homeSettings, instructionTitle: e.target.value})} 
+                          className="w-full px-3 py-2 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#087889]"
+                          placeholder="जैसे: महत्वपूर्ण निर्देश"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-gray-700 font-bold mb-1">मुख्य निर्देश विवरण (Instruction Details)</label>
+                        <textarea 
+                          required 
+                          rows={4}
+                          value={homeSettings.instructionText} 
+                          onChange={(e) => setHomeSettings({...homeSettings, instructionText: e.target.value})} 
+                          className="w-full px-3 py-2 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#087889] font-medium"
+                          placeholder="वेबसाइट पर अपना आधार कार्ड नंबर और पासवर्ड डालकर LOGIN करें..."
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-gray-700 font-bold mb-1">निर्देश नोट (Note - हाइलाइटेड संदेश)</label>
+                        <textarea 
+                          required 
+                          rows={3}
+                          value={homeSettings.instructionNote} 
+                          onChange={(e) => setHomeSettings({...homeSettings, instructionNote: e.target.value})} 
+                          className="w-full px-3 py-2 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#087889] font-medium"
+                          placeholder="नोट: किसी अन्य GROUP में भेजा गया सहयोग मान्य नहीं होगा..."
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="text-right border-t border-gray-100 pt-4">
+                    <button 
+                      type="submit" 
+                      className="px-8 py-3 bg-[#087889] text-white font-extrabold rounded-xl shadow-md hover:bg-[#06616e] transition-all transform hover:-translate-y-0.5"
+                    >
+                      💾 सेटिंग्स सहेजें (Save Settings)
+                    </button>
+                  </div>
+                </form>
               </div>
             )}
 

@@ -26,7 +26,11 @@ import GreenParyavaranForm from './Pages/SahayogForm/GreenParyavaranForm';
 import BetiSahayogAavedanList from './Pages/Sahayata List/BetiSahayogAavedanList';
 import NidhanSahayogAavedanList from './Pages/Sahayata List/NidhanSahayogAavedanList';
 import GreenParyavaranList from './Pages/Sahayata List/GreenParyavaranList';
+import AllSahayogList from './Pages/Vivah Sahayog List/AllSahayogList';
+import AllNidhanSahyogList from './Pages/NidhanSahayog/AllNidhanSahyogList';
 import ProtectedRoute from './components/ProtectedRoute'; 
+
+
 import AdminProtectedRoute from './components/AdminProtectedRoute';
 
 const App = () => {
@@ -202,6 +206,34 @@ const App = () => {
               <Navbar />
               <div className="flex-grow">
                 <GreenParyavaranList />
+              </div>
+              <Footer />
+            </div>
+          } 
+        />
+
+        {/* ================= ALL VIVAH SAHAYOG LIST PAGE ================= */}
+        <Route 
+          path="/vivah-sahayog-list" 
+          element={
+            <div className="flex flex-col min-h-screen">
+              <Navbar />
+              <div className="flex-grow">
+                <AllSahayogList />
+              </div>
+              <Footer />
+            </div>
+          } 
+        />
+
+        {/* ================= ALL NIDHAN SAHAYOG LIST PAGE ================= */}
+        <Route 
+          path="/nidhan-sahayog-list" 
+          element={
+            <div className="flex flex-col min-h-screen">
+              <Navbar />
+              <div className="flex-grow">
+                <AllNidhanSahyogList />
               </div>
               <Footer />
             </div>

@@ -10,6 +10,12 @@ const Navbar = () => {
   const [isDesktopSahayataOpen, setIsDesktopSahayataOpen] = useState(false);
   const [isMobileSahayataOpen, setIsMobileSahayataOpen] = useState(false);
 
+  const [isDesktopVivahOpen, setIsDesktopVivahOpen] = useState(false);
+  const [isMobileVivahOpen, setIsMobileVivahOpen] = useState(false);
+
+  const [isDesktopNidhanOpen, setIsDesktopNidhanOpen] = useState(false);
+  const [isMobileNidhanOpen, setIsMobileNidhanOpen] = useState(false);
+
   const [isDesktopSahayogFormOpen, setIsDesktopSahayogFormOpen] = useState(false);
   const [isMobileSahayogFormOpen, setIsMobileSahayogFormOpen] = useState(false);
 
@@ -125,9 +131,51 @@ const Navbar = () => {
 
               {/* General Links */}
               <Link to="/member-list" className={`h-full px-2 flex items-center transition-colors whitespace-nowrap ${isActive('/member-list') ? 'bg-[#06616e] text-orange-200 border-b-2 border-orange-400' : 'hover:bg-[#06616e]'}`}>Member List</Link>
-              <Link to="#" className="h-full px-2 flex items-center hover:bg-[#06616e] transition-colors whitespace-nowrap">Vivah Sahayog List</Link>
+
+              {/* VIVAH SAHYOG LIST DROPDOWN */}
+              <div 
+                className={`relative flex items-center h-full px-2 cursor-pointer whitespace-nowrap transition-colors ${isActive('/vivah-sahayog-list') ? 'bg-[#06616e] text-orange-200 border-b-2 border-orange-400' : 'hover:bg-[#06616e]'}`}
+                onMouseEnter={() => setIsDesktopVivahOpen(true)}
+                onMouseLeave={() => setIsDesktopVivahOpen(false)}
+                onClick={() => setIsDesktopVivahOpen(!isDesktopVivahOpen)}
+              >
+                <span className="flex items-center gap-0.5">
+                  Vivah Sahyog List
+                  <svg className={`w-3.5 h-3.5 transition-transform duration-300 ${isDesktopVivahOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                </span>
+                
+                {isDesktopVivahOpen && (
+                  <div 
+                    className="absolute top-[50px] left-0 w-52 bg-white text-gray-800 shadow-2xl rounded-md flex flex-col overflow-hidden border-t-4 z-[9999]" 
+                    style={{ borderColor: logoOrange }}
+                  >
+                    <Link to="/vivah-sahayog-list" className="px-4 py-3 hover:bg-gray-50 hover:text-[#f08519] border-b border-gray-100 transition-colors font-medium text-[13px]">All Sahyog List</Link>
+                  </div>
+                )}
+              </div>
+
               <Link to="/annual-donation-list" className={`h-full px-2 flex items-center transition-colors whitespace-nowrap ${isActive('/annual-donation-list') ? 'bg-[#06616e] text-orange-200 border-b-2 border-orange-400' : 'hover:bg-[#06616e]'}`}>Annual Donation List</Link>
-              <Link to="#" className="h-full px-2 flex items-center hover:bg-[#06616e] transition-colors whitespace-nowrap">Nidhan Sahayog</Link>
+              {/* NIDHAN SAHYOG LIST DROPDOWN */}
+              <div 
+                className={`relative flex items-center h-full px-2 cursor-pointer whitespace-nowrap transition-colors ${isActive('/nidhan-sahayog-list') ? 'bg-[#06616e] text-orange-200 border-b-2 border-orange-400' : 'hover:bg-[#06616e]'}`}
+                onMouseEnter={() => setIsDesktopNidhanOpen(true)}
+                onMouseLeave={() => setIsDesktopNidhanOpen(false)}
+                onClick={() => setIsDesktopNidhanOpen(!isDesktopNidhanOpen)}
+              >
+                <span className="flex items-center gap-0.5">
+                  Nidhan Sahyog List
+                  <svg className={`w-3.5 h-3.5 transition-transform duration-300 ${isDesktopNidhanOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                </span>
+                
+                {isDesktopNidhanOpen && (
+                  <div 
+                    className="absolute top-[50px] left-0 w-52 bg-white text-gray-800 shadow-2xl rounded-md flex flex-col overflow-hidden border-t-4 z-[9999]" 
+                    style={{ borderColor: logoOrange }}
+                  >
+                    <Link to="/nidhan-sahayog-list" className="px-4 py-3 hover:bg-gray-50 hover:text-[#f08519] border-b border-gray-100 transition-colors font-medium text-[13px]">All Nidhan Sahyog List</Link>
+                  </div>
+                )}
+              </div>
               
               {/* Rules & Regulations Link */}
               <Link to="/rules-regulations" className={`h-full px-2 flex items-center transition-colors whitespace-nowrap ${isActive('/rules-regulations') ? 'bg-[#06616e] text-orange-200 border-b-2 border-orange-400' : 'hover:bg-[#06616e]'}`}>Rules & Regulations</Link>
@@ -250,9 +298,41 @@ const Navbar = () => {
 
             {/* GENERAL LINKS */}
             <Link to="/member-list" onClick={() => setIsMobileMenuOpen(false)} className={`py-3 px-6 border-b border-white/20 transition-colors ${isActive('/member-list') ? 'bg-[#06616e] text-orange-200 font-bold border-l-4 border-orange-400' : 'hover:bg-[#06616e]'}`}>Member List</Link>
-            <Link to="#" onClick={() => setIsMobileMenuOpen(false)} className="py-3 px-6 border-b border-white/20 hover:bg-[#06616e] transition-colors">Vivah Sahayog List</Link>
+
+            {/* VIVAH SAHYOG LIST ACCORDION */}
+            <div>
+              <button 
+                onClick={() => setIsMobileVivahOpen(!isMobileVivahOpen)} 
+                className="w-full text-left py-3 px-6 border-b border-white/20 flex justify-between items-center focus:outline-none"
+              >
+                Vivah Sahyog List
+                <svg className={`w-5 h-5 transition-transform duration-300 ${isMobileVivahOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+              </button>
+              
+              {isMobileVivahOpen && (
+                <div className="bg-[#06616e] flex flex-col text-sm border-b border-white/20">
+                  <Link to="/vivah-sahayog-list" onClick={() => { setIsMobileMenuOpen(false); setIsMobileVivahOpen(false); }} className="py-3 px-10 border-b border-white/10 hover:bg-white/10 transition-colors font-medium">All Sahyog List</Link>
+                </div>
+              )}
+            </div>
+
             <Link to="/annual-donation-list" onClick={() => setIsMobileMenuOpen(false)} className={`py-3 px-6 border-b border-white/20 transition-colors ${isActive('/annual-donation-list') ? 'bg-[#06616e] text-orange-200 font-bold border-l-4 border-orange-400' : 'hover:bg-[#06616e]'}`}>Annual Donation List</Link>
-            <Link to="#" onClick={() => setIsMobileMenuOpen(false)} className="py-3 px-6 border-b border-white/20 hover:bg-[#06616e] transition-colors">Nidhan Sahayog</Link>
+            {/* NIDHAN SAHYOG LIST ACCORDION */}
+            <div>
+              <button 
+                onClick={() => setIsMobileNidhanOpen(!isMobileNidhanOpen)} 
+                className="w-full text-left py-3 px-6 border-b border-white/20 flex justify-between items-center focus:outline-none text-white font-semibold"
+              >
+                Nidhan Sahyog List
+                <svg className={`w-5 h-5 transition-transform duration-300 ${isMobileNidhanOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+              </button>
+              
+              {isMobileNidhanOpen && (
+                <div className="bg-[#06616e] flex flex-col text-sm border-b border-white/20">
+                  <Link to="/nidhan-sahayog-list" onClick={() => { setIsMobileMenuOpen(false); setIsMobileNidhanOpen(false); }} className="py-3 px-10 border-b border-white/10 hover:bg-white/10 transition-colors font-medium">All Nidhan Sahyog List</Link>
+                </div>
+              )}
+            </div>
             <Link to="/rules-regulations" onClick={() => setIsMobileMenuOpen(false)} className={`py-3 px-6 border-b border-white/20 transition-colors ${isActive('/rules-regulations') ? 'bg-[#06616e] text-orange-200 font-bold border-l-4 border-orange-400' : 'hover:bg-[#06616e]'}`}>Rules & Regulations</Link>
             
             {/* SAHAYOG FORM ACCORDION */}

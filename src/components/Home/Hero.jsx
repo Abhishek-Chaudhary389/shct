@@ -1,4 +1,5 @@
  import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 // Asset folder se teeno photos import kar rahe hain
 import heroImg1 from '../../assets/ngo1.jpg';
 import heroImg2 from '../../assets/ngo2.jpg';
@@ -77,12 +78,12 @@ const Hero = () => {
 
           {/* Buttons */}
           <div className="flex flex-wrap gap-4">
-            <button className="px-8 py-3 rounded-full font-bold text-white shadow-lg transition-transform hover:scale-105 bg-[#f08519] hover:bg-orange-600">
+            <Link to="/register" className="px-8 py-3 rounded-full font-bold text-white shadow-lg transition-transform hover:scale-105 bg-[#f08519] hover:bg-orange-600 inline-block text-center">
               REGISTER NOW
-            </button>
-            <button className="px-10 py-3 rounded-full font-bold text-white shadow-lg transition-transform hover:scale-105 bg-[#f08519] hover:bg-orange-600">
+            </Link>
+            <Link to="/login" className="px-10 py-3 rounded-full font-bold text-white shadow-lg transition-transform hover:scale-105 bg-[#f08519] hover:bg-orange-600 inline-block text-center">
               LOGIN
-            </button>
+            </Link>
           </div>
         </div>
       </div>

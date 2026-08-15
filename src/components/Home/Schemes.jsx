@@ -1,4 +1,5 @@
  import React from 'react';
+import { Link } from 'react-router-dom';
 
 const Schemes = () => {
   // Logo colors
@@ -37,12 +38,13 @@ const Schemes = () => {
               SHCT अपने सदस्यों एवं उनके परिवारों के साथ हर परिस्थिति में खड़ा रहने के उद्देश्य से आकस्मिक निधन सहायता योजना संचालित करता है। यदि किसी सदस्य का असामयिक निधन हो जाता है, तो संस्था निर्धारित नियमों के अनुसार उसके परिवार को आर्थिक सहायता प्रदान करती है, ताकि कठिन समय में उन्हें आवश्यक सहयोग मिल सके। इस योजना से संबंधित पात्रता, नियम एवं सहायता प्रक्रिया की विस्तृत जानकारी नीचे दिए गए बटन के माध्यम से देखी जा सकती है।
             </p>
             
-            <button 
-              className="w-full py-3.5 rounded-xl font-bold text-white shadow-md transition-transform hover:scale-[1.02] active:scale-95 text-lg"
+            <Link 
+              to="/sahayata-list/nidhan"
+              className="w-full py-3.5 rounded-xl font-bold text-white shadow-md transition-transform hover:scale-[1.02] active:scale-95 text-lg block text-center"
               style={{ backgroundColor: logoOrange }}
             >
               👉 दिवंगत सहायता विवरण
-            </button>
+            </Link>
           </div>
 
 
@@ -62,12 +64,13 @@ const Schemes = () => {
               SHCT समाज के जरूरतमंद सदस्य परिवारों की सहायता के उद्देश्य से बेटी विवाह सहायता योजना संचालित करता है। इस योजना के अंतर्गत पात्र सदस्यों की बेटियों के विवाह के अवसर पर संस्था द्वारा निर्धारित प्रक्रिया एवं नियमों के अनुसार आर्थिक सहयोग प्रदान किया जाता है। योजना की पात्रता, आवश्यक दस्तावेज़ एवं आवेदन प्रक्रिया की पूरी जानकारी नीचे दिए गए बटन पर उपलब्ध है।
             </p>
             
-            <button 
-              className="w-full py-3.5 rounded-xl font-bold text-white shadow-md transition-transform hover:scale-[1.02] active:scale-95 text-lg"
+            <Link 
+              to="/sahayata-list/beti"
+              className="w-full py-3.5 rounded-xl font-bold text-white shadow-md transition-transform hover:scale-[1.02] active:scale-95 text-lg block text-center"
               style={{ backgroundColor: logoOrange }}
             >
               👉 बेटी विवाह सहायता विवरण
-            </button>
+            </Link>
           </div>
 
         </div>

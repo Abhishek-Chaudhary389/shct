@@ -20,6 +20,7 @@ const DONATIONS_COL = 'annual_donations';
 const BETI_COL = 'beti_sahayog';
 const NIDHAN_COL = 'nidhan_sahayog';
 const GREEN_COL = 'green_paryavaran';
+const HOME_ALERTS_COL = 'home_alerts';
 
 // --- DATA SERVICE APIS ---
 
@@ -83,20 +84,24 @@ export const approveRegistration = async (id, group = 'A') => {
     // 1. Remove from Pending
     await deleteDoc(pendingRef);
 
-    // Generate Sequential Unique ID (SHCT-0001, SHCT-0002, ...)
+    // Generate Sequential Unique ID (shct0001, shct0002, ...)
     const approvedSnapshot = await getDocs(collection(db, APPROVED_COL));
     let maxIdNum = 0;
     approvedSnapshot.forEach((docSnap) => {
       const uId = docSnap.data().uniqueId;
-      if (uId && uId.startsWith('SHCT-')) {
-        const num = parseInt(uId.replace('SHCT-', ''), 10);
-        if (!isNaN(num) && num > maxIdNum) {
-          maxIdNum = num;
+      if (uId) {
+        // Support old SHCT-0001, SHCT0001 and new shct0001 formats during lookup
+        const cleanId = uId.toUpperCase().replace('-', '');
+        if (cleanId.startsWith('SHCT')) {
+          const num = parseInt(cleanId.replace('SHCT', ''), 10);
+          if (!isNaN(num) && num > maxIdNum) {
+            maxIdNum = num;
+          }
         }
       }
     });
     const nextIdNum = maxIdNum + 1;
-    const uniqueMemberId = `SHCT-${String(nextIdNum).padStart(4, '0')}`;
+    const uniqueMemberId = `shct${String(nextIdNum).padStart(4, '0')}`;
     
     const nextSno = approvedSnapshot.size + 1001;
     
@@ -165,6 +170,8 @@ export const getBetiSahayogList = async () => {
     return [];
   }
 };
+export const getBetiSahyogList = getBetiSahayogList;
+export const getBetiSahyoglist = getBetiSahayogList;
 
 export const addBetiSahayog = async (data) => {
   try {
@@ -187,6 +194,8 @@ export const getNidhanSahayogList = async () => {
     return [];
   }
 };
+export const getNidhanSahyogList = getNidhanSahayogList;
+export const getNidhanSahyoglist = getNidhanSahayogList;
 
 export const addNidhanSahayog = async (data) => {
   try {
@@ -209,6 +218,7 @@ export const getGreenParyavaranList = async () => {
     return [];
   }
 };
+export const getGreenParyavaranlist = getGreenParyavaranList;
 
 export const addGreenParyavaran = async (data) => {
   try {
@@ -237,3 +247,180 @@ export const updateSahayogStatus = async (type, id, newStatus) => {
     throw error;
   }
 };
+
+// ================= HOME ALERTS API =================
+
+export const getHomeAlerts = async () => {
+  try {
+    const snapshot = await getDocs(collection(db, HOME_ALERTS_COL));
+    const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    return data.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+  } catch (error) {
+    console.error("Error fetching home alerts:", error);
+    return [];
+  }
+};
+
+export const addHomeAlert = async (alertData) => {
+  try {
+    const newAlert = {
+      ...alertData,
+      isActive: false, // Default to hidden
+      createdAt: new Date().toISOString()
+    };
+    const docRef = await addDoc(collection(db, HOME_ALERTS_COL), newAlert);
+    return { id: docRef.id, ...newAlert };
+  } catch (error) {
+    console.error("Error adding home alert:", error);
+    throw error;
+  }
+};
+
+export const updateHomeAlertStatus = async (id, isActive) => {
+  try {
+    const alertRef = doc(db, HOME_ALERTS_COL, id);
+    await updateDoc(alertRef, { isActive });
+    return true;
+  } catch (error) {
+    console.error("Error updating home alert status:", error);
+    throw error;
+  }
+};
+
+export const deleteHomeAlert = async (id) => {
+  try {
+    await deleteDoc(doc(db, HOME_ALERTS_COL, id));
+    return true;
+  } catch (error) {
+    console.error("Error deleting home alert:", error);
+    throw error;
+  }
+};
+
+// ================= SYSTEM SETTINGS API =================
+const SETTINGS_COL = 'system_settings';
+const HOME_PAGE_DOC_ID = 'home_page';
+
+export const getHomePageSettings = async () => {
+  try {
+    const docRef = doc(db, SETTINGS_COL, HOME_PAGE_DOC_ID);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      return docSnap.data();
+    }
+    // Return default settings if none exist yet
+    return {
+      headerTitle: "बेटी विवाह सहायता योजना",
+      alertTitle: "सहयोग अलर्ट - 1",
+      alertPoints: "सहयोग की अंतिम तिथि: 10 जुलाई से 26 जुलाई 2026 तक\nनियम: 1 ट्रांजेक्शन = 1 रसीद अपलोड",
+      instructionTitle: "महत्वपूर्ण निर्देश",
+      instructionText: "वेबसाइट पर अपना आधार कार्ड नंबर और पासवर्ड डालकर LOGIN करें और अपना GROUP देख लें। आप जिस GROUP में हैं, सिर्फ उसी GROUP में दिखने वाले परिवार के खाते में न्यूनतम राशि (50 रुपए) ऑनलाइन (UPI/Net Banking) भेजें।",
+      instructionNote: "नोट: किसी अन्य GROUP में भेजा गया सहयोग मान्य नहीं होगा। सहयोग भेजने के बाद ट्रांजेक्शन स्क्रीनशॉट और ID अपलोड करना अनिवार्य है।"
+    };
+  } catch (error) {
+    console.error("Error fetching home settings:", error);
+    return {
+      headerTitle: "बेटी विवाह सहायता योजना",
+      alertTitle: "सहयोग अलर्ट - 1",
+      alertPoints: "सहयोग की अंतिम तिथि: 10 जुलाई से 26 जुलाई 2026 तक\nनियम: 1 ट्रांजेक्शन = 1 रसीद अपलोड",
+      instructionTitle: "महत्वपूर्ण निर्देश",
+      instructionText: "वेबसाइट पर अपना आधार कार्ड नंबर और पासवर्ड डालकर LOGIN करें और अपना GROUP देख लें। आप जिस GROUP में हैं, सिर्फ उसी GROUP में दिखने वाले परिवार के खाते में न्यूनतम राशि (50 रुपए) ऑनलाइन (UPI/Net Banking) भेजें।",
+      instructionNote: "नोट: किसी अन्य GROUP में भेजा गया सहयोग मान्य नहीं होगा। सहयोग भेजने के बाद ट्रांजेक्शन स्क्रीनशॉट और ID अपलोड करना अनिवार्य है।"
+    };
+  }
+};
+
+export const saveHomePageSettings = async (settings) => {
+  try {
+    const docRef = doc(db, SETTINGS_COL, HOME_PAGE_DOC_ID);
+    await setDoc(docRef, settings, { merge: true });
+    return true;
+  } catch (error) {
+    console.error("Error saving home settings:", error);
+    throw error;
+  }
+};
+
+// ================= BETI SAHAYOG RECEIPTS API =================
+const BETI_RECEIPTS_COL = 'beti_sahayog_receipts';
+
+export const addBetiSahyogReceipt = async (receiptData) => {
+  try {
+    const data = {
+      ...receiptData,
+      submittedAt: new Date().toISOString(),
+      status: 'APPROVED'
+    };
+    const docRef = await addDoc(collection(db, BETI_RECEIPTS_COL), data);
+    return { id: docRef.id, ...data };
+  } catch (error) {
+    console.error("Error adding Beti Sahyog receipt:", error);
+    throw error;
+  }
+};
+
+export const getBetiSahyogReceipts = async () => {
+  try {
+    const snapshot = await getDocs(collection(db, BETI_RECEIPTS_COL));
+    const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    return data.sort((a, b) => new Date(b.submittedAt || 0) - new Date(a.submittedAt || 0));
+  } catch (error) {
+    console.error("Error fetching Beti Sahyog receipts:", error);
+    return [];
+  }
+};
+
+export const updateBetiReceiptStatus = async (id, newStatus) => {
+  try {
+    const docRef = doc(db, BETI_RECEIPTS_COL, id);
+    await updateDoc(docRef, { status: newStatus });
+    return true;
+  } catch (error) {
+    console.error("Error updating Beti Sahyog receipt status:", error);
+    throw error;
+  }
+};
+
+
+// ================= NIDHAN SAHAYOG RECEIPTS API =================
+const NIDHAN_RECEIPTS_COL = 'nidhan_sahayog_receipts';
+
+export const addNidhanSahyogReceipt = async (receiptData) => {
+  try {
+    const data = {
+      ...receiptData,
+      submittedAt: new Date().toISOString(),
+      status: 'APPROVED'
+    };
+    const docRef = await addDoc(collection(db, NIDHAN_RECEIPTS_COL), data);
+    return { id: docRef.id, ...data };
+  } catch (error) {
+    console.error("Error adding Nidhan Sahyog receipt:", error);
+    throw error;
+  }
+};
+
+export const getNidhanSahyogReceipts = async () => {
+  try {
+    const snapshot = await getDocs(collection(db, NIDHAN_RECEIPTS_COL));
+    const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    return data.sort((a, b) => new Date(b.submittedAt || 0) - new Date(a.submittedAt || 0));
+  } catch (error) {
+    console.error("Error fetching Nidhan Sahyog receipts:", error);
+    return [];
+  }
+};
+
+export const updateNidhanReceiptStatus = async (id, newStatus) => {
+  try {
+    const docRef = doc(db, NIDHAN_RECEIPTS_COL, id);
+    await updateDoc(docRef, { status: newStatus });
+    return true;
+  } catch (error) {
+    console.error("Error updating Nidhan Sahyog receipt status:", error);
+    throw error;
+  }
+};
+
+
+

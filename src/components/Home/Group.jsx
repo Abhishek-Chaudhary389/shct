@@ -1,51 +1,42 @@
- import React from 'react';
+ import React, { useState, useEffect } from 'react';
+import { getHomeAlerts, getHomePageSettings } from '../../services/dataService';
 
 const Group = () => {
   // Theme Colors
   const logoTeal = "#087889";
   const logoOrange = "#f08519";
 
-  const groupList = [
-    { group: "A", name: "श्रीमती फातमा खातून (महराजगंज)" },
-    { group: "B", name: "श्री पन्ना लाल (सिद्धार्थनगर)" },
-    { group: "C", name: "श्री राम प्रवेश मौर्य (महराजगंज)" },
-    { group: "D", name: "श्री महेन्द्र सिंह (सोनभद्र)" },
-    { group: "L", name: "श्री भूप सिंह (बरेली)" },
-    { group: "M", name: "श्री राम कुमार (शाहजहांपुर)" },
-  ];
+  const [groupDetails, setGroupDetails] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [settings, setSettings] = useState({
+    headerTitle: "बेटी विवाह सहायता योजना",
+    alertTitle: "सहयोग अलर्ट - 1",
+    alertPoints: "सहयोग की अंतिम तिथि: 10 जुलाई से 26 जुलाई 2026 तक\nनियम: 1 ट्रांजेक्शन = 1 रसीद अपलोड",
+    instructionTitle: "महत्वपूर्ण निर्देश",
+    instructionText: "वेबसाइट पर अपना आधार कार्ड नंबर और पासवर्ड डालकर LOGIN करें और अपना GROUP देख लें। आप जिस GROUP में हैं, सिर्फ उसी GROUP में दिखने वाले परिवार के खाते में न्यूनतम राशि (50 रुपए) ऑनलाइन (UPI/Net Banking) भेजें।",
+    instructionNote: "नोट: किसी अन्य GROUP में भेजा गया सहयोग मान्य नहीं होगा। सहयोग भेजने के बाद ट्रांजेक्शन स्क्रीनशॉट और ID अपलोड करना अनिवार्य है।"
+  });
 
-  const groupDetails = [
-    {
-      group: "A",
-      member: "श्रीमती फातमा खातून",
-      uniqueId: "4005268194",
-      date: "04/02/2025",
-      address: "जिला- महराजगंज, ब्लॉक- पनियरा",
-      daughter: "कु० समीरूण निशा",
-      marriageDate: "11/05/2026",
-      accName: "FATMA KHATOON",
-      accNo: "11638502744",
-      ifsc: "SBIN0016793",
-      branch: "PARTAWAL MAHRAJGANJ",
-      bank: "SBI",
-      minSupport: "50 रुपए"
-    },
-    {
-      group: "B",
-      member: "श्री पन्ना लाल",
-      uniqueId: "7700651424",
-      date: "17/03/2025",
-      address: "जिला- सिद्धार्थ नगर, ब्लॉक- डुमरियागंज",
-      daughter: "अंजनी मौर्या",
-      marriageDate: "01/05/2026",
-      accName: "PANNA LAL",
-      accNo: "45151360251",
-      ifsc: "SBIN0008993",
-      branch: "BHAWANIGANJ",
-      bank: "SBI",
-      minSupport: "50 रुपए"
-    }
-  ];
+  useEffect(() => {
+    const fetchAlertsAndSettings = async () => {
+      try {
+        const allAlerts = await getHomeAlerts();
+        // Filter only those which are set to active by Admin
+        const activeAlerts = allAlerts.filter(alert => alert.isActive);
+        setGroupDetails(activeAlerts);
+
+        const pageSettings = await getHomePageSettings();
+        if (pageSettings) {
+          setSettings(pageSettings);
+        }
+      } catch (error) {
+        console.error("Failed to load alerts or settings:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchAlertsAndSettings();
+  }, []);
 
   return (
     <div className="w-full min-h-screen bg-gray-50 py-12 font-sans">
@@ -57,7 +48,7 @@ const Group = () => {
           <div className="absolute bottom-0 left-0 w-32 h-32 bg-[#f08519] opacity-20 rounded-full blur-2xl"></div>
           
           <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-white tracking-wide relative z-10">
-            बेटी विवाह सहायता योजना
+            {settings.headerTitle}
           </h1>
           <div className="w-24 h-1.5 mx-auto mt-5 rounded-full relative z-10" style={{ backgroundColor: logoOrange }}></div>
         </div>
@@ -69,17 +60,15 @@ const Group = () => {
           <div className="bg-white border-l-[6px] border-[#f08519] rounded-xl shadow-md p-6 lg:p-8 hover:shadow-lg transition-shadow">
             <div className="flex items-center mb-4">
               <span className="bg-orange-100 text-[#f08519] p-3 rounded-full mr-4 text-xl">🔔</span>
-              <h2 className="text-2xl font-bold text-gray-800">सहयोग अलर्ट - 1</h2>
+              <h2 className="text-2xl font-bold text-gray-800">{settings.alertTitle}</h2>
             </div>
             <ul className="space-y-3 text-gray-700 font-medium text-base">
-              <li className="flex items-start">
-                <span className="text-[#f08519] mr-2 mt-0.5">▸</span> 
-                सहयोग की अंतिम तिथि: 10 जुलाई से 26 जुलाई 2026 तक
-              </li>
-              <li className="flex items-start">
-                <span className="text-[#f08519] mr-2 mt-0.5">▸</span> 
-                नियम: 1 ट्रांजेक्शन = 1 रसीद अपलोड
-              </li>
+              {settings.alertPoints.split('\n').filter(p => p.trim() !== '').map((point, idx) => (
+                <li key={idx} className="flex items-start">
+                  <span className="text-[#f08519] mr-2 mt-0.5">▸</span> 
+                  {point}
+                </li>
+              ))}
             </ul>
           </div>
 
@@ -87,14 +76,16 @@ const Group = () => {
           <div className="bg-white border-l-[6px] border-[#087889] rounded-xl shadow-md p-6 lg:p-8 hover:shadow-lg transition-shadow">
             <div className="flex items-center mb-4">
               <span className="bg-teal-100 text-[#087889] p-3 rounded-full mr-4 text-xl">💡</span>
-              <h2 className="text-2xl font-bold text-gray-800">महत्वपूर्ण निर्देश</h2>
+              <h2 className="text-2xl font-bold text-gray-800">{settings.instructionTitle}</h2>
             </div>
-            <p className="text-gray-600 font-medium text-sm leading-relaxed text-justify mb-3">
-              वेबसाइट पर अपना आधार कार्ड नंबर और पासवर्ड डालकर LOGIN करें और अपना GROUP देख लें। आप जिस GROUP में हैं, सिर्फ उसी GROUP में दिखने वाले परिवार के खाते में न्यूनतम राशि (50 रुपए) ऑनलाइन (UPI/Net Banking) भेजें।
+            <p className="text-gray-600 font-medium text-sm leading-relaxed text-justify mb-3 whitespace-pre-line">
+              {settings.instructionText}
             </p>
-            <p className="text-[#087889] font-bold text-sm bg-teal-50 p-3 rounded-lg border border-teal-100">
-              नोट: किसी अन्य GROUP में भेजा गया सहयोग मान्य नहीं होगा। सहयोग भेजने के बाद ट्रांजेक्शन स्क्रीनशॉट और ID अपलोड करना अनिवार्य है।
-            </p>
+            {settings.instructionNote && (
+              <p className="text-[#087889] font-bold text-sm bg-teal-50 p-3 rounded-lg border border-teal-100 whitespace-pre-line">
+                {settings.instructionNote}
+              </p>
+            )}
           </div>
         </div>
 
@@ -106,14 +97,18 @@ const Group = () => {
           
           <div className="bg-white rounded-2xl shadow-md border-t-[6px] p-6 md:p-8" style={{ borderColor: logoTeal }}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-4">
-              {groupList.map((item, index) => (
+              {loading ? (
+                <div className="col-span-full text-center text-gray-500 py-4">Loading active groups...</div>
+              ) : groupDetails.length === 0 ? (
+                <div className="col-span-full text-center text-gray-500 py-4">वर्तमान में कोई ग्रुप सूची उपलब्ध नहीं है।</div>
+              ) : groupDetails.map((item, index) => (
                 <div key={index} className="flex items-center p-3 rounded-lg hover:bg-teal-50 transition-colors border border-transparent hover:border-teal-100">
                   <div className="text-white px-4 py-2 rounded-md font-bold text-sm whitespace-nowrap shadow-sm" style={{ backgroundColor: logoTeal }}>
                     GROUP - {item.group}
                   </div>
                   <span className="text-xl mx-3" style={{ color: logoOrange }}>👉</span>
                   <div className="font-bold text-gray-700 text-sm md:text-base">
-                    {item.name}
+                    {item.member} {item.address ? `(${item.address.split(',')[0].replace('जिला-','').trim()})` : ''}
                   </div>
                 </div>
               ))}
@@ -145,8 +140,17 @@ const Group = () => {
                 <p>यूनिक आईडी- {detail.uniqueId}</p>
                 <p>सदस्यता तिथि- {detail.date}</p>
                 <p>{detail.address}</p>
-                <p>बेटी का नाम- {detail.daughter}</p>
-                <p>विवाह तिथि- {detail.marriageDate}</p>
+                {detail.type === 'nidhan' ? (
+                  <>
+                    <p>मृतक का नाम- {detail.daughter}</p>
+                    <p>निधन तिथि- {detail.marriageDate}</p>
+                  </>
+                ) : (
+                  <>
+                    <p>बेटी का नाम- {detail.daughter}</p>
+                    <p>विवाह तिथि- {detail.marriageDate}</p>
+                  </>
+                )}
               </div>
 
               {/* Bank Details Heading (Like green heading in photo) */}
@@ -164,16 +168,19 @@ const Group = () => {
                 <p className="normal-case mt-4 text-gray-900 font-bold">न्यूनतम सहयोग- {detail.minSupport}</p>
               </div>
 
-              {/* QR Code Block (Bottom left like photo) */}
-              <div className="bg-white p-3 inline-block rounded-md border border-gray-200 shadow-sm mt-2">
-                <div className="text-center text-[10px] font-bold mb-1 text-gray-800 uppercase tracking-widest">{detail.accName}</div>
-                <div className="text-center text-sm font-bold mb-3 text-gray-900">Scan & Pay</div>
-                <img 
-                  src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=${detail.accNo}@${detail.bank}&pn=${detail.accName}`} 
-                  alt="QR Code" 
-                  className="w-32 h-32 md:w-36 md:h-36 object-contain mx-auto"
-                />
-              </div>
+              {/* QR Code (If available) */}
+              {detail.qrCodeBase64 && (
+                <div className="mt-8 flex flex-col items-center justify-center p-6 bg-white rounded-xl border border-gray-100 shadow-sm max-w-sm">
+                  <div className="text-lg font-bold text-gray-800 mb-2">{detail.accName}</div>
+                  <div className="text-sm font-semibold text-gray-500 mb-4 bg-gray-100 px-3 py-1 rounded-full border border-gray-200">Scan & Pay</div>
+                  <div className="w-48 h-48 sm:w-56 sm:h-56 bg-gray-50 flex items-center justify-center p-2 rounded-lg border-2 border-dashed border-gray-200">
+                     <img src={detail.qrCodeBase64} alt="QR Code" className="h-full w-full object-contain" />
+                  </div>
+                  <div className="text-sm font-medium text-gray-500 mt-4 text-center px-4">
+                    किसी भी UPI ऐप (Google Pay, PhonePe, Paytm) से स्कैन करें
+                  </div>
+                </div>
+              )}
 
             </div>
           ))}
