@@ -136,7 +136,7 @@ const AllSahayogList = () => {
       >
         <div className="text-center z-10 px-4">
           <h1 className="text-3xl md:text-5xl font-black text-white tracking-wide uppercase">
-            Beti Vivah Sahyog Suchi
+            all Vivah Sahyog list
           </h1>
           <p className="text-orange-400 font-bold mt-2 tracking-widest text-xs md:text-sm uppercase">
             Silent Help Charitable Trust

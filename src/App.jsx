@@ -9,7 +9,7 @@ import Group from './components/Home/Group';
 // UserLogin फोल्डर से
 import Register from './Pages/UserLogin/Register'; 
 import Login from './Pages/UserLogin/Login'; 
-import UserDashboard from './Pages/UserLogin/UserDashborad'; // Add import for UserDashboard
+import UserDashboard from './Pages/UserLogin/UserDashboard'; 
 import AdminLogin from './Pages/AdminPanel/AdminLogin';
 import AdminDashboard from './Pages/AdminPanel/AdminDashboard'; 
 
@@ -23,10 +23,10 @@ import RulesRegulations from './Pages/RulesRegulations';
 import BetiSahayogForm from './Pages/SahayogForm/BetiSahayogForm'; 
 import NidhanSahayogForm from './Pages/SahayogForm/NidhanSahayogForm'; 
 import GreenParyavaranForm from './Pages/SahayogForm/GreenParyavaranForm'; 
-import BetiSahayogAavedanList from './Pages/Sahayata List/BetiSahayogAavedanList';
-import NidhanSahayogAavedanList from './Pages/Sahayata List/NidhanSahayogAavedanList';
-import GreenParyavaranList from './Pages/Sahayata List/GreenParyavaranList';
-import AllSahayogList from './Pages/Vivah Sahayog List/AllSahayogList';
+import BetiSahayogAavedanList from './Pages/SahayataList/BetiSahayogAavedanList';
+import NidhanSahayogAavedanList from './Pages/SahayataList/NidhanSahayogAavedanList';
+import GreenParyavaranList from './Pages/SahayataList/GreenParyavaranList';
+import AllSahayogList from './Pages/VivahSahayogList/AllSahayogList';
 import AllNidhanSahyogList from './Pages/NidhanSahayog/AllNidhanSahyogList';
 import ProtectedRoute from './components/ProtectedRoute'; 
 

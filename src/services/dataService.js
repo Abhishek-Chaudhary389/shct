@@ -28,9 +28,23 @@ export const getPendingRegistrations = async () => {
   try {
     const snapshot = await getDocs(collection(db, PENDING_COL));
     const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    return data.sort((a, b) => new Date(b.submittedAt || 0) - new Date(a.submittedAt || 0));
+    // Filter only active PENDING registrations
+    return data
+      .filter(r => r.status === 'PENDING' || !r.status)
+      .sort((a, b) => new Date(b.submittedAt || 0) - new Date(a.submittedAt || 0));
   } catch (error) {
     console.error("Error fetching pending registrations:", error);
+    return [];
+  }
+};
+
+export const getAllRegistrationsHistory = async () => {
+  try {
+    const snapshot = await getDocs(collection(db, PENDING_COL));
+    const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    return data.sort((a, b) => new Date(b.submittedAt || 0) - new Date(a.submittedAt || 0));
+  } catch (error) {
+    console.error("Error fetching all registrations history:", error);
     return [];
   }
 };
@@ -81,8 +95,8 @@ export const approveRegistration = async (id, group = 'A') => {
     }
     const target = pendingSnap.data();
 
-    // 1. Remove from Pending
-    await deleteDoc(pendingRef);
+    // 1. Update status in Pending collection to APPROVED
+    await updateDoc(pendingRef, { status: 'APPROVED' });
 
     // Generate Sequential Unique ID (shct0001, shct0002, ...)
     const approvedSnapshot = await getDocs(collection(db, APPROVED_COL));
@@ -151,7 +165,8 @@ export const approveRegistration = async (id, group = 'A') => {
 
 export const rejectRegistration = async (id) => {
   try {
-    await deleteDoc(doc(db, PENDING_COL, id));
+    const pendingRef = doc(db, PENDING_COL, id);
+    await updateDoc(pendingRef, { status: 'REJECTED' });
   } catch (error) {
     console.error("Error rejecting registration:", error);
     throw error;
@@ -349,7 +364,7 @@ export const addBetiSahyogReceipt = async (receiptData) => {
     const data = {
       ...receiptData,
       submittedAt: new Date().toISOString(),
-      status: 'APPROVED'
+      status: 'PENDING'
     };
     const docRef = await addDoc(collection(db, BETI_RECEIPTS_COL), data);
     return { id: docRef.id, ...data };
@@ -390,7 +405,7 @@ export const addNidhanSahyogReceipt = async (receiptData) => {
     const data = {
       ...receiptData,
       submittedAt: new Date().toISOString(),
-      status: 'APPROVED'
+      status: 'PENDING'
     };
     const docRef = await addDoc(collection(db, NIDHAN_RECEIPTS_COL), data);
     return { id: docRef.id, ...data };

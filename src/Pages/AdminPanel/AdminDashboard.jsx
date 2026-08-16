@@ -3,13 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import logoImg from '../../assets/shct.png';
 import { 
   getPendingRegistrations, 
+  getAllRegistrationsHistory,
   getApprovedMembers, 
   getAnnualDonations, 
   approveRegistration, 
   rejectRegistration,
-  getBetiSahayogList,
-  getNidhanSahayogList,
-  getGreenParyavaranList,
+  getBetiSahyogList,
+  getNidhanSahyogList,
   updateSahayogStatus,
   getHomeAlerts,
   addHomeAlert,
@@ -34,7 +34,6 @@ const AdminDashboard = () => {
 
   const [betiList, setBetiList] = useState([]);
   const [nidhanList, setNidhanList] = useState([]);
-  const [greenList, setGreenList] = useState([]);
   const [homeAlertsList, setHomeAlertsList] = useState([]);
   const [betiReceiptsList, setBetiReceiptsList] = useState([]);
   const [nidhanReceiptsList, setNidhanReceiptsList] = useState([]);
@@ -49,10 +48,17 @@ const AdminDashboard = () => {
   });
 
   const [isSahayataMenuOpen, setIsSahayataMenuOpen] = useState(false);
+  const [isHomeMenuOpen, setIsHomeMenuOpen] = useState(false);
 
   const [notification, setNotification] = useState('');
   const [selectedReceipt, setSelectedReceipt] = useState(null);
+  const [selectedMemberForDetail, setSelectedMemberForDetail] = useState(null);
   const [selectedGroups, setSelectedGroups] = useState({});
+
+  const [betiFilter, setBetiFilter] = useState('PENDING'); // 'PENDING' | 'APPROVED' | 'REJECTED' | 'ALL'
+  const [nidhanFilter, setNidhanFilter] = useState('PENDING'); // 'PENDING' | 'APPROVED' | 'REJECTED' | 'ALL'
+  const [selectedReceiptForDetail, setSelectedReceiptForDetail] = useState(null);
+  const [registrationFilter, setRegistrationFilter] = useState('PENDING'); // 'PENDING' | 'APPROVED' | 'REJECTED' | 'ALL'
 
   const [newHomeAlert, setNewHomeAlert] = useState({
     group: '', member: '', uniqueId: '', date: '', address: '', 
@@ -72,16 +78,79 @@ const AdminDashboard = () => {
   }, [navigate]);
 
   const loadData = async () => {
-    setPendingList(await getPendingRegistrations());
-    setApprovedList(await getApprovedMembers());
-    setDonationsList(await getAnnualDonations());
-    setBetiList(await getBetiSahayogList());
-    setNidhanList(await getNidhanSahyogList());
-    setGreenList(await getGreenParyavaranList());
-    setHomeAlertsList(await getHomeAlerts());
-    setHomeSettings(await getHomePageSettings());
-    setBetiReceiptsList(await getBetiSahyogReceipts());
-    setNidhanReceiptsList(await getNidhanSahyogReceipts());
+    console.log("Starting loadData...");
+    try {
+      const pList = await getAllRegistrationsHistory();
+      console.log("Loaded registrations history list:", pList.length);
+      setPendingList(pList);
+    } catch (e) {
+      console.error("Error loading pending registrations:", e);
+    }
+
+    try {
+      const aList = await getApprovedMembers();
+      console.log("Loaded approved list:", aList.length);
+      setApprovedList(aList);
+    } catch (e) {
+      console.error("Error loading approved members:", e);
+    }
+
+    try {
+      const dList = await getAnnualDonations();
+      console.log("Loaded donations list:", dList.length);
+      setDonationsList(dList);
+    } catch (e) {
+      console.error("Error loading annual donations:", e);
+    }
+
+    try {
+      const bList = await getBetiSahayogList();
+      console.log("Loaded beti applications list:", bList.length);
+      setBetiList(bList);
+    } catch (e) {
+      console.error("Error loading beti applications:", e);
+    }
+
+    try {
+      const nList = await getNidhanSahyogList();
+      console.log("Loaded nidhan applications list:", nList.length);
+      setNidhanList(nList);
+    } catch (e) {
+      console.error("Error loading nidhan applications:", e);
+    }
+
+    try {
+      const alerts = await getHomeAlerts();
+      console.log("Loaded home alerts list:", alerts.length);
+      setHomeAlertsList(alerts);
+    } catch (e) {
+      console.error("Error loading home alerts:", e);
+    }
+
+    try {
+      const settings = await getHomePageSettings();
+      console.log("Loaded home settings");
+      setHomeSettings(settings);
+    } catch (e) {
+      console.error("Error loading home settings:", e);
+    }
+
+    try {
+      const bReceipts = await getBetiSahyogReceipts();
+      console.log("Loaded beti receipts list:", bReceipts.length, bReceipts);
+      setBetiReceiptsList(bReceipts);
+    } catch (e) {
+      console.error("Error loading beti receipts:", e);
+    }
+
+    try {
+      const nReceipts = await getNidhanSahyogReceipts();
+      console.log("Loaded nidhan receipts list:", nReceipts.length, nReceipts);
+      setNidhanReceiptsList(nReceipts);
+    } catch (e) {
+      console.error("Error loading nidhan receipts:", e);
+    }
+    console.log("loadData complete.");
   };
 
   const handleSaveHomeSettings = async (e) => {
@@ -282,21 +351,36 @@ const AdminDashboard = () => {
                 )}
               </button>
 
-              <button 
-                onClick={() => setActiveTab('home_alerts')}
-                className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl font-bold text-sm transition-all shadow-sm ${activeTab === 'home_alerts' ? 'bg-[#087889] text-white border border-teal-500/30' : 'text-gray-300 hover:bg-gray-800 hover:text-white'}`}
-              >
-                <span className="text-lg">📢</span> 
-                <span className="text-left flex-1">Home Alerts</span>
-              </button>
-
-              <button 
-                onClick={() => setActiveTab('settings')}
-                className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl font-bold text-sm transition-all shadow-sm ${activeTab === 'settings' ? 'bg-[#087889] text-white border border-teal-500/30' : 'text-gray-300 hover:bg-gray-800 hover:text-white'}`}
-              >
-                <span className="text-lg">⚙️</span> 
-                <span className="text-left flex-1">Home Settings</span>
-              </button>
+              {/* HOME MANAGEMENT ACCORDION */}
+              <div className="pt-2">
+                <button 
+                  onClick={() => setIsHomeMenuOpen(!isHomeMenuOpen)}
+                  className="w-full flex items-center justify-between px-4 py-3 rounded-xl font-bold text-sm transition-all text-gray-300 hover:bg-gray-800 hover:text-white shadow-sm"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="text-lg">🏠</span>
+                    <span>Home Management</span>
+                  </div>
+                  <svg className={`w-4 h-4 transition-transform ${isHomeMenuOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                </button>
+                
+                {isHomeMenuOpen && (
+                  <div className="mt-2 space-y-2 pl-4 border-l-2 border-gray-800 ml-4">
+                    <button 
+                      onClick={() => setActiveTab('settings')}
+                      className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl font-semibold text-xs transition-all ${activeTab === 'settings' ? 'bg-[#087889] text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
+                    >
+                      <span>⚙️</span> <span className="text-left flex-1">Home Settings</span>
+                    </button>
+                    <button 
+                      onClick={() => setActiveTab('home_alerts')}
+                      className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl font-semibold text-xs transition-all ${activeTab === 'home_alerts' ? 'bg-[#087889] text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
+                    >
+                      <span>📢</span> <span className="text-left flex-1">Home Alerts</span>
+                    </button>
+                  </div>
+                )}
+              </div>
 
               <button 
                 onClick={() => setActiveTab('donations')}
@@ -361,13 +445,6 @@ const AdminDashboard = () => {
                       <span>🕊️</span> <span className="text-left flex-1">Nidhan Sahayog</span>
                       {nidhanList.length > 0 && <span className="bg-red-500 text-white text-[9px] px-1.5 py-0.5 rounded-full">{nidhanList.length}</span>}
                     </button>
-                    <button 
-                      onClick={() => setActiveTab('green')}
-                      className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl font-semibold text-xs transition-all ${activeTab === 'green' ? 'bg-[#087889] text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
-                    >
-                      <span>🌿</span> <span className="text-left flex-1">Green Paryavaran</span>
-                      {greenList.length > 0 && <span className="bg-green-500 text-white text-[9px] px-1.5 py-0.5 rounded-full">{greenList.length}</span>}
-                    </button>
                   </div>
                 )}
               </div>
@@ -389,65 +466,176 @@ const AdminDashboard = () => {
             )}
 
             {/* ================= METRICS CARDS ================= */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-              <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 border-t-4 border-t-amber-500 flex items-center justify-between hover:shadow-md transition-shadow">
-                <div>
-                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">पेंडिंग आवेदन</p>
-                  <h3 className="text-4xl font-black text-amber-600 mt-1">{pendingList.length}</h3>
-                  <p className="text-xs text-gray-400 mt-1 font-medium">Approval Queue</p>
+            {activeTab === 'beti_receipts' ? (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                {/* Pending Beti Receipts */}
+                <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 border-t-4 border-t-amber-500 flex items-center justify-between hover:shadow-md transition-shadow">
+                  <div>
+                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">लंबित बेटी रसीदें</p>
+                    <h3 className="text-4xl font-black text-amber-600 mt-1">
+                      {betiReceiptsList.filter(r => r.status === 'PENDING').length}
+                    </h3>
+                    <p className="text-xs text-gray-400 mt-1 font-medium">Pending Verification</p>
+                  </div>
+                  <div className="w-14 h-14 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center text-2xl font-bold">
+                    ⏳
+                  </div>
                 </div>
-                <div className="w-14 h-14 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center text-2xl font-bold">
-                  ⏳
-                </div>
-              </div>
 
-              <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 border-t-4 border-t-[#087889] flex items-center justify-between hover:shadow-md transition-shadow">
-                <div>
-                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">स्वीकृत सदस्य</p>
-                  <h3 className="text-4xl font-black text-[#087889] mt-1">{approvedList.length}</h3>
-                  <p className="text-xs text-gray-400 mt-1 font-medium">Approved Members</p>
+                {/* Approved Beti Receipts */}
+                <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 border-t-4 border-t-emerald-500 flex items-center justify-between hover:shadow-md transition-shadow">
+                  <div>
+                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">स्वीकृत बेटी रसीदें</p>
+                    <h3 className="text-4xl font-black text-emerald-600 mt-1">
+                      {betiReceiptsList.filter(r => r.status === 'APPROVED').length}
+                    </h3>
+                    <p className="text-xs text-gray-400 mt-1 font-medium">Approved Donations</p>
+                  </div>
+                  <div className="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center text-2xl font-bold">
+                    ✅
+                  </div>
                 </div>
-                <div className="w-14 h-14 bg-teal-50 text-[#087889] rounded-2xl flex items-center justify-center text-2xl font-bold">
-                  ✅
-                </div>
-              </div>
 
-              <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 border-t-4 border-t-[#f08519] flex items-center justify-between hover:shadow-md transition-shadow">
-                <div>
-                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">कुल दान संग्रह</p>
-                  <h3 className="text-3xl font-black text-[#f08519] mt-1">₹ {totalDonationSum}</h3>
-                  <p className="text-xs text-gray-400 mt-1 font-medium">Registration Fees</p>
-                </div>
-                <div className="w-14 h-14 bg-orange-50 text-[#f08519] rounded-2xl flex items-center justify-center text-2xl font-bold">
-                  💰
+                {/* Rejected Beti Receipts */}
+                <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 border-t-4 border-t-red-500 flex items-center justify-between hover:shadow-md transition-shadow">
+                  <div>
+                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">अस्वीकृत बेटी रसीदें</p>
+                    <h3 className="text-4xl font-black text-red-600 mt-1">
+                      {betiReceiptsList.filter(r => r.status === 'REJECTED').length}
+                    </h3>
+                    <p className="text-xs text-gray-400 mt-1 font-medium">Rejected Receipts</p>
+                  </div>
+                  <div className="w-14 h-14 bg-red-50 text-red-600 rounded-2xl flex items-center justify-center text-2xl font-bold">
+                    ✕
+                  </div>
                 </div>
               </div>
-            </div>
+            ) : activeTab === 'nidhan_receipts' ? (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                {/* Pending Nidhan Receipts */}
+                <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 border-t-4 border-t-amber-500 flex items-center justify-between hover:shadow-md transition-shadow">
+                  <div>
+                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">लंबित मृत्यु रसीदें</p>
+                    <h3 className="text-4xl font-black text-amber-600 mt-1">
+                      {nidhanReceiptsList.filter(r => r.status === 'PENDING').length}
+                    </h3>
+                    <p className="text-xs text-gray-400 mt-1 font-medium">Pending Verification</p>
+                  </div>
+                  <div className="w-14 h-14 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center text-2xl font-bold">
+                    ⏳
+                  </div>
+                </div>
+
+                {/* Approved Nidhan Receipts */}
+                <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 border-t-4 border-t-emerald-500 flex items-center justify-between hover:shadow-md transition-shadow">
+                  <div>
+                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">स्वीकृत मृत्यु रसीदें</p>
+                    <h3 className="text-4xl font-black text-emerald-600 mt-1">
+                      {nidhanReceiptsList.filter(r => r.status === 'APPROVED').length}
+                    </h3>
+                    <p className="text-xs text-gray-400 mt-1 font-medium">Approved Donations</p>
+                  </div>
+                  <div className="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center text-2xl font-bold">
+                    ✅
+                  </div>
+                </div>
+
+                {/* Rejected Nidhan Receipts */}
+                <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 border-t-4 border-t-red-500 flex items-center justify-between hover:shadow-md transition-shadow">
+                  <div>
+                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">अस्वीकृत मृत्यु रसीदें</p>
+                    <h3 className="text-4xl font-black text-red-600 mt-1">
+                      {nidhanReceiptsList.filter(r => r.status === 'REJECTED').length}
+                    </h3>
+                    <p className="text-xs text-gray-400 mt-1 font-medium">Rejected Receipts</p>
+                  </div>
+                  <div className="w-14 h-14 bg-red-50 text-red-600 rounded-2xl flex items-center justify-center text-2xl font-bold">
+                    ✕
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 border-t-4 border-t-amber-500 flex items-center justify-between hover:shadow-md transition-shadow">
+                  <div>
+                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">पेंडिंग आवेदन</p>
+                    <h3 className="text-4xl font-black text-amber-600 mt-1">
+                      {pendingList.filter(r => r.status === 'PENDING' || !r.status).length}
+                    </h3>
+                    <p className="text-xs text-gray-400 mt-1 font-medium">Approval Queue</p>
+                  </div>
+                  <div className="w-14 h-14 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center text-2xl font-bold">
+                    ⏳
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 border-t-4 border-t-[#087889] flex items-center justify-between hover:shadow-md transition-shadow">
+                  <div>
+                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">स्वीकृत सदस्य</p>
+                    <h3 className="text-4xl font-black text-[#087889] mt-1">{approvedList.length}</h3>
+                    <p className="text-xs text-gray-400 mt-1 font-medium">Approved Members</p>
+                  </div>
+                  <div className="w-14 h-14 bg-teal-50 text-[#087889] rounded-2xl flex items-center justify-center text-2xl font-bold">
+                    ✅
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 border-t-4 border-t-[#f08519] flex items-center justify-between hover:shadow-md transition-shadow">
+                  <div>
+                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">कुल दान संग्रह</p>
+                    <h3 className="text-3xl font-black text-[#f08519] mt-1">₹ {totalDonationSum}</h3>
+                    <p className="text-xs text-gray-400 mt-1 font-medium">Registration Fees</p>
+                  </div>
+                  <div className="w-14 h-14 bg-orange-50 text-[#f08519] rounded-2xl flex items-center justify-center text-2xl font-bold">
+                    💰
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* ================= TAB CONTENT ================= */}
 
             {/* TAB 1: PENDING REGISTRATIONS */}
             {activeTab === 'pending' && (
               <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-                <div className="p-6 bg-gradient-to-r from-amber-500 to-orange-500 text-white flex justify-between items-center">
+                <div className="p-6 bg-gradient-to-r from-amber-500 to-orange-500 text-white flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                   <div>
-                    <h3 className="text-xl font-extrabold">पेंडिंग रजिस्ट्रेशन आवेदन (Approval Queue)</h3>
-                    <p className="text-xs text-amber-100 mt-1">यहाँ नए यूज़र्स द्वारा जमा किए गए रजिस्ट्रेशन की सूची है। सत्यापन कर स्वीकृति दें।</p>
+                    <h3 className="text-xl font-extrabold">रजिस्ट्रेशन आवेदन प्रबंधन (Registration Queue)</h3>
+                    <p className="text-xs text-amber-100 mt-1">यहाँ नए यूज़र्स द्वारा जमा किए गए रजिस्ट्रेशन की सूची है।</p>
                   </div>
-                  <span className="bg-white text-amber-800 text-xs font-black px-3.5 py-1.5 rounded-full shadow">
-                    {pendingList.length} पेंडिंग
-                  </span>
+                  {/* Filter Tabs */}
+                  <div className="flex flex-wrap bg-white/10 backdrop-blur p-1 rounded-xl border border-white/20">
+                    {['PENDING', 'APPROVED', 'REJECTED', 'ALL'].map((f) => (
+                      <button
+                        key={f}
+                        onClick={() => setRegistrationFilter(f)}
+                        className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
+                          registrationFilter === f 
+                            ? 'bg-white text-amber-800 shadow-sm' 
+                            : 'text-white hover:bg-white/10'
+                        }`}
+                      >
+                        {f === 'PENDING' ? `⏳ लंबित (${pendingList.filter(r => r.status === 'PENDING' || !r.status).length})` :
+                         f === 'APPROVED' ? `✅ स्वीकृत (${pendingList.filter(r => r.status === 'APPROVED').length})` :
+                         f === 'REJECTED' ? `❌ अस्वीकृत (${pendingList.filter(r => r.status === 'REJECTED').length})` :
+                         `🔎 सभी (${pendingList.length})`}
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
-                {pendingList.length === 0 ? (
+                {pendingList.filter(r => {
+                  const status = r.status || 'PENDING';
+                  return registrationFilter === 'ALL' ? true : status === registrationFilter;
+                }).length === 0 ? (
                   <div className="p-16 text-center text-gray-500 bg-gray-50/50">
                     <span className="text-5xl">🎉</span>
-                    <h4 className="text-lg font-bold mt-4 text-gray-700">कोई पेंडिंग आवेदन नहीं है!</h4>
-                    <p className="text-sm text-gray-400 mt-1">जब कोई नया यूज़र रजिस्ट्रेशन करेगा, तो उसका विवरण यहाँ दिखाई देगा।</p>
+                    <h4 className="text-lg font-bold mt-4 text-gray-700">कोई आवेदन नहीं है!</h4>
+                    <p className="text-sm text-gray-400 mt-1">इस फ़िल्टर के लिए कोई रिकॉर्ड उपलब्ध नहीं है।</p>
                   </div>
                 ) : (
                   <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
+                    <table className="w-full text-left border-collapse border-b border-gray-200">
                       <thead>
                         <tr className="bg-gray-50 text-gray-700 text-xs font-extrabold uppercase border-b border-gray-200">
                           <th className="py-4 px-5">आवेदन ID</th>
@@ -457,66 +645,85 @@ const AdminDashboard = () => {
                           <th className="py-4 px-5">Txn ID / फीस</th>
                           <th className="py-4 px-5 text-center">पेमेंट रसीद</th>
                           <th className="py-4 px-5 text-center">ग्रुप चुनें</th>
-                          <th className="py-4 px-5 text-center">एडमिन एक्शन</th>
+                          <th className="py-4 px-5 text-center">स्थिति / कार्यवाही</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-100 text-sm font-medium">
-                        {pendingList.map((item) => (
-                          <tr key={item.id} className="hover:bg-amber-50/40 transition-colors">
-                            <td className="py-4 px-5 font-mono font-bold text-gray-900">{item.id}</td>
-                            <td className="py-4 px-5">
-                              <p className="font-bold text-gray-900">{item.name}</p>
-                              <p className="text-xs text-gray-500">पिता/पति: {item.fatherName || item.fatherOrHusbandName || 'N/A'}</p>
-                            </td>
-                            <td className="py-4 px-5">
-                              <p className="font-semibold text-teal-800">📞 {item.mobile}</p>
-                              <p className="text-xs font-mono text-gray-500 mt-1">💳 {item.aadhaar}</p>
-                            </td>
-                            <td className="py-4 px-5">
-                              <p className="font-bold text-gray-800">{item.district}</p>
-                              <p className="text-xs text-gray-500 mt-1">{item.block}</p>
-                            </td>
-                            <td className="py-4 px-5">
-                              <span className="font-mono text-[11px] bg-gray-100 text-gray-800 px-2 py-1 rounded font-bold border border-gray-200">{item.transactionId}</span>
-                              <p className="text-xs font-bold text-emerald-600 mt-2">₹ {item.amount || 200}</p>
-                            </td>
-                            <td className="py-4 px-5 text-center">
-                              <button 
-                                onClick={() => setSelectedReceipt(item.receiptUrl)}
-                                className="px-3.5 py-1.5 bg-teal-50 hover:bg-teal-100 text-[#087889] border border-teal-200 rounded-lg text-xs font-bold transition-colors"
-                              >
-                                👁️ रसीद देखें
-                              </button>
-                            </td>
-                            <td className="py-4 px-5 text-center">
-                              <select 
-                                className="border border-gray-300 rounded-lg p-1.5 text-xs font-bold text-gray-700 bg-gray-50 focus:ring-2 focus:ring-[#087889]"
-                                value={selectedGroups[item.id] || 'A'}
-                                onChange={(e) => setSelectedGroups({...selectedGroups, [item.id]: e.target.value})}
-                              >
-                                {Array.from({length: 26}, (_, i) => String.fromCharCode(65 + i)).map(char => (
-                                  <option key={char} value={char}>Group {char}</option>
-                                ))}
-                              </select>
-                            </td>
-                            <td className="py-4 px-5">
-                              <div className="flex items-center justify-center space-x-2">
+                        {pendingList
+                          .filter(r => {
+                            const status = r.status || 'PENDING';
+                            return registrationFilter === 'ALL' ? true : status === registrationFilter;
+                          })
+                          .map((item) => (
+                            <tr key={item.id} className="hover:bg-amber-50/40 transition-colors">
+                              <td className="py-4 px-5 font-mono font-bold text-gray-900">{item.id}</td>
+                              <td className="py-4 px-5">
+                                <p className="font-bold text-gray-900">{item.name}</p>
+                                <p className="text-xs text-gray-500">पिता/पति: {item.fatherName || item.fatherOrHusbandName || 'N/A'}</p>
+                              </td>
+                              <td className="py-4 px-5">
+                                <p className="font-semibold text-teal-800">📞 {item.mobile}</p>
+                                <p className="text-xs font-mono text-gray-500 mt-1">💳 {item.aadhaar}</p>
+                              </td>
+                              <td className="py-4 px-5">
+                                <p className="font-bold text-gray-800">{item.district}</p>
+                                <p className="text-xs text-gray-500 mt-1">{item.block}</p>
+                              </td>
+                              <td className="py-4 px-5">
+                                <span className="font-mono text-[11px] bg-gray-100 text-gray-800 px-2 py-1 rounded font-bold border border-gray-200">{item.transactionId}</span>
+                                <p className="text-xs font-bold text-emerald-600 mt-2">₹ {item.amount || 200}</p>
+                              </td>
+                              <td className="py-4 px-5 text-center">
                                 <button 
-                                  onClick={() => handleApprove(item.id, item.name, selectedGroups[item.id] || 'A')}
-                                  className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs shadow-sm transition-transform hover:-translate-y-0.5"
+                                  onClick={() => setSelectedReceipt(item.receiptUrl)}
+                                  className="px-3.5 py-1.5 bg-teal-50 hover:bg-teal-100 text-[#087889] border border-teal-200 rounded-lg text-xs font-bold transition-colors"
                                 >
-                                  ✓ Approve
+                                  👁️ रसीद देखें
                                 </button>
-                                <button 
-                                  onClick={() => handleReject(item.id, item.name)}
-                                  className="px-3.5 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold text-xs shadow-sm transition-transform hover:-translate-y-0.5"
-                                >
-                                  ✕ Reject
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
+                              </td>
+                              <td className="py-4 px-5 text-center">
+                                {(item.status === 'PENDING' || !item.status) ? (
+                                  <select 
+                                    className="border border-gray-300 rounded-lg p-1.5 text-xs font-bold text-gray-700 bg-gray-50 focus:ring-2 focus:ring-[#087889]"
+                                    value={selectedGroups[item.id] || 'A'}
+                                    onChange={(e) => setSelectedGroups({...selectedGroups, [item.id]: e.target.value})}
+                                  >
+                                    {Array.from({length: 26}, (_, i) => String.fromCharCode(65 + i)).map(char => (
+                                      <option key={char} value={char}>Group {char}</option>
+                                    ))}
+                                  </select>
+                                ) : (
+                                  <span className="text-gray-400 font-bold">Group {item.group || 'A'}</span>
+                                )}
+                              </td>
+                              <td className="py-4 px-5">
+                                {(item.status === 'PENDING' || !item.status) ? (
+                                  <div className="flex items-center justify-center space-x-2">
+                                    <button 
+                                      onClick={() => handleApprove(item.id, item.name, selectedGroups[item.id] || 'A')}
+                                      className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs shadow-sm transition-transform hover:-translate-y-0.5"
+                                    >
+                                      ✓ Approve
+                                    </button>
+                                    <button 
+                                      onClick={() => handleReject(item.id, item.name)}
+                                      className="px-3.5 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold text-xs shadow-sm transition-transform hover:-translate-y-0.5"
+                                    >
+                                      ✕ Reject
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <div className="text-center">
+                                    <span className={`px-2.5 py-1 text-[11px] font-black rounded-full shadow-sm ${
+                                      item.status === 'APPROVED' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                                    }`}>
+                                      {item.status === 'APPROVED' ? 'स्वीकृत' : 'अस्वीकृत'}
+                                    </span>
+                                  </div>
+                                )}
+                              </td>
+                            </tr>
+                          ))}
                       </tbody>
                     </table>
                   </div>
@@ -553,6 +760,7 @@ const AdminDashboard = () => {
                           <th className="py-4 px-5">ब्लॉक</th>
                           <th className="py-4 px-5">मोबाइल</th>
                           <th className="py-4 px-5">जुड़ने की तिथि</th>
+                          <th className="py-4 px-5 text-center">विवरण (View)</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-100 text-sm font-medium">
@@ -565,6 +773,14 @@ const AdminDashboard = () => {
                             <td className="py-4 px-5">{m.block}</td>
                             <td className="py-4 px-5 font-semibold text-gray-700">{m.mobile}</td>
                             <td className="py-4 px-5 text-xs font-bold text-gray-500">{m.joinedDate || '2026-08-03'}</td>
+                            <td className="py-4 px-5 text-center">
+                              <button 
+                                onClick={() => setSelectedMemberForDetail(m)}
+                                className="px-3.5 py-1.5 bg-[#087889] hover:bg-[#06616e] text-white rounded-lg text-xs font-bold transition-all shadow-sm flex items-center gap-1 mx-auto"
+                              >
+                                👁️ View
+                              </button>
+                            </td>
                           </tr>
                         ))}
                       </tbody>
@@ -766,79 +982,7 @@ const AdminDashboard = () => {
               </div>
             )}
 
-            {/* TAB 6: GREEN PARYAVARAN */}
-            {activeTab === 'green' && (
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-                <div className="p-6 bg-green-600 text-white flex justify-between items-center">
-                  <div>
-                    <h3 className="text-xl font-extrabold">ग्रीन पर्यावरण अभियान आवेदन</h3>
-                    <p className="text-xs text-green-100 mt-1">पौधारोपण के लिए प्राप्त हुए आवेदन।</p>
-                  </div>
-                  <span className="bg-white text-green-900 text-xs font-black px-3.5 py-1.5 rounded-full shadow">
-                    {greenList.length} आवेदन
-                  </span>
-                </div>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse">
-                    <thead>
-                      <tr className="bg-gray-50 text-gray-700 text-xs font-extrabold uppercase border-b border-gray-200">
-                        <th className="py-4 px-5">S.NO</th>
-                        <th className="py-4 px-5">यूनिक ID</th>
-                        <th className="py-4 px-5">आवेदक का नाम</th>
-                        <th className="py-4 px-5">पौधों की संख्या</th>
-                        <th className="py-4 px-5">रोपण तिथि</th>
-                        <th className="py-4 px-5">जिला</th>
-                        <th className="py-4 px-5">ब्लॉक</th>
-                        <th className="py-4 px-5 text-center">फोटो</th>
-                        <th className="py-4 px-5">रजिस्ट्रेशन तिथि</th>
-                        <th className="py-4 px-5 text-right">स्थिति / कार्यवाही</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100 text-sm font-medium">
-                      {greenList.map((item, index) => (
-                        <tr key={item.id} className="hover:bg-green-50/30 transition-colors">
-                          <td className="py-4 px-5 font-bold text-gray-500">{index + 1}</td>
-                          <td className="py-4 px-5 font-bold text-green-700">{item.uniqueId}</td>
-                          <td className="py-4 px-5 font-bold text-gray-900">{item.applicantName}</td>
-                          <td className="py-4 px-5 font-bold text-xl">{item.treesPlanted} 🌳</td>
-                          <td className="py-4 px-5 text-green-600 font-bold">{item.plantationDate}</td>
-                          <td className="py-4 px-5 font-semibold text-gray-800">{item.district || 'N/A'}</td>
-                          <td className="py-4 px-5 text-gray-600">{item.block || 'N/A'}</td>
-                          <td className="py-4 px-5 text-center">
-                            {item.documentImage ? (
-                              <button 
-                                onClick={() => setSelectedReceipt(item.documentImage)}
-                                className="px-3.5 py-1.5 bg-green-50 hover:bg-green-100 text-green-700 border border-green-200 rounded-lg text-xs font-bold transition-colors shadow-sm whitespace-nowrap"
-                              >
-                                👁️ फोटो देखें
-                              </button>
-                            ) : (
-                              <span className="text-gray-400 text-xs">N/A</span>
-                            )}
-                          </td>
-                          <td className="py-4 px-5 text-xs text-gray-500">{new Date(item.submittedAt).toLocaleDateString()}</td>
-                          <td className="py-4 px-5 text-right">
-                            {item.status === 'PENDING' ? (
-                              <div className="flex justify-end gap-2">
-                                <button onClick={() => handleSahayogAction('green', item.id, 'APPROVED')} className="p-2 bg-green-50 text-green-600 hover:bg-green-100 rounded-lg transition-colors" title="Approve">✅</button>
-                                <button onClick={() => handleSahayogAction('green', item.id, 'REJECTED')} className="p-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg transition-colors" title="Reject">❌</button>
-                              </div>
-                            ) : (
-                              <span className={`px-2.5 py-1 text-[11px] font-black rounded-full shadow-sm ${item.status === 'APPROVED' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                                {item.status === 'APPROVED' ? 'स्वीकृत' : 'अस्वीकृत'}
-                              </span>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                      {greenList.length === 0 && (
-                        <tr><td colSpan="7" className="py-8 text-center text-gray-500">कोई आवेदन नहीं है</td></tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
+
 
             {/* TAB: HOME ALERTS */}
             {activeTab === 'home_alerts' && (
@@ -970,10 +1114,29 @@ const AdminDashboard = () => {
             {/* TAB: BETI RECEIPTS VERIFICATION */}
             {activeTab === 'beti_receipts' && (
               <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-                <div className="flex justify-between items-center border-b border-gray-100 pb-4 mb-6">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-gray-100 pb-4 mb-6 gap-4">
                   <div>
                     <h3 className="text-xl font-extrabold text-gray-800">बेटी विवाह सहयोग रसीदें (Beti Sahyog Receipts)</h3>
                     <p className="text-xs text-gray-500 mt-1">सदस्यों द्वारा अपलोड की गई सहयोग भुगतान रसीदों का सत्यापन करें।</p>
+                  </div>
+                  {/* Filter Tabs */}
+                  <div className="flex flex-wrap bg-gray-100 p-1 rounded-xl border border-gray-200">
+                    {['PENDING', 'APPROVED', 'REJECTED', 'ALL'].map((f) => (
+                      <button
+                        key={f}
+                        onClick={() => setBetiFilter(f)}
+                        className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
+                          betiFilter === f 
+                            ? 'bg-[#087889] text-white shadow-sm' 
+                            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200/50'
+                        }`}
+                      >
+                        {f === 'PENDING' ? `⏳ लंबित (${betiReceiptsList.filter(r => r.status === 'PENDING').length})` :
+                         f === 'APPROVED' ? `✅ स्वीकृत (${betiReceiptsList.filter(r => r.status === 'APPROVED').length})` :
+                         f === 'REJECTED' ? `❌ अस्वीकृत (${betiReceiptsList.filter(r => r.status === 'REJECTED').length})` :
+                         `🔎 सभी (${betiReceiptsList.length})`}
+                      </button>
+                    ))}
                   </div>
                 </div>
 
@@ -990,72 +1153,74 @@ const AdminDashboard = () => {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100 text-sm font-medium">
-                      {betiReceiptsList.map((receipt) => (
-                        <tr key={receipt.id} className="hover:bg-gray-50/50">
-                          <td className="py-3 px-4">
-                            <span className="font-bold text-gray-800">{receipt.donorName}</span>
-                            <div className="text-xs text-gray-500 font-semibold mt-0.5">ID: {receipt.donorUniqueId} | Mob: {receipt.donorMobile}</div>
-                          </td>
-                          <td className="py-3 px-4">
-                            <span className="font-bold text-teal-700">{receipt.beneficiaryName}</span>
-                            <div className="text-xs text-gray-500 font-semibold mt-0.5">ID: {receipt.beneficiaryUniqueId} | Group: {receipt.group}</div>
-                          </td>
-                          <td className="py-3 px-4 text-xs font-bold text-gray-600">
-                            <div>Amt: <span className="text-teal-700 font-extrabold">₹ {receipt.amount}</span></div>
-                            <div className="mt-1 font-mono text-[10px] break-all">Txn: {receipt.transactionId}</div>
-                            <div className="text-gray-400 font-medium mt-0.5">Date: {receipt.date}</div>
-                          </td>
-                          <td className="py-3 px-4 text-center">
-                            {receipt.receiptImage ? (
-                              <button 
-                                onClick={() => setSelectedReceipt(receipt.receiptImage)}
-                                className="px-3 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-lg text-xs font-bold transition-colors"
-                              >
-                                👁️ रसीद देखें
-                              </button>
-                            ) : (
-                              <span className="text-gray-400 text-xs">No Image</span>
-                            )}
-                          </td>
-                          <td className="py-3 px-4 text-center">
-                            <span className={`px-2.5 py-1 text-[11px] font-black rounded-full shadow-sm ${
-                              receipt.status === 'APPROVED' ? 'bg-green-100 text-green-700' :
-                              receipt.status === 'REJECTED' ? 'bg-red-100 text-red-700' :
-                              'bg-amber-100 text-amber-700'
-                            }`}>
-                              {receipt.status === 'APPROVED' ? 'स्वीकृत' :
-                               receipt.status === 'REJECTED' ? 'अस्वीकृत' :
-                               'लंबित'}
-                            </span>
-                          </td>
-                          <td className="py-3 px-4 text-right">
-                            <div className="flex justify-end gap-2">
-                              {receipt.status !== 'APPROVED' && (
+                      {betiReceiptsList
+                        .filter(r => betiFilter === 'ALL' ? true : r.status === betiFilter)
+                        .map((receipt) => (
+                          <tr key={receipt.id} className="hover:bg-gray-50/50">
+                            <td className="py-3 px-4">
+                              <span className="font-bold text-gray-800">{receipt.donorName}</span>
+                              <div className="text-xs text-gray-500 font-semibold mt-0.5">ID: {receipt.donorUniqueId} | Mob: {receipt.donorMobile}</div>
+                            </td>
+                            <td className="py-3 px-4">
+                              <span className="font-bold text-teal-700">{receipt.beneficiaryName}</span>
+                              <div className="text-xs text-gray-500 font-semibold mt-0.5">ID: {receipt.beneficiaryUniqueId} | Group: {receipt.group}</div>
+                            </td>
+                            <td className="py-3 px-4 text-xs font-bold text-gray-600">
+                              <div>Amt: <span className="text-teal-700 font-extrabold">₹ {receipt.amount}</span></div>
+                              <div className="mt-1 font-mono text-[10px] break-all">Txn: {receipt.transactionId}</div>
+                              <div className="text-gray-400 font-medium mt-0.5">Date: {receipt.date}</div>
+                            </td>
+                            <td className="py-3 px-4 text-center">
+                              {receipt.receiptImage ? (
                                 <button 
-                                  onClick={() => handleBetiReceiptAction(receipt.id, 'APPROVED')} 
-                                  className="p-2 bg-green-50 text-green-600 hover:bg-green-100 rounded-lg transition-colors" 
-                                  title="Approve"
+                                  onClick={() => setSelectedReceiptForDetail(receipt)}
+                                  className="px-3 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-lg text-xs font-bold transition-colors"
                                 >
-                                  ✅
+                                  👁️ विवरण एवं रसीद (Detail)
                                 </button>
+                              ) : (
+                                <span className="text-gray-400 text-xs">No Image</span>
                               )}
-                              {receipt.status !== 'REJECTED' && (
-                                <button 
-                                  onClick={() => handleBetiReceiptAction(receipt.id, 'REJECTED')} 
-                                  className="p-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg transition-colors" 
-                                  title="Reject"
-                                >
-                                  ❌
-                                </button>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                      {betiReceiptsList.length === 0 && (
+                            </td>
+                            <td className="py-3 px-4 text-center">
+                              <span className={`px-2.5 py-1 text-[11px] font-black rounded-full shadow-sm ${
+                                receipt.status === 'APPROVED' ? 'bg-green-100 text-green-700' :
+                                receipt.status === 'REJECTED' ? 'bg-red-100 text-red-700' :
+                                'bg-amber-100 text-amber-700'
+                              }`}>
+                                {receipt.status === 'APPROVED' ? 'स्वीकृत' :
+                                 receipt.status === 'REJECTED' ? 'अस्वीकृत' :
+                                 'लंबित'}
+                              </span>
+                            </td>
+                            <td className="py-3 px-4 text-right">
+                              <div className="flex justify-end gap-2">
+                                {receipt.status !== 'APPROVED' && (
+                                  <button 
+                                    onClick={() => handleBetiReceiptAction(receipt.id, 'APPROVED')} 
+                                    className="p-2 bg-green-50 text-green-600 hover:bg-green-100 rounded-lg transition-colors" 
+                                    title="Approve"
+                                  >
+                                    ✅
+                                  </button>
+                                )}
+                                {receipt.status !== 'REJECTED' && (
+                                  <button 
+                                    onClick={() => handleBetiReceiptAction(receipt.id, 'REJECTED')} 
+                                    className="p-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg transition-colors" 
+                                    title="Reject"
+                                  >
+                                    ❌
+                                  </button>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      {betiReceiptsList.filter(r => betiFilter === 'ALL' ? true : r.status === betiFilter).length === 0 && (
                         <tr>
                           <td colSpan="6" className="text-center py-8 text-gray-500 font-bold">
-                            कोई रसीद अपलोड नहीं की गई है
+                            इस फिल्टर के लिए कोई रसीद नहीं है
                           </td>
                         </tr>
                       )}
@@ -1068,10 +1233,29 @@ const AdminDashboard = () => {
             {/* TAB: NIDHAN RECEIPTS VERIFICATION */}
             {activeTab === 'nidhan_receipts' && (
               <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-                <div className="flex justify-between items-center border-b border-gray-100 pb-4 mb-6">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-gray-100 pb-4 mb-6 gap-4">
                   <div>
                     <h3 className="text-xl font-extrabold text-gray-800">मृत्यु सहयोग रसीदें (Nidhan Sahyog Receipts)</h3>
                     <p className="text-xs text-gray-500 mt-1">सदस्यों द्वारा अपलोड की गई सहयोग भुगतान रसीदों का सत्यापन करें।</p>
+                  </div>
+                  {/* Filter Tabs */}
+                  <div className="flex flex-wrap bg-gray-100 p-1 rounded-xl border border-gray-200">
+                    {['PENDING', 'APPROVED', 'REJECTED', 'ALL'].map((f) => (
+                      <button
+                        key={f}
+                        onClick={() => setNidhanFilter(f)}
+                        className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
+                          nidhanFilter === f 
+                            ? 'bg-[#087889] text-white shadow-sm' 
+                            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200/50'
+                        }`}
+                      >
+                        {f === 'PENDING' ? `⏳ लंबित (${nidhanReceiptsList.filter(r => r.status === 'PENDING').length})` :
+                         f === 'APPROVED' ? `✅ स्वीकृत (${nidhanReceiptsList.filter(r => r.status === 'APPROVED').length})` :
+                         f === 'REJECTED' ? `❌ अस्वीकृत (${nidhanReceiptsList.filter(r => r.status === 'REJECTED').length})` :
+                         `🔎 सभी (${nidhanReceiptsList.length})`}
+                      </button>
+                    ))}
                   </div>
                 </div>
 
@@ -1088,72 +1272,74 @@ const AdminDashboard = () => {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100 text-sm font-medium">
-                      {nidhanReceiptsList.map((receipt) => (
-                        <tr key={receipt.id} className="hover:bg-gray-50/50">
-                          <td className="py-3 px-4">
-                            <span className="font-bold text-gray-800">{receipt.donorName}</span>
-                            <div className="text-xs text-gray-500 font-semibold mt-0.5">ID: {receipt.donorUniqueId} | Mob: {receipt.donorMobile}</div>
-                          </td>
-                          <td className="py-3 px-4">
-                            <span className="font-bold text-teal-700">{receipt.beneficiaryName}</span>
-                            <div className="text-xs text-gray-500 font-semibold mt-0.5">ID: {receipt.beneficiaryUniqueId} | Group: {receipt.group}</div>
-                          </td>
-                          <td className="py-3 px-4 text-xs font-bold text-gray-600">
-                            <div>Amt: <span className="text-teal-700 font-extrabold">₹ {receipt.amount}</span></div>
-                            <div className="mt-1 font-mono text-[10px] break-all">Txn: {receipt.transactionId}</div>
-                            <div className="text-gray-400 font-medium mt-0.5">Date: {receipt.date}</div>
-                          </td>
-                          <td className="py-3 px-4 text-center">
-                            {receipt.receiptImage ? (
-                              <button 
-                                onClick={() => setSelectedReceipt(receipt.receiptImage)}
-                                className="px-3 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-lg text-xs font-bold transition-colors"
-                              >
-                                👁️ रसीद देखें
-                              </button>
-                            ) : (
-                              <span className="text-gray-400 text-xs">No Image</span>
-                            )}
-                          </td>
-                          <td className="py-3 px-4 text-center">
-                            <span className={`px-2.5 py-1 text-[11px] font-black rounded-full shadow-sm ${
-                              receipt.status === 'APPROVED' ? 'bg-green-100 text-green-700' :
-                              receipt.status === 'REJECTED' ? 'bg-red-100 text-red-700' :
-                              'bg-amber-100 text-amber-700'
-                            }`}>
-                              {receipt.status === 'APPROVED' ? 'स्वीकृत' :
-                               receipt.status === 'REJECTED' ? 'अस्वीकृत' :
-                               'लंबित'}
-                            </span>
-                          </td>
-                          <td className="py-3 px-4 text-right">
-                            <div className="flex justify-end gap-2">
-                              {receipt.status !== 'APPROVED' && (
+                      {nidhanReceiptsList
+                        .filter(r => nidhanFilter === 'ALL' ? true : r.status === nidhanFilter)
+                        .map((receipt) => (
+                          <tr key={receipt.id} className="hover:bg-gray-50/50">
+                            <td className="py-3 px-4">
+                              <span className="font-bold text-gray-800">{receipt.donorName}</span>
+                              <div className="text-xs text-gray-500 font-semibold mt-0.5">ID: {receipt.donorUniqueId} | Mob: {receipt.donorMobile}</div>
+                            </td>
+                            <td className="py-3 px-4">
+                              <span className="font-bold text-teal-700">{receipt.beneficiaryName}</span>
+                              <div className="text-xs text-gray-500 font-semibold mt-0.5">ID: {receipt.beneficiaryUniqueId} | Group: {receipt.group}</div>
+                            </td>
+                            <td className="py-3 px-4 text-xs font-bold text-gray-600">
+                              <div>Amt: <span className="text-teal-700 font-extrabold">₹ {receipt.amount}</span></div>
+                              <div className="mt-1 font-mono text-[10px] break-all">Txn: {receipt.transactionId}</div>
+                              <div className="text-gray-400 font-medium mt-0.5">Date: {receipt.date}</div>
+                            </td>
+                            <td className="py-3 px-4 text-center">
+                              {receipt.receiptImage ? (
                                 <button 
-                                  onClick={() => handleNidhanReceiptAction(receipt.id, 'APPROVED')} 
-                                  className="p-2 bg-green-50 text-green-600 hover:bg-green-100 rounded-lg transition-colors" 
-                                  title="Approve"
+                                  onClick={() => setSelectedReceiptForDetail(receipt)}
+                                  className="px-3 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-lg text-xs font-bold transition-colors"
                                 >
-                                  ✅
+                                  👁️ विवरण एवं रसीद (Detail)
                                 </button>
+                              ) : (
+                                <span className="text-gray-400 text-xs">No Image</span>
                               )}
-                              {receipt.status !== 'REJECTED' && (
-                                <button 
-                                  onClick={() => handleNidhanReceiptAction(receipt.id, 'REJECTED')} 
-                                  className="p-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg transition-colors" 
-                                  title="Reject"
-                                >
-                                  ❌
-                                </button>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                      {nidhanReceiptsList.length === 0 && (
+                            </td>
+                            <td className="py-3 px-4 text-center">
+                              <span className={`px-2.5 py-1 text-[11px] font-black rounded-full shadow-sm ${
+                                receipt.status === 'APPROVED' ? 'bg-green-100 text-green-700' :
+                                receipt.status === 'REJECTED' ? 'bg-red-100 text-red-700' :
+                                'bg-amber-100 text-amber-700'
+                              }`}>
+                                {receipt.status === 'APPROVED' ? 'स्वीकृत' :
+                                 receipt.status === 'REJECTED' ? 'अस्वीकृत' :
+                                 'लंबित'}
+                              </span>
+                            </td>
+                            <td className="py-3 px-4 text-right">
+                              <div className="flex justify-end gap-2">
+                                {receipt.status !== 'APPROVED' && (
+                                  <button 
+                                    onClick={() => handleNidhanReceiptAction(receipt.id, 'APPROVED')} 
+                                    className="p-2 bg-green-50 text-green-600 hover:bg-green-100 rounded-lg transition-colors" 
+                                    title="Approve"
+                                  >
+                                    ✅
+                                  </button>
+                                )}
+                                {receipt.status !== 'REJECTED' && (
+                                  <button 
+                                    onClick={() => handleNidhanReceiptAction(receipt.id, 'REJECTED')} 
+                                    className="p-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg transition-colors" 
+                                    title="Reject"
+                                  >
+                                    ❌
+                                  </button>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      {nidhanReceiptsList.filter(r => nidhanFilter === 'ALL' ? true : r.status === nidhanFilter).length === 0 && (
                         <tr>
                           <td colSpan="6" className="text-center py-8 text-gray-500 font-bold">
-                            कोई रसीद अपलोड नहीं की गई है
+                            इस फिल्टर के लिए कोई रसीद नहीं है
                           </td>
                         </tr>
                       )}
@@ -1302,6 +1488,322 @@ const AdminDashboard = () => {
             <div className="mt-6 text-right">
               <button 
                 onClick={() => setSelectedReceipt(null)}
+                className="px-6 py-3 bg-[#087889] hover:bg-[#06616e] text-white font-bold rounded-xl text-sm transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5"
+              >
+                बंद करें (Close)
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ================= MEMBER DETAIL MODAL ================= */}
+      {selectedMemberForDetail && (
+        <div className="fixed inset-0 z-50 bg-gray-900/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl max-w-3xl w-full p-6 shadow-2xl relative border border-gray-100 my-8">
+            {/* Header */}
+            <div className="flex justify-between items-center border-b border-gray-100 pb-4 mb-5">
+              <div>
+                <h4 className="text-xl font-extrabold text-gray-900 flex items-center gap-2">
+                  <span className="text-2xl">👤</span> सदस्य का पूरा विवरण (Member Profile Details)
+                </h4>
+                <p className="text-xs text-gray-500 mt-1">यूनिक ID: <span className="font-mono font-bold text-[#087889]">{selectedMemberForDetail.uniqueId}</span> | ग्रुप: {selectedMemberForDetail.group || 'A'}</p>
+              </div>
+              <button 
+                onClick={() => setSelectedMemberForDetail(null)}
+                className="text-gray-400 hover:text-gray-900 text-2xl font-bold transition-colors w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100"
+              >
+                ✕
+              </button>
+            </div>
+            
+            {/* Body - Grid Layout */}
+            <div className="space-y-6 max-h-[60vh] overflow-y-auto pr-2 text-left">
+              
+              {/* Personal Information */}
+              <div>
+                <h5 className="text-sm font-bold text-[#087889] border-b border-teal-100 pb-1.5 mb-3 flex items-center gap-1.5">
+                  <span>ℹ️</span> व्यक्तिगत जानकारी (Personal Information)
+                </h5>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                  <div>
+                    <p className="text-gray-500 font-medium">नाम (Full Name)</p>
+                    <p className="font-bold text-gray-900 text-sm mt-0.5">{selectedMemberForDetail.name}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500 font-medium">पिता/पति का नाम (Father/Husband Name)</p>
+                    <p className="font-bold text-gray-900 text-sm mt-0.5">{selectedMemberForDetail.fatherName || selectedMemberForDetail.fatherOrHusbandName || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500 font-medium">जन्म तिथि (Date of Birth)</p>
+                    <p className="font-bold text-gray-900 text-sm mt-0.5">{selectedMemberForDetail.dob || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500 font-medium">लिंग (Gender)</p>
+                    <p className="font-bold text-gray-900 text-sm mt-0.5">{selectedMemberForDetail.gender || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500 font-medium">मोबाइल नंबर (Mobile No.)</p>
+                    <p className="font-bold text-[#087889] text-sm mt-0.5">📞 {selectedMemberForDetail.mobile}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500 font-medium">आधार नंबर (Aadhaar Number)</p>
+                    <p className="font-bold text-gray-900 text-sm mt-0.5 font-mono">{selectedMemberForDetail.aadhaar || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500 font-medium">ईमेल (Email Address)</p>
+                    <p className="font-bold text-gray-900 text-sm mt-0.5">{selectedMemberForDetail.email || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500 font-medium">व्यवसाय/पेशा (Occupation)</p>
+                    <p className="font-bold text-gray-900 text-sm mt-0.5">{selectedMemberForDetail.occupation || selectedMemberForDetail.business || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500 font-medium">कार्यरत कार्यालय (Working Office)</p>
+                    <p className="font-bold text-gray-900 text-sm mt-0.5">{selectedMemberForDetail.workingOffice || 'N/A'}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Address Details */}
+              <div>
+                <h5 className="text-sm font-bold text-[#087889] border-b border-teal-100 pb-1.5 mb-3 flex items-center gap-1.5">
+                  <span>📍</span> पते का विवरण (Address Details)
+                </h5>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                  <div>
+                    <p className="text-gray-500 font-medium">राज्य (State)</p>
+                    <p className="font-bold text-gray-900 text-sm mt-0.5">{selectedMemberForDetail.state || 'Uttar Pradesh'}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500 font-medium">जिला (District)</p>
+                    <p className="font-bold text-gray-900 text-sm mt-0.5">{selectedMemberForDetail.district || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500 font-medium">ब्लॉक (Block)</p>
+                    <p className="font-bold text-gray-900 text-sm mt-0.5">{selectedMemberForDetail.block || 'N/A'}</p>
+                  </div>
+                  <div className="md:col-span-3">
+                    <p className="text-gray-500 font-medium">पूरा पता (Full Address)</p>
+                    <p className="font-bold text-gray-900 text-sm mt-0.5">{selectedMemberForDetail.address || 'N/A'}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Nominee Details */}
+              <div>
+                <h5 className="text-sm font-bold text-[#087889] border-b border-teal-100 pb-1.5 mb-3 flex items-center gap-1.5">
+                  <span>👥</span> नॉमिनी विवरण (Nominee Details)
+                </h5>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                  <div>
+                    <p className="text-gray-500 font-medium">नॉमिनी का नाम (Nominee Name)</p>
+                    <p className="font-bold text-gray-900 text-sm mt-0.5">{selectedMemberForDetail.nomineeName || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500 font-medium">सदस्य से संबंध (Relation)</p>
+                    <p className="font-bold text-gray-900 text-sm mt-0.5">{selectedMemberForDetail.nomineeRelation || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500 font-medium">नॉमिनी मोबाइल नंबर (Nominee Mobile)</p>
+                    <p className="font-bold text-gray-900 text-sm mt-0.5">{selectedMemberForDetail.nomineeMobile || 'N/A'}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Registration & Payment Info */}
+              <div>
+                <h5 className="text-sm font-bold text-[#087889] border-b border-teal-100 pb-1.5 mb-3 flex items-center gap-1.5">
+                  <span>💳</span> रजिस्ट्रेशन एवं भुगतान (Registration & Payment Info)
+                </h5>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                  <div>
+                    <p className="text-gray-500 font-medium">ट्रांजेक्शन ID (Transaction ID)</p>
+                    <p className="font-bold text-gray-900 text-sm mt-0.5 font-mono">{selectedMemberForDetail.transactionId || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500 font-medium">जमा शुल्क (Amount Paid)</p>
+                    <p className="font-bold text-emerald-600 text-sm mt-0.5">₹ {selectedMemberForDetail.amount || 200}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500 font-medium">रेफरल कोड (Referral Code)</p>
+                    <p className="font-bold text-gray-900 text-sm mt-0.5 font-mono">{selectedMemberForDetail.referralCode || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500 font-medium">आवेदन तिथि (Registration Date)</p>
+                    <p className="font-bold text-gray-900 text-sm mt-0.5">{selectedMemberForDetail.submittedAt ? new Date(selectedMemberForDetail.submittedAt).toLocaleString() : (selectedMemberForDetail.joinedDate || 'N/A')}</p>
+                  </div>
+                  {selectedMemberForDetail.receiptUrl && (
+                    <div className="md:col-span-2">
+                      <p className="text-gray-500 font-medium mb-1">भुगतान रसीद (Payment Receipt)</p>
+                      <a 
+                        href={selectedMemberForDetail.receiptUrl} 
+                        target="_blank" 
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-800 transition-colors"
+                      >
+                        🔗 रसीद नई टैब में खोलें (Open Receipt in New Tab)
+                      </a>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Receipt Image Preview if present */}
+              {selectedMemberForDetail.receiptUrl && (
+                <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100 flex flex-col items-center">
+                  <p className="text-xs text-gray-500 font-bold mb-2">पेमेंट रसीद प्रीव्यू (Receipt Preview)</p>
+                  <div className="w-full max-h-48 flex items-center justify-center overflow-hidden rounded-xl border border-gray-200 bg-white">
+                    <img 
+                      src={selectedMemberForDetail.receiptUrl} 
+                      alt="Receipt Preview" 
+                      className="max-h-48 object-contain cursor-pointer hover:scale-105 transition-transform"
+                      onClick={() => {
+                        setSelectedReceipt(selectedMemberForDetail.receiptUrl);
+                        setSelectedMemberForDetail(null);
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+
+            </div>
+
+            {/* Footer buttons */}
+            <div className="mt-6 flex justify-end gap-3 border-t border-gray-100 pt-4">
+              <button 
+                onClick={() => setSelectedMemberForDetail(null)}
+                className="px-6 py-3 bg-[#087889] hover:bg-[#06616e] text-white font-bold rounded-xl text-sm transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5"
+              >
+                बंद करें (Close)
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ================= DETAILED RECEIPT DIALOG MODAL ================= */}
+      {selectedReceiptForDetail && (
+        <div className="fixed inset-0 z-50 bg-gray-900/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto animate-fadeIn">
+          <div className="bg-white rounded-3xl max-w-2xl w-full p-6 shadow-2xl relative border border-gray-100 my-8">
+            {/* Modal Header */}
+            <div className="flex justify-between items-center border-b border-gray-100 pb-4 mb-5">
+              <h4 className="text-lg font-extrabold text-gray-900 flex items-center gap-2">
+                <span className="text-2xl">🧾</span> सहयोग रसीद विवरण (Donation Receipt Details)
+              </h4>
+              <button 
+                onClick={() => setSelectedReceiptForDetail(null)}
+                className="text-gray-400 hover:text-gray-900 text-2xl font-bold transition-colors w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="space-y-6 max-h-[65vh] overflow-y-auto pr-2">
+              {/* Donor Details */}
+              <div>
+                <h5 className="text-xs font-bold text-[#087889] border-b border-teal-100 pb-1.5 mb-3 flex items-center gap-1.5">
+                  <span>👤</span> सहयोगकर्ता विवरण (Donor Details)
+                </h5>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-semibold">
+                  <div>
+                    <p className="text-gray-500 font-medium">सहयोगी का नाम (Name)</p>
+                    <p className="font-bold text-gray-900 text-sm mt-0.5">{selectedReceiptForDetail.donorName}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500 font-medium">यूनिक आईडी (Unique ID)</p>
+                    <p className="font-bold text-[#f08519] text-sm mt-0.5 font-mono">{selectedReceiptForDetail.donorUniqueId}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500 font-medium">मोबाइल नंबर (Mobile)</p>
+                    <p className="font-bold text-gray-900 text-sm mt-0.5">📞 {selectedReceiptForDetail.donorMobile}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500 font-medium">आधार नंबर (Aadhaar)</p>
+                    <p className="font-bold text-gray-900 text-sm mt-0.5 font-mono">{selectedReceiptForDetail.donorAadhaar || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500 font-medium">जिला (District)</p>
+                    <p className="font-bold text-gray-900 text-sm mt-0.5">{selectedReceiptForDetail.donorDistrict || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500 font-medium">ब्लॉक (Block)</p>
+                    <p className="font-bold text-gray-900 text-sm mt-0.5">{selectedReceiptForDetail.donorBlock || 'N/A'}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Beneficiary Details */}
+              <div>
+                <h5 className="text-xs font-bold text-[#087889] border-b border-teal-100 pb-1.5 mb-3 flex items-center gap-1.5">
+                  <span>👥</span> लाभार्थी विवरण (Beneficiary Details)
+                </h5>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs font-semibold">
+                  <div>
+                    <p className="text-gray-500 font-medium">सहायता प्राप्तकर्ता (Name)</p>
+                    <p className="font-bold text-gray-900 text-sm mt-0.5">{selectedReceiptForDetail.beneficiaryName}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500 font-medium">यूनिक आईडी (Unique ID)</p>
+                    <p className="font-bold text-gray-900 text-sm mt-0.5 font-mono">{selectedReceiptForDetail.beneficiaryUniqueId}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500 font-medium">ग्रुप (Group)</p>
+                    <p className="font-bold text-gray-900 text-sm mt-0.5">Group {selectedReceiptForDetail.group}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Transaction Details */}
+              <div>
+                <h5 className="text-xs font-bold text-[#087889] border-b border-teal-100 pb-1.5 mb-3 flex items-center gap-1.5">
+                  <span>💳</span> ट्रांजेक्शन विवरण (Transaction Details)
+                </h5>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs font-semibold">
+                  <div>
+                    <p className="text-gray-500 font-medium">ट्रांजेक्शन ID (Transaction ID)</p>
+                    <p className="font-bold text-gray-900 text-sm mt-0.5 font-mono">{selectedReceiptForDetail.transactionId}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500 font-medium">सहयोग राशि (Amount Paid)</p>
+                    <p className="font-bold text-emerald-600 text-sm mt-0.5">₹ {selectedReceiptForDetail.amount}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500 font-medium">सहयोग तिथि (Donation Date)</p>
+                    <p className="font-bold text-gray-900 text-sm mt-0.5">{selectedReceiptForDetail.date}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Receipt Screenshot Preview */}
+              {selectedReceiptForDetail.receiptImage && (
+                <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100 flex flex-col items-center">
+                  <p className="text-xs text-gray-500 font-bold mb-2">भुगतान स्क्रीनशॉट (Receipt Screenshot)</p>
+                  <div className="w-full max-h-72 flex items-center justify-center overflow-y-auto rounded-xl border border-gray-200 bg-white p-2">
+                    <img 
+                      src={selectedReceiptForDetail.receiptImage} 
+                      alt="Receipt Screenshot" 
+                      className="max-h-64 object-contain rounded cursor-pointer hover:scale-105 transition-transform"
+                      onClick={() => window.open(selectedReceiptForDetail.receiptImage, '_blank')}
+                    />
+                  </div>
+                  <a 
+                    href={selectedReceiptForDetail.receiptImage} 
+                    target="_blank" 
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1 text-[10px] font-bold text-blue-600 hover:text-blue-800 transition-colors mt-2"
+                  >
+                    🔗 रसीद नए टैब में फुल साइज में खोलें (View Full Size)
+                  </a>
+                </div>
+              )}
+            </div>
+
+            {/* Footer Buttons */}
+            <div className="mt-6 flex justify-end gap-3 border-t border-gray-100 pt-4">
+              <button 
+                onClick={() => setSelectedReceiptForDetail(null)}
                 className="px-6 py-3 bg-[#087889] hover:bg-[#06616e] text-white font-bold rounded-xl text-sm transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5"
               >
                 बंद करें (Close)

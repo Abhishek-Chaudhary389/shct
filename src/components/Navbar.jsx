@@ -191,7 +191,7 @@ const Navbar = () => {
                 </Link>
               ) : (
                 <div 
-                  className={`relative flex items-center h-full px-2 cursor-pointer whitespace-nowrap transition-colors ${(isActive('/beti-sahayog-form') || isActive('/nidhan-sahayog-form') || isActive('/green-paryavaran-form')) ? 'bg-[#06616e] text-orange-200 border-b-2 border-orange-400' : 'hover:bg-[#06616e]'}`}
+                  className={`relative flex items-center h-full px-2 cursor-pointer whitespace-nowrap transition-colors ${(isActive('/beti-sahayog-form') || isActive('/nidhan-sahayog-form')) ? 'bg-[#06616e] text-orange-200 border-b-2 border-orange-400' : 'hover:bg-[#06616e]'}`}
                   onMouseEnter={() => setIsDesktopSahayogFormOpen(true)}
                   onMouseLeave={() => setIsDesktopSahayogFormOpen(false)}
                   onClick={() => setIsDesktopSahayogFormOpen(!isDesktopSahayogFormOpen)}
@@ -207,8 +207,7 @@ const Navbar = () => {
                       style={{ borderColor: logoOrange }}
                     >
                       <Link to="/beti-sahayog-form" className={`px-4 py-3 border-b border-gray-100 font-medium text-[13px] ${isActive('/beti-sahayog-form') ? 'text-[#f08519] bg-orange-50 font-bold' : 'hover:bg-gray-50 hover:text-[#f08519]'}`}>Beti Sahayog Form</Link>
-                      <Link to="/nidhan-sahayog-form" className={`px-4 py-3 border-b border-gray-100 font-medium text-[13px] ${isActive('/nidhan-sahayog-form') ? 'text-[#f08519] bg-orange-50 font-bold' : 'hover:bg-gray-50 hover:text-[#f08519]'}`}>Nidhan Sahayog Form</Link>
-                      <Link to="/green-paryavaran-form" className={`px-4 py-3 font-medium text-[13px] ${isActive('/green-paryavaran-form') ? 'text-[#f08519] bg-orange-50 font-bold' : 'hover:bg-gray-50 hover:text-[#f08519]'}`}>Green Paryavaran Form</Link>
+                      <Link to="/nidhan-sahayog-form" className={`px-4 py-3 font-medium text-[13px] ${isActive('/nidhan-sahayog-form') ? 'text-[#f08519] bg-orange-50 font-bold' : 'hover:bg-gray-50 hover:text-[#f08519]'}`}>Nidhan Sahayog Form</Link>
                     </div>
                   )}
                 </div>
@@ -232,8 +231,7 @@ const Navbar = () => {
                     style={{ borderColor: logoOrange }}
                   >
                     <Link to="/sahayata-list/beti" className="px-4 py-3 hover:bg-gray-50 hover:text-[#f08519] border-b border-gray-100 transition-colors font-medium text-[13px]">Beti Sahayog Aavedan List</Link>
-                    <Link to="/sahayata-list/nidhan" className="px-4 py-3 hover:bg-gray-50 hover:text-[#f08519] border-b border-gray-100 transition-colors font-medium text-[13px]">Nidhan Sahayog Aavedan List</Link>
-                    <Link to="/sahayata-list/green" className="px-4 py-3 hover:bg-gray-50 hover:text-[#f08519] transition-colors font-medium text-[13px]">Green Paryavaran List</Link>
+                    <Link to="/sahayata-list/nidhan" className="px-4 py-3 hover:bg-gray-50 hover:text-[#f08519] transition-colors font-medium text-[13px]">Nidhan Sahayog Aavedan List</Link>
                   </div>
                 )}
               </div>
@@ -358,8 +356,7 @@ const Navbar = () => {
                 {isMobileSahayogFormOpen && (
                   <div className="bg-[#06616e] flex flex-col text-sm border-b border-white/20">
                     <Link to="/beti-sahayog-form" onClick={() => setIsMobileMenuOpen(false)} className={`py-3 px-10 border-b border-white/10 transition-colors ${isActive('/beti-sahayog-form') ? 'bg-black/30 text-orange-200 font-bold' : 'hover:bg-white/10'}`}>Beti Sahayog Form</Link>
-                    <Link to="/nidhan-sahayog-form" onClick={() => setIsMobileMenuOpen(false)} className={`py-3 px-10 border-b border-white/10 transition-colors ${isActive('/nidhan-sahayog-form') ? 'bg-black/30 text-orange-200 font-bold' : 'hover:bg-white/10'}`}>Nidhan Sahayog Form</Link>
-                    <Link to="/green-paryavaran-form" onClick={() => setIsMobileMenuOpen(false)} className={`py-3 px-10 transition-colors ${isActive('/green-paryavaran-form') ? 'bg-black/30 text-orange-200 font-bold' : 'hover:bg-white/10'}`}>Green Paryavaran Form</Link>
+                    <Link to="/nidhan-sahayog-form" onClick={() => setIsMobileMenuOpen(false)} className={`py-3 px-10 transition-colors ${isActive('/nidhan-sahayog-form') ? 'bg-black/30 text-orange-200 font-bold' : 'hover:bg-white/10'}`}>Nidhan Sahayog Form</Link>
                   </div>
                 )}
               </div>
@@ -378,8 +375,7 @@ const Navbar = () => {
               {isMobileSahayataOpen && (
                 <div className="bg-[#06616e] flex flex-col text-sm border-b border-white/20">
                   <Link to="/sahayata-list/beti" onClick={() => setIsMobileMenuOpen(false)} className="py-3 px-10 border-b border-white/10 hover:bg-white/10 transition-colors">Beti Sahayog Aavedan List</Link>
-                  <Link to="/sahayata-list/nidhan" onClick={() => setIsMobileMenuOpen(false)} className="py-3 px-10 border-b border-white/10 hover:bg-white/10 transition-colors">Nidhan Sahayog Aavedan List</Link>
-                  <Link to="/sahayata-list/green" onClick={() => setIsMobileMenuOpen(false)} className="py-3 px-10 hover:bg-white/10 transition-colors">Green Paryavaran List</Link>
+                  <Link to="/sahayata-list/nidhan" onClick={() => setIsMobileMenuOpen(false)} className="py-3 px-10 hover:bg-white/10 transition-colors">Nidhan Sahayog Aavedan List</Link>
                 </div>
               )}
             </div>

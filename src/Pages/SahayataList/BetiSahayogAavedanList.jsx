@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { getNidhanSahayogList } from '../../services/dataService';
+import { getBetiSahyogList } from '../../services/dataService';
 import bannerImg from '../../assets/ngo1.jpg';
 
-const NidhanSahayogAavedanList = () => {
+const BetiSahayogAavedanList = () => {
   const [dataList, setDataList] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedImage, setSelectedImage] = useState(null);
@@ -17,10 +17,10 @@ const NidhanSahayogAavedanList = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const data = await getNidhanSahayogList();
+        const data = await getBetiSahyogList();
         setDataList(data);
       } catch (err) {
-        console.error("Error fetching Nidhan Sahyog List:", err);
+        console.error("Error fetching Beti Sahyog List:", err);
       } finally {
         setLoading(false);
       }
@@ -43,7 +43,7 @@ const NidhanSahayogAavedanList = () => {
       result = result.filter(item => 
         (item.applicantName && item.applicantName.toLowerCase().includes(q)) ||
         (item.uniqueId && item.uniqueId.toLowerCase().includes(q)) ||
-        (item.deceasedName && item.deceasedName.toLowerCase().includes(q))
+        (item.daughterName && item.daughterName.toLowerCase().includes(q))
       );
     }
     return result;
@@ -80,7 +80,7 @@ const NidhanSahayogAavedanList = () => {
       >
         <div className="absolute inset-0 bg-black/50"></div>
         <h1 className="text-4xl md:text-5xl font-extrabold text-white z-10 tracking-wider">
-          Death Aavedan Suchi
+          Beti Vivah Aavedan List
         </h1>
       </div>
 
@@ -88,8 +88,8 @@ const NidhanSahayogAavedanList = () => {
         
         {/* RED NOTES */}
         <div className="text-red-600 text-center font-medium text-[15px] space-y-3 mb-10">
-          <p>नोट- 1. मृत्यु आवेदन सूची में वैधानिकता जांच आख्या भौतिक सत्यापन के अधीन है। भौतिक सत्यापन के उपरांत ही वैधानिकता पर अंतिम निर्णय लिया जाएगा।</p>
-          <p>2. असामयिक निधन पर आर्थिक मदद योजना में ऑनलाइन आवेदन के उपरांत आवेदक अपने जिले के FRCT जिलाध्यक्ष को phone करके सामान्य सूचना जरूर दें</p>
+          <p></p>
+          <p></p>
         </div>
 
         {/* FILTERS SECTION */}
@@ -172,8 +172,9 @@ const NidhanSahayogAavedanList = () => {
                   <th className="p-4 border-r border-gray-150">S NO</th>
                   <th className="p-4 border-r border-gray-150 whitespace-nowrap">Unique ID</th>
                   <th className="p-4 border-r border-gray-150">नाम</th>
-                  <th className="p-4 border-r border-gray-150">मृत्यु तिथि</th>
-                  <th className="p-4 border-r border-gray-150 text-center">मृत्यु प्रमाण पत्र</th>
+                  <th className="p-4 border-r border-gray-150">बेटी का नाम</th>
+                  <th className="p-4 border-r border-gray-150">विवाह तिथि</th>
+                  <th className="p-4 border-r border-gray-150 text-center">विवाह कार्ड</th>
                   <th className="p-4 border-r border-gray-150">स्थाई निवासी जिला</th>
                   <th className="p-4 border-r border-gray-150">ब्लॉक</th>
                   <th className="p-4 border-r border-gray-150">Submission Date</th>
@@ -197,14 +198,15 @@ const NidhanSahayogAavedanList = () => {
                     return (
                       <tr key={item.id} className="border-b border-gray-100 hover:bg-gray-50/50 transition-colors">
                         <td className="p-4 border-r border-gray-100 bg-gray-50/50 font-mono text-gray-400">{indexOfFirstRecord + index + 1}</td>
-                        <td className="p-4 border-r border-gray-100 bg-gray-50/50 font-mono font-bold text-gray-900">{item.uniqueId?.replace('UID-', '697') || 'N/A'}</td>
+                        <td className="p-4 border-r border-gray-100 bg-gray-50/50 font-mono font-bold text-gray-900">{item.uniqueId?.replace('UID-', '090') || 'N/A'}</td>
                         <td className="p-4 border-r border-gray-100 font-bold text-gray-900">{item.applicantName}</td>
-                        <td className="p-4 border-r border-gray-100 text-red-700 font-bold">{item.deathDate}</td>
+                        <td className="p-4 border-r border-gray-100 text-blue-700 font-bold">{item.daughterName}</td>
+                        <td className="p-4 border-r border-gray-100 whitespace-pre-wrap font-medium">{item.marriageDate}</td>
                         <td className="p-4 border-r border-gray-100 text-center text-gray-300">
                           {item.documentImage ? (
                             <button 
                               onClick={() => setSelectedImage(item.documentImage)}
-                              className="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-lg text-xs font-bold transition-colors shadow-sm whitespace-nowrap"
+                              className="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg text-xs font-bold transition-colors shadow-sm whitespace-nowrap"
                             >
                               👁️ कार्ड देखें
                             </button>
@@ -230,7 +232,7 @@ const NidhanSahayogAavedanList = () => {
                   })
                 ) : (
                   <tr>
-                    <td colSpan="10" className="p-8 text-center text-gray-500 text-base font-bold">No data available in table</td>
+                    <td colSpan="11" className="p-8 text-center text-gray-500 text-base font-bold">No data available in table</td>
                   </tr>
                 )}
               </tbody>
@@ -292,7 +294,7 @@ const NidhanSahayogAavedanList = () => {
             <div className="mt-6 text-right">
               <button 
                 onClick={() => setSelectedImage(null)}
-                className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-sm transition-all shadow-md"
+                className="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-sm transition-all shadow-md"
               >
                 बंद करें (Close)
               </button>
@@ -304,4 +306,4 @@ const NidhanSahayogAavedanList = () => {
   );
 };
 
-export default NidhanSahayogAavedanList;
+export default BetiSahayogAavedanList;
