@@ -2,12 +2,24 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { addPendingRegistration } from '../../services/dataService';
 import { compressImage } from '../../utils/imageCompressor';
+import { uploadToImageKit } from '../../utils/imageKitUploader';
+
+const indianStates = [
+  "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", 
+  "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand", 
+  "Karnataka", "Kerala", "Madhya Pradesh", "Maharashtra", "Manipur", 
+  "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Punjab", 
+  "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura", 
+  "Uttarakhand", "Uttar Pradesh", "West Bengal",
+  "Andaman and Nicobar Islands", "Chandigarh", "Dadra and Nagar Haveli and Daman and Diu",
+  "Delhi", "Jammu and Kashmir", "Ladakh", "Lakshadweep", "Puducherry"
+];
 
 const Register = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: '', aadhaar: '', fatherName: '', dob: '', password: '', mobile: '',
-    gender: '', occupation: '', district: '', block: '', email: '', address: '',
+    gender: '', occupation: '', state: 'Uttar Pradesh', district: '', block: '', email: '', address: '',
     nomineeName: '', nomineeRelation: '', nomineeMobile: '', transactionId: '',
     referralCode: '', receiptUrl: ''
   });
@@ -34,7 +46,17 @@ const Register = () => {
     setIsSubmitting(true);
     
     try {
-      await addPendingRegistration(formData);
+      let finalReceiptUrl = formData.receiptUrl;
+      // If it is a base64 image data URL, upload to ImageKit
+      if (formData.receiptUrl && formData.receiptUrl.startsWith('data:image')) {
+        finalReceiptUrl = await uploadToImageKit(formData.receiptUrl, `reg_receipt_${formData.aadhaar}_${Date.now()}.jpg`);
+      }
+
+      await addPendingRegistration({
+        ...formData,
+        receiptUrl: finalReceiptUrl
+      });
+
       setTimeout(() => {
         setIsSubmitting(false);
         alert('आपका पंजीकरण सफलतापुर्वक हो गया है। कृपया एडमिन अप्रूवल का इंतज़ार करें।');
@@ -164,20 +186,23 @@ const Register = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1">State <span className="text-red-500">*</span></label>
-                  <select className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#087889] focus:border-[#087889] transition-colors">
-                    <option>Uttar Pradesh</option>
+                  <select name="state" value={formData.state} onChange={handleChange} required className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#087889] focus:border-[#087889] transition-colors">
+                    {indianStates.map(st => (
+                      <option key={st} value={st}>{st}</option>
+                    ))}
                   </select>
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1">स्थाई निवासी जिला <span className="text-red-500">*</span></label>
-                  <select name="district" value={formData.district} onChange={handleChange} required className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#087889] focus:border-[#087889] transition-colors">
-                    <option value="">Select District</option>
-                    <option value="gorakhpur">Gorakhpur</option>
-                    <option value="maharajganj">Maharajganj</option>
-                    <option value="basti">Basti</option>
-                    <option value="sant kabir nagar">Sant Kabir Nagar</option>
-                    <option value="lucknow">Lucknow</option>
-                  </select>
+                  <input 
+                    type="text" 
+                    name="district" 
+                    value={formData.district} 
+                    onChange={handleChange} 
+                    required 
+                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#087889] focus:border-[#087889] transition-colors" 
+                    placeholder="अपना जिला दर्ज करें" 
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1">स्थाई निवासी ब्लॉक <span className="text-red-500">*</span></label>

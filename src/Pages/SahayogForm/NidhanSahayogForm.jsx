@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { addNidhanSahayog } from '../../services/dataService';
 import { compressImage } from '../../utils/imageCompressor';
+import { uploadToImageKit } from '../../utils/imageKitUploader';
 
 const NidhanSahayogForm = () => {
   const logoTeal = "#087889";
@@ -43,10 +44,15 @@ const NidhanSahayogForm = () => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    const mockUniqueId = `UID-${Math.floor(10000 + Math.random() * 90000)}`;
-    const submissionData = { ...formData, uniqueId: mockUniqueId };
-
     try {
+      let finalDocImage = formData.documentImage;
+      if (formData.documentImage && formData.documentImage.startsWith('data:image')) {
+        finalDocImage = await uploadToImageKit(formData.documentImage, `nidhan_card_${formData.aadhaarNumber}_${Date.now()}.jpg`);
+      }
+
+      const mockUniqueId = `UID-${Math.floor(10000 + Math.random() * 90000)}`;
+      const submissionData = { ...formData, documentImage: finalDocImage, uniqueId: mockUniqueId };
+
       await addNidhanSahayog(submissionData);
       console.log("Nidhan Sahayog Data sent:", submissionData);
       setIsSubmitting(false);

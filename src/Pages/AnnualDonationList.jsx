@@ -12,7 +12,7 @@ const AnnualDonationList = () => {
   const [filterDistrict, setFilterDistrict] = useState('');
   const [filterBlock, setFilterBlock] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-  const [entriesPerPage, setEntriesPerPage] = useState(25);
+  const [entriesPerPage, setEntriesPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {

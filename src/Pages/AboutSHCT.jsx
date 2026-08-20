@@ -15,7 +15,7 @@ const AboutSHCT = () => {
           हमारे बारे में (About SHCT)
         </h1>
         <p className="text-teal-100 text-lg md:text-xl max-w-2xl mx-auto relative z-10 font-medium">
-          "Help For Helpless" - असहायों की मदद के लिए सदैव तत्पर
+          "बेहतर भविष्य के लिए समर्पित" - असहायों की मदद के लिए सदैव तत्पर
         </p>
       </div>
 

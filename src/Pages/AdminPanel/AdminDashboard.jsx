@@ -23,10 +23,12 @@ import {
   updateNidhanReceiptStatus
 } from '../../services/dataService';
 import { compressImage } from '../../utils/imageCompressor';
+import { uploadToImageKit } from '../../utils/imageKitUploader';
+import { exportToCSV } from '../../utils/csvExporter';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('pending'); // 'pending' | 'approved' | 'donations' | 'beti' | 'nidhan' | 'green' | 'settings'
+  const [activeTab, setActiveTab] = useState('analytics'); // Set landing tab to analytics
   
   const [pendingList, setPendingList] = useState([]);
   const [approvedList, setApprovedList] = useState([]);
@@ -59,6 +61,7 @@ const AdminDashboard = () => {
   const [nidhanFilter, setNidhanFilter] = useState('PENDING'); // 'PENDING' | 'APPROVED' | 'REJECTED' | 'ALL'
   const [selectedReceiptForDetail, setSelectedReceiptForDetail] = useState(null);
   const [registrationFilter, setRegistrationFilter] = useState('PENDING'); // 'PENDING' | 'APPROVED' | 'REJECTED' | 'ALL'
+  const [registrationAutoAssign, setRegistrationAutoAssign] = useState(false); // Auto assign rule toggle
 
   const [newHomeAlert, setNewHomeAlert] = useState({
     group: '', member: '', uniqueId: '', date: '', address: '', 
@@ -192,16 +195,167 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleExportMembers = () => {
+    const headersMap = {
+      uniqueId: "यूनिक ID",
+      name: "नाम",
+      fatherName: "पिता/पति का नाम",
+      dob: "जन्म तिथि",
+      mobile: "मोबाइल नंबर",
+      aadhaar: "आधार नंबर",
+      gender: "जेंडर",
+      occupation: "व्यवसाय",
+      district: "जिला",
+      block: "ब्लॉक",
+      email: "ईमेल ID",
+      address: "पता",
+      nomineeName: "नॉमिनी का नाम",
+      nomineeRelation: "नॉमिनी से संबंध",
+      nomineeMobile: "नॉमिनी मोबाइल",
+      group: "ग्रुप",
+      registeredOn: "रजिस्ट्रेशन तिथि"
+    };
+    exportToCSV(approvedList, headersMap, `SHCT_Approved_Members_${Date.now()}.csv`);
+  };
+
+  const handleExportReceipts = (type) => {
+    const list = type === 'beti' ? betiReceiptsList : nidhanReceiptsList;
+    const filename = type === 'beti' ? `SHCT_Beti_Receipts_${Date.now()}.csv` : `SHCT_Nidhan_Receipts_${Date.now()}.csv`;
+    const headersMap = {
+      donorName: "सहयोगकर्ता का नाम",
+      donorUniqueId: "सहयोगकर्ता ID",
+      donorMobile: "मोबाइल नंबर",
+      donorAadhaar: "आधार नंबर",
+      donorDistrict: "जिला",
+      donorBlock: "ब्लॉक",
+      beneficiaryName: "लाभार्थी का नाम",
+      beneficiaryUniqueId: "लाभार्थी ID",
+      group: "ग्रुप",
+      transactionId: "ट्रांजेक्शन ID",
+      amount: "सहायता राशि (₹)",
+      date: "सहयोग तिथि",
+      status: "स्थिति (Status)"
+    };
+    exportToCSV(list, headersMap, filename);
+  };
+
+  const handleExportDonations = () => {
+    const headersMap = {
+      name: "दानदाता का नाम",
+      uniqueId: "यूनिक ID",
+      amount: "राशि (₹)",
+      transactionId: "ट्रांजेक्शन ID",
+      district: "जिला",
+      sahyogDate: "सहयोग तिथि"
+    };
+    exportToCSV(donationsList, headersMap, `SHCT_Annual_Donations_${Date.now()}.csv`);
+  };
+
+  const getGroupSizes = () => {
+    const counts = { A: 0, B: 0, C: 0, D: 0 };
+    approvedList.forEach(m => {
+      const g = m.group ? String(m.group).trim().toUpperCase() : 'A';
+      counts[g] = (counts[g] || 0) + 1;
+    });
+    return counts;
+  };
+
+  const getSmallestGroup = () => {
+    const groupSizes = getGroupSizes();
+    const targetGroups = ['A', 'B', 'C', 'D'];
+    let smallestGroup = 'A';
+    let minSize = Infinity;
+    targetGroups.forEach(g => {
+      const size = groupSizes[g] || 0;
+      if (size < minSize) {
+        minSize = size;
+        smallestGroup = g;
+      }
+    });
+    return smallestGroup;
+  };
+
+  const getThisMonthDonations = () => {
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+
+    let donationsMonthSum = 0;
+    donationsList.forEach(d => {
+      const dDate = d.sahyogDate ? new Date(d.sahyogDate) : d.date ? new Date(d.date) : null;
+      if (dDate && dDate.getMonth() === currentMonth && dDate.getFullYear() === currentYear) {
+        donationsMonthSum += Number(d.amount) || 0;
+      }
+    });
+
+    return donationsMonthSum;
+  };
+
+  const getDistrictStats = () => {
+    const districts = {};
+    approvedList.forEach(m => {
+      const dist = m.district ? String(m.district).trim() : 'अन्य (Other)';
+      districts[dist] = (districts[dist] || 0) + 1;
+    });
+    return Object.keys(districts)
+      .map(name => ({ name, count: districts[name] }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
+  };
+
+  const getAidDistributed = () => {
+    const betiSum = betiReceiptsList
+      .filter(r => r.status === 'APPROVED')
+      .reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
+    const nidhanSum = nidhanReceiptsList
+      .filter(r => r.status === 'APPROVED')
+      .reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
+    return { betiSum, nidhanSum };
+  };
+
+  const getMonthlyTrend = () => {
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const now = new Date();
+    const trend = [];
+    
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      trend.push({
+        monthName: months[d.getMonth()] + " " + d.getFullYear().toString().slice(-2),
+        monthIdx: d.getMonth(),
+        year: d.getFullYear(),
+        amount: 0
+      });
+    }
+
+    donationsList.forEach(d => {
+      const dDate = d.sahyogDate ? new Date(d.sahyogDate) : d.date ? new Date(d.date) : null;
+      if (dDate) {
+        trend.forEach(t => {
+          if (dDate.getMonth() === t.monthIdx && dDate.getFullYear() === t.year) {
+            t.amount += Number(d.amount) || 0;
+          }
+        });
+      }
+    });
+
+    return trend;
+  };
+
   const handleLogout = () => {
     localStorage.removeItem('isAdminLoggedIn');
     navigate('/admin-login');
   };
 
-  const handleApprove = async (id, name, group) => {
+  const handleApprove = async (id, name, manualGroup) => {
     try {
-      const res = await approveRegistration(id, group);
+      let groupToAssign = manualGroup;
+      if (registrationAutoAssign) {
+        groupToAssign = getSmallestGroup();
+      }
+      const res = await approveRegistration(id, groupToAssign);
       if (res) {
-        setNotification(`✅ ${name} को सफलतापूर्वक अप्रूव कर दिया गया है! डेटा Member List और Annual Donation List में जोड़ दिया गया है।`);
+        setNotification(`✅ ${name} को सफलतापूर्वक अप्रूव कर दिया गया है (ग्रुप: ${groupToAssign})! डेटा Member List और Annual Donation List में जोड़ दिया गया है।`);
         await loadData();
         setTimeout(() => setNotification(''), 5000);
       }
@@ -262,7 +416,15 @@ const AdminDashboard = () => {
   const handleCreateHomeAlert = async (e) => {
     e.preventDefault();
     try {
-      await addHomeAlert(newHomeAlert);
+      let finalQrCode = newHomeAlert.qrCodeBase64;
+      if (newHomeAlert.qrCodeBase64 && newHomeAlert.qrCodeBase64.startsWith('data:image')) {
+        finalQrCode = await uploadToImageKit(newHomeAlert.qrCodeBase64, `alert_qr_${newHomeAlert.uniqueId || 'member'}_${Date.now()}.jpg`);
+      }
+
+      await addHomeAlert({
+        ...newHomeAlert,
+        qrCodeBase64: finalQrCode
+      });
       setNewHomeAlert({ group: '', member: '', uniqueId: '', date: '', address: '', daughter: '', marriageDate: '', accName: '', accNo: '', ifsc: '', branch: '', bank: '', minSupport: '50 रुपए', qrCodeBase64: '', type: 'beti' });
       await loadData();
       setNotification('नया होम पेज अलर्ट सफलतापूर्वक जोड़ दिया गया है!');
@@ -286,7 +448,7 @@ const AdminDashboard = () => {
     }
   };
 
-  const totalDonationSum = donationsList.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0) + (approvedList.length * 200);
+  const totalDonationSum = donationsList.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
 
   return (
     <div className="h-screen bg-gray-50 font-sans flex flex-col overflow-hidden">
@@ -330,13 +492,23 @@ const AdminDashboard = () => {
             <h2 className="text-[11px] font-black text-gray-500 uppercase tracking-widest mb-5">Admin Menu</h2>
             <nav className="space-y-3">
               <button 
+                onClick={() => setActiveTab('analytics')}
+                className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl font-bold text-sm transition-all shadow-sm ${activeTab === 'analytics' ? 'bg-[#087889] text-white border border-teal-500/30' : 'text-gray-300 hover:bg-gray-800 hover:text-white'}`}
+              >
+                <span className="text-lg">📊</span> 
+                <span className="text-left flex-1">मुख्य सांख्यिकी (Analytics)</span>
+              </button>
+
+              <button 
                 onClick={() => setActiveTab('pending')}
                 className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl font-bold text-sm transition-all shadow-sm ${activeTab === 'pending' ? 'bg-[#087889] text-white border border-teal-500/30' : 'text-gray-300 hover:bg-gray-800 hover:text-white'}`}
               >
                 <span className="text-lg">⏳</span> 
                 <span className="text-left flex-1">पेंडिंग रजिस्ट्रेशन</span>
-                {pendingList.length > 0 && (
-                  <span className="bg-amber-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full shadow-sm">{pendingList.length}</span>
+                {pendingList.filter(r => r.status === 'PENDING' || !r.status).length > 0 && (
+                  <span className="bg-amber-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full shadow-sm">
+                    {pendingList.filter(r => r.status === 'PENDING' || !r.status).length}
+                  </span>
                 )}
               </button>
 
@@ -349,6 +521,14 @@ const AdminDashboard = () => {
                 {approvedList.length > 0 && (
                   <span className="bg-teal-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full shadow-sm">{approvedList.length}</span>
                 )}
+              </button>
+
+              <button 
+                onClick={() => setActiveTab('groups')}
+                className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl font-bold text-sm transition-all shadow-sm ${activeTab === 'groups' ? 'bg-[#087889] text-white border border-teal-500/30' : 'text-gray-300 hover:bg-gray-800 hover:text-white'}`}
+              >
+                <span className="text-lg">🛡️</span> 
+                <span className="text-left flex-1">ग्रुप प्रबंधन (Groups)</span>
               </button>
 
               {/* HOME MANAGEMENT ACCORDION */}
@@ -595,6 +775,256 @@ const AdminDashboard = () => {
 
             {/* ================= TAB CONTENT ================= */}
 
+            {/* TAB: ANALYTICS DASHBOARD */}
+            {activeTab === 'analytics' && (
+              <div className="space-y-8">
+                {/* 1. Aid Distributed Comparison Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Beti Sahyog Aid */}
+                  <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 border-t-4 border-t-emerald-500 hover:shadow-md transition-shadow">
+                    <h4 className="text-sm font-bold text-gray-500 uppercase tracking-wider">कुल बेटी विवाह सहयोग वितरण</h4>
+                    <div className="flex justify-between items-end mt-2">
+                      <div>
+                        <h3 className="text-3xl font-black text-emerald-600">₹ {getAidDistributed().betiSum}</h3>
+                        <p className="text-xs text-gray-400 mt-1">Disbursed for marriage help</p>
+                      </div>
+                      <span className="text-3xl">👰</span>
+                    </div>
+                  </div>
+
+                  {/* Nidhan Sahyog Aid */}
+                  <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 border-t-4 border-t-red-500 hover:shadow-md transition-shadow">
+                    <h4 className="text-sm font-bold text-gray-500 uppercase tracking-wider">कुल मृत्यु सहयोग वितरण</h4>
+                    <div className="flex justify-between items-end mt-2">
+                      <div>
+                        <h3 className="text-3xl font-black text-red-600">₹ {getAidDistributed().nidhanSum}</h3>
+                        <p className="text-xs text-gray-400 mt-1">Disbursed for demise support</p>
+                      </div>
+                      <span className="text-3xl">🕊️</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 2. Charts Row */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  
+                  {/* Monthly Trend Chart */}
+                  <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
+                    <div className="border-b border-gray-100 pb-4 mb-6">
+                      <h3 className="text-lg font-bold text-gray-800">मासिक दान एवं रजिस्ट्रेशन संग्रह (Monthly Collections)</h3>
+                      <p className="text-xs text-gray-400 mt-0.5">पिछले 6 महीनों का कुल संग्रह (₹200 रजिस्ट्रेशन फीस + वार्षिक सहयोग)</p>
+                    </div>
+
+                    {/* SVG Bar Chart */}
+                    <div className="flex justify-center">
+                      <svg width="100%" height="220" viewBox="0 0 500 220" className="max-w-full">
+                        {/* Grid lines */}
+                        {[0, 0.25, 0.5, 0.75, 1].map((ratio, idx) => {
+                          const y = 20 + ratio * 140;
+                          const val = Math.round((1 - ratio) * Math.max(...getMonthlyTrend().map(t => t.amount), 1000));
+                          return (
+                            <g key={idx}>
+                              <line x1="50" y1={y} x2="480" y2={y} stroke="#e5e7eb" strokeDasharray="3,3" />
+                              <text x="40" y={y + 4} textAnchor="end" className="text-[10px] fill-gray-400 font-bold font-mono">₹{val}</text>
+                            </g>
+                          );
+                        })}
+
+                        {/* Bars and labels */}
+                        {getMonthlyTrend().map((t, idx) => {
+                          const barWidth = 40;
+                          const spacing = 30;
+                          const x = 70 + idx * (barWidth + spacing);
+                          const maxVal = Math.max(...getMonthlyTrend().map(item => item.amount), 1000);
+                          const barHeight = maxVal > 0 ? (t.amount / maxVal) * 140 : 0;
+                          const y = 160 - barHeight;
+
+                          return (
+                            <g key={idx} className="group">
+                              {/* Hover tooltip background */}
+                              <rect x={x - 10} y="10" width={barWidth + 20} height="180" fill="transparent" />
+                              
+                              {/* Actual Bar */}
+                              <rect 
+                                x={x} 
+                                y={y} 
+                                width={barWidth} 
+                                height={barHeight} 
+                                fill={t.amount > 0 ? "#087889" : "#d1d5db"} 
+                                rx="4"
+                                className="transition-all duration-300 hover:fill-[#f08519] cursor-pointer"
+                              />
+
+                              {/* Amount text on hover / static */}
+                              {t.amount > 0 && (
+                                <text 
+                                  x={x + barWidth / 2} 
+                                  y={y - 6} 
+                                  textAnchor="middle" 
+                                  className="text-[10px] font-bold fill-[#087889] font-mono"
+                                >
+                                  ₹{t.amount}
+                                </text>
+                              )}
+
+                              {/* X Axis Label */}
+                              <text 
+                                x={x + barWidth / 2} 
+                                y="180" 
+                                textAnchor="middle" 
+                                className="text-[11px] font-bold fill-gray-500"
+                              >
+                                {t.monthName}
+                              </text>
+                            </g>
+                          );
+                        })}
+                        {/* Base line */}
+                        <line x1="50" y1="160" x2="480" y2="160" stroke="#9ca3af" strokeWidth="1.5" />
+                      </svg>
+                    </div>
+                  </div>
+
+                  {/* District Members distribution */}
+                  <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 flex flex-col">
+                    <div className="border-b border-gray-100 pb-4 mb-6">
+                      <h3 className="text-lg font-bold text-gray-800">शीर्ष 5 जिला भागीदारी (Top 5 Districts)</h3>
+                      <p className="text-xs text-gray-400 mt-0.5">संस्था में जुड़े सदस्यों की जिलावार संख्या</p>
+                    </div>
+
+                    <div className="flex-1 flex flex-col justify-center space-y-4">
+                      {getDistrictStats().length === 0 ? (
+                        <p className="text-sm text-gray-400 text-center py-10 font-bold">कोई सदस्य डेटा उपलब्ध नहीं है</p>
+                      ) : (
+                        getDistrictStats().map((dist, idx) => {
+                          const maxCount = Math.max(...getDistrictStats().map(d => d.count), 1);
+                          const percentage = (dist.count / maxCount) * 100;
+                          const colors = ["bg-[#087889]", "bg-[#f08519]", "bg-teal-600", "bg-orange-500", "bg-cyan-600"];
+                          return (
+                            <div key={idx} className="space-y-1.5">
+                              <div className="flex justify-between items-center text-xs font-bold text-gray-700">
+                                <span className="flex items-center gap-2">
+                                  <span className="w-5 h-5 bg-gray-100 rounded-full flex items-center justify-center text-[10px] text-gray-500">{idx + 1}</span>
+                                  {dist.name}
+                                </span>
+                                <span className="font-mono text-[#087889]">{dist.count} सदस्य</span>
+                              </div>
+                              <div className="w-full bg-gray-100 h-2.5 rounded-full overflow-hidden">
+                                <div 
+                                  className={`h-full rounded-full transition-all duration-500 ${colors[idx % colors.length]}`} 
+                                  style={{ width: `${percentage}%` }}
+                                ></div>
+                              </div>
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* 3. Monthly Donors Summary Bar */}
+                <div className="bg-[#087889] rounded-2xl p-6 text-white shadow flex flex-col md:flex-row justify-between items-center gap-6">
+                  <div>
+                    <h4 className="text-sm font-bold text-teal-100 uppercase tracking-wider">इस महीने का कुल शगुन/रजिस्ट्रेशन दान संग्रह</h4>
+                    <p className="text-xs text-teal-200 mt-1">वर्तमान माह के दौरान प्राप्त सभी भुगतानों का योग</p>
+                  </div>
+                  <h3 className="text-4xl font-black font-mono">₹ {getThisMonthDonations()}</h3>
+                </div>
+              </div>
+            )}
+
+            {/* TAB: GROUP MANAGEMENT */}
+            {activeTab === 'groups' && (
+              <div className="space-y-8">
+                {/* Auto Assign Toggle card */}
+                <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                  <div>
+                    <h3 className="text-lg font-bold text-gray-800">ग्रुप ऑटो-असाइनमेंट सेटिंग्स (Auto-Assignment Rule)</h3>
+                    <p className="text-xs text-gray-500 mt-1">
+                      यदि सक्षम है, तो नए यूज़र्स को अप्रूव करते समय सिस्टम स्वचालित रूप से उन्हें सबसे छोटे ग्रुप (सबसे कम सदस्य संख्या वाले ग्रुप) में डाल देगा।
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className={`text-xs font-bold ${registrationAutoAssign ? 'text-emerald-600' : 'text-gray-400'}`}>
+                      {registrationAutoAssign ? 'ऑटो-असाइनमेंट चालू है' : 'ऑटो-असाइनमेंट बंद है'}
+                    </span>
+                    <button 
+                      onClick={() => setRegistrationAutoAssign(!registrationAutoAssign)}
+                      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                        registrationAutoAssign ? 'bg-emerald-600' : 'bg-gray-200'
+                      }`}
+                    >
+                      <span
+                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                          registrationAutoAssign ? 'translate-x-5' : 'translate-x-0'
+                        }`}
+                      />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Group Sizes Grid */}
+                <div>
+                  <h3 className="text-xl font-extrabold text-gray-800 mb-6">सभी सक्रिय ग्रुप (Active Groups Sizes)</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    {['A', 'B', 'C', 'D'].map((g) => {
+                      const size = getGroupSizes()[g] || 0;
+                      const maxCapacity = Math.max(...Object.values(getGroupSizes()), 10) + 5;
+                      const percentage = (size / maxCapacity) * 100;
+                      
+                      const groupColors = {
+                        A: { border: 'border-t-teal-500', text: 'text-teal-600', bg: 'bg-teal-500' },
+                        B: { border: 'border-t-orange-500', text: 'text-orange-600', bg: 'bg-orange-500' },
+                        C: { border: 'border-t-indigo-500', text: 'text-indigo-600', bg: 'bg-indigo-500' },
+                        D: { border: 'border-t-rose-500', text: 'text-rose-600', bg: 'bg-rose-500' }
+                      };
+                      const color = groupColors[g] || groupColors.A;
+
+                      return (
+                        <div 
+                          key={g} 
+                          className={`bg-white rounded-2xl p-6 shadow-sm border border-gray-200 border-t-4 ${color.border} flex flex-col justify-between hover:shadow-md transition-shadow`}
+                        >
+                          <div>
+                            <div className="flex justify-between items-center">
+                              <h4 className="text-lg font-black text-gray-800">ग्रुप {g}</h4>
+                              {getSmallestGroup() === g && registrationAutoAssign && (
+                                <span className="bg-emerald-50 text-emerald-700 text-[9px] font-black px-2 py-0.5 rounded-full border border-emerald-100">
+                                  ★ सबसे छोटा
+                                </span>
+                              )}
+                            </div>
+                            <h3 className={`text-4xl font-black mt-4 ${color.text}`}>{size} <span className="text-xs text-gray-400 font-bold">सदस्य</span></h3>
+                          </div>
+                          
+                          <div className="mt-6 space-y-1.5">
+                            <div className="flex justify-between text-[10px] text-gray-400 font-bold">
+                              <span>ग्रुप डेंसिटी</span>
+                              <span>{Math.round(percentage)}%</span>
+                            </div>
+                            <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+                              <div className={`h-full rounded-full ${color.bg}`} style={{ width: `${percentage}%` }}></div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Instructions card */}
+                <div className="bg-gray-100 rounded-2xl p-6 border border-gray-200 text-sm text-gray-600 leading-relaxed font-semibold">
+                  <h4 className="text-gray-800 font-bold mb-2 flex items-center gap-1.5">💡 ग्रुप ऑटो-असाइनमेंट कैसे काम करता है?</h4>
+                  <ul className="list-disc pl-5 space-y-1">
+                    <li>जब कोई नया सदस्य रजिस्ट्रेशन फॉर्म भरता है, तो वे पेंडिंग लिस्ट में आते हैं।</li>
+                    <li>अगर ऑटो-असाइनमेंट चालू है, तो अप्रूव बटन दबाने पर सिस्टम ऑटोमैटिकली यह देखेगा कि ग्रुप A, B, C, D में से किस ग्रुप में सबसे कम सदस्य हैं।</li>
+                    <li>सिस्टम उस सदस्य को सीधे उसी सबसे कम सदस्य वाले ग्रुप में असाइन कर देगा, जिससे सभी ग्रुप्स का साइज़ (Size) हमेशा संतुलित (Balanced) बना रहेगा।</li>
+                  </ul>
+                </div>
+              </div>
+            )}
+
             {/* TAB 1: PENDING REGISTRATIONS */}
             {activeTab === 'pending' && (
               <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
@@ -734,14 +1164,22 @@ const AdminDashboard = () => {
             {/* TAB 2: APPROVED MEMBERS */}
             {activeTab === 'approved' && (
               <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-                <div className="p-6 bg-[#087889] text-white flex justify-between items-center">
+                <div className="p-6 bg-[#087889] text-white flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                   <div>
                     <h3 className="text-xl font-extrabold">स्वीकृत सदस्य (Approved Member List)</h3>
                     <p className="text-xs text-teal-100 mt-1">यह डेटा आपकी मुख्य वेबसाइट के /member-list पेज पर प्रदर्शित हो रहा है।</p>
                   </div>
-                  <span className="bg-white text-teal-900 text-xs font-black px-3.5 py-1.5 rounded-full shadow">
-                    {approvedList.length} कुल सदस्य
-                  </span>
+                  <div className="flex items-center gap-3">
+                    <button 
+                      onClick={handleExportMembers} 
+                      className="px-4 py-2 bg-white text-[#087889] hover:bg-teal-50 text-xs font-black rounded-xl shadow transition-colors flex items-center gap-1.5"
+                    >
+                      📥 Excel/CSV डाउनलोड
+                    </button>
+                    <span className="bg-teal-800 text-white text-xs font-black px-3.5 py-2 rounded-xl shadow-inner">
+                      {approvedList.length} कुल सदस्य
+                    </span>
+                  </div>
                 </div>
 
                 {approvedList.length === 0 ? (
@@ -793,14 +1231,22 @@ const AdminDashboard = () => {
             {/* TAB 3: ANNUAL DONATIONS */}
             {activeTab === 'donations' && (
               <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-                <div className="p-6 bg-[#f08519] text-white flex justify-between items-center">
+                <div className="p-6 bg-[#f08519] text-white flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                   <div>
                     <h3 className="text-xl font-extrabold">वार्षिक दान रिकॉर्ड (Annual Donations)</h3>
                     <p className="text-xs text-orange-100 mt-1">रजिस्ट्रेशन शुल्क एवं अन्य दान रिकॉर्ड।</p>
                   </div>
-                  <span className="bg-white text-orange-900 text-xs font-black px-3.5 py-1.5 rounded-full shadow">
-                    {donationsList.length} डोनेशन रिकॉर्ड्स
-                  </span>
+                  <div className="flex items-center gap-3">
+                    <button 
+                      onClick={handleExportDonations} 
+                      className="px-4 py-2 bg-white text-[#f08519] hover:bg-orange-50 text-xs font-black rounded-xl shadow transition-colors flex items-center gap-1.5"
+                    >
+                      📥 Excel/CSV डाउनलोड
+                    </button>
+                    <span className="bg-orange-800 text-white text-xs font-black px-3.5 py-2 rounded-xl shadow-inner">
+                      {donationsList.length} डोनेशन रिकॉर्ड्स
+                    </span>
+                  </div>
                 </div>
 
                 <div className="overflow-x-auto">
@@ -1116,7 +1562,15 @@ const AdminDashboard = () => {
               <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-gray-100 pb-4 mb-6 gap-4">
                   <div>
-                    <h3 className="text-xl font-extrabold text-gray-800">बेटी विवाह सहयोग रसीदें (Beti Sahyog Receipts)</h3>
+                    <div className="flex flex-wrap items-center gap-3">
+                      <h3 className="text-xl font-extrabold text-gray-800">बेटी विवाह सहयोग रसीदें (Beti Sahyog Receipts)</h3>
+                      <button 
+                        onClick={() => handleExportReceipts('beti')} 
+                        className="px-3 py-1 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 text-[11px] font-black rounded-lg shadow-sm transition-colors flex items-center gap-1"
+                      >
+                        📥 Excel/CSV
+                      </button>
+                    </div>
                     <p className="text-xs text-gray-500 mt-1">सदस्यों द्वारा अपलोड की गई सहयोग भुगतान रसीदों का सत्यापन करें।</p>
                   </div>
                   {/* Filter Tabs */}
@@ -1235,7 +1689,15 @@ const AdminDashboard = () => {
               <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-gray-100 pb-4 mb-6 gap-4">
                   <div>
-                    <h3 className="text-xl font-extrabold text-gray-800">मृत्यु सहयोग रसीदें (Nidhan Sahyog Receipts)</h3>
+                    <div className="flex flex-wrap items-center gap-3">
+                      <h3 className="text-xl font-extrabold text-gray-800">मृत्यु सहयोग रसीदें (Nidhan Sahyog Receipts)</h3>
+                      <button 
+                        onClick={() => handleExportReceipts('nidhan')} 
+                        className="px-3 py-1 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 text-[11px] font-black rounded-lg shadow-sm transition-colors flex items-center gap-1"
+                      >
+                        📥 Excel/CSV
+                      </button>
+                    </div>
                     <p className="text-xs text-gray-500 mt-1">सदस्यों द्वारा अपलोड की गई सहयोग भुगतान रसीदों का सत्यापन करें।</p>
                   </div>
                   {/* Filter Tabs */}
@@ -1367,14 +1829,15 @@ const AdminDashboard = () => {
                     </h4>
                     <div>
                       <label className="block text-gray-700 font-bold mb-1">मुख्य शीर्षक (Main Banner Title)</label>
-                      <input 
-                        type="text" 
+                      <select 
                         required 
                         value={homeSettings.headerTitle} 
                         onChange={(e) => setHomeSettings({...homeSettings, headerTitle: e.target.value})} 
-                        className="w-full px-3 py-2 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#087889]"
-                        placeholder="जैसे: बेटी विवाह सहायता योजना"
-                      />
+                        className="w-full px-3 py-2 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#087889] font-bold text-gray-800"
+                      >
+                        <option value="बेटी विवाह सहायता योजना">👩 बेटी विवाह सहायता योजना (Beti Vivah Sahyog Yojna)</option>
+                        <option value="निधन सहायता योजना">🕊️ निधन सहायता योजना (Nidhan Sahyog Yojna)</option>
+                      </select>
                     </div>
                   </div>
 

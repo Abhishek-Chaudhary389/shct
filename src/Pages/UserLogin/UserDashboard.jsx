@@ -4,6 +4,7 @@ import {
   getPendingRegistrations, 
   getApprovedMembers, 
   getHomeAlerts, 
+  getHomePageSettings,
   addBetiSahyogReceipt, 
   getBetiSahyogReceipts,
   addNidhanSahyogReceipt,
@@ -11,6 +12,7 @@ import {
 } from '../../services/dataService';
 import html2canvas from 'html2canvas';
 import { compressImage } from '../../utils/imageCompressor';
+import { uploadToImageKit } from '../../utils/imageKitUploader';
 
 const normalizeGroup = (groupStr) => {
   if (!groupStr) return '';
@@ -28,6 +30,7 @@ const UserDashboard = () => {
   const [submittedReceiptsList, setSubmittedReceiptsList] = useState([]);
   const [submittedNidhanReceiptsList, setSubmittedNidhanReceiptsList] = useState([]);
   const [selectedAlertForReceipt, setSelectedAlertForReceipt] = useState(null);
+  const [pageSettings, setPageSettings] = useState(null);
 
   const [user, setUser] = useState({
     name: '',
@@ -96,12 +99,23 @@ const UserDashboard = () => {
 
           // Fetch all alerts
           const allAlerts = await getHomeAlerts();
-          // Filter active alerts for this user's group
+          
+          // Fetch page settings to determine the active yojna type
+          const settings = await getHomePageSettings();
+          setPageSettings(settings);
+          
+          let activeType = 'beti';
+          if (settings && settings.headerTitle === "निधन सहायता योजना") {
+            activeType = 'nidhan';
+          }
+
+          // Filter active alerts for this user's group and matching active scheme type
           const userRawGroup = normalizeGroup(foundUser.group || 'A');
           const myActiveAlerts = allAlerts.filter(alert => 
             alert.isActive && 
             alert.group && 
-            normalizeGroup(alert.group) === userRawGroup
+            normalizeGroup(alert.group) === userRawGroup &&
+            (alert.type || 'beti') === activeType
           );
           setActiveAlerts(myActiveAlerts);
 
@@ -551,23 +565,29 @@ const UserDashboard = () => {
       }
 
       setIsUploading(true);
-      const submissionData = {
-        donorName: user.name,
-        donorUniqueId: user.uniqueId,
-        donorAadhaar: user.aadhaar,
-        donorMobile: user.mobile,
-        donorDistrict: user.district || '',
-        donorBlock: user.block || '',
-        beneficiaryName: selectedAlert.member,
-        beneficiaryUniqueId: selectedAlert.uniqueId,
-        group: selectedAlert.group,
-        transactionId: txnId,
-        date: txnDate,
-        amount: amount,
-        receiptImage: receiptImg
-      };
 
       try {
+        let finalReceiptImage = receiptImg;
+        if (receiptImg && receiptImg.startsWith('data:image')) {
+          finalReceiptImage = await uploadToImageKit(receiptImg, `beti_sahyog_receipt_${user.uniqueId}_${Date.now()}.jpg`);
+        }
+
+        const submissionData = {
+          donorName: user.name,
+          donorUniqueId: user.uniqueId,
+          donorAadhaar: user.aadhaar,
+          donorMobile: user.mobile,
+          donorDistrict: user.district || '',
+          donorBlock: user.block || '',
+          beneficiaryName: selectedAlert.member,
+          beneficiaryUniqueId: selectedAlert.uniqueId,
+          group: selectedAlert.group,
+          transactionId: txnId,
+          date: txnDate,
+          amount: amount,
+          receiptImage: finalReceiptImage
+        };
+
         await addBetiSahyogReceipt(submissionData);
         setIsUploading(false);
         setUploadSuccess(true);
@@ -933,23 +953,29 @@ const UserDashboard = () => {
       }
 
       setIsUploading(true);
-      const submissionData = {
-        donorName: user.name,
-        donorUniqueId: user.uniqueId,
-        donorAadhaar: user.aadhaar,
-        donorMobile: user.mobile,
-        donorDistrict: user.district || '',
-        donorBlock: user.block || '',
-        beneficiaryName: selectedAlert.member,
-        beneficiaryUniqueId: selectedAlert.uniqueId,
-        group: selectedAlert.group,
-        transactionId: txnId,
-        date: txnDate,
-        amount: amount,
-        receiptImage: receiptImg
-      };
 
       try {
+        let finalReceiptImage = receiptImg;
+        if (receiptImg && receiptImg.startsWith('data:image')) {
+          finalReceiptImage = await uploadToImageKit(receiptImg, `nidhan_sahyog_receipt_${user.uniqueId}_${Date.now()}.jpg`);
+        }
+
+        const submissionData = {
+          donorName: user.name,
+          donorUniqueId: user.uniqueId,
+          donorAadhaar: user.aadhaar,
+          donorMobile: user.mobile,
+          donorDistrict: user.district || '',
+          donorBlock: user.block || '',
+          beneficiaryName: selectedAlert.member,
+          beneficiaryUniqueId: selectedAlert.uniqueId,
+          group: selectedAlert.group,
+          transactionId: txnId,
+          date: txnDate,
+          amount: amount,
+          receiptImage: finalReceiptImage
+        };
+
         await addNidhanSahyogReceipt(submissionData);
         setIsUploading(false);
         setUploadSuccess(true);
