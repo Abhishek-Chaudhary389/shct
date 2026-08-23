@@ -34,10 +34,12 @@ import ProtectedRoute from './components/ProtectedRoute';
 
 
 import AdminProtectedRoute from './components/AdminProtectedRoute';
+import ScrollToTop from './components/ScrollToTop';
 
 const App = () => {
   return (
     <div className="min-h-screen bg-white font-sans">
+      <ScrollToTop />
       <Routes>
         
         {/* ================= HOME PAGE ================= */}

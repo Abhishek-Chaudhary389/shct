@@ -170,7 +170,7 @@ const AboutSHCT = () => {
             <p className="text-gray-500 text-sm mt-2 font-medium">Silent Help Charitable Trust के समर्पित सदस्य</p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl mx-auto px-4">
             
             {/* Member 1: बासित अंसारी */}
             <div className="bg-white rounded-3xl p-6 shadow-md border border-gray-100 hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 flex flex-col items-center text-center relative overflow-hidden group">
@@ -203,24 +203,6 @@ const AboutSHCT = () => {
               {/* Text Underneath */}
               <span className="text-[9px] font-black uppercase tracking-widest text-[#087889] bg-teal-50 px-3 py-0.5 rounded-full">TRUST MEMBER</span>
               <h4 className="text-xl font-black text-gray-800 tracking-tight mt-2 mb-1">राजेश</h4>
-              <p className="text-xs text-gray-400 mt-1 font-semibold uppercase tracking-wider text-[#087889]">सदस्य</p>
-              <p className="text-xs text-gray-500 mt-2 font-medium leading-relaxed">ट्रस्ट के समर्पित सदस्य के रूप में समाज सेवा गतिविधियों में सक्रिय भागीदार।</p>
-            </div>
-
-            {/* Member 3: राजकुमार */}
-            <div className="bg-white rounded-3xl p-6 shadow-md border border-gray-100 hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 flex flex-col items-center text-center relative overflow-hidden group">
-              {/* Background gradient hint */}
-              <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-teal-100/20 to-emerald-100/20 rounded-bl-full -z-10"></div>
-              
-              {/* Photo Box on Top */}
-              <div className="w-36 h-44 rounded-2xl bg-gradient-to-tr from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden relative shadow-inner ring-4 ring-teal-500/20 group-hover:ring-teal-500/50 transition-all duration-500 mb-4 shrink-0 mx-auto">
-                {/* 👤 PHOTO PLACEHOLDER: Replace this span with an img element when ready */}
-                <span className="text-5xl text-gray-300 select-none group-hover:scale-110 transition-transform duration-500">👤</span>
-              </div>
-
-              {/* Text Underneath */}
-              <span className="text-[9px] font-black uppercase tracking-widest text-[#087889] bg-teal-50 px-3 py-0.5 rounded-full">TRUST MEMBER</span>
-              <h4 className="text-xl font-black text-gray-800 tracking-tight mt-2 mb-1">राजकुमार</h4>
               <p className="text-xs text-gray-400 mt-1 font-semibold uppercase tracking-wider text-[#087889]">सदस्य</p>
               <p className="text-xs text-gray-500 mt-2 font-medium leading-relaxed">ट्रस्ट के समर्पित सदस्य के रूप में समाज सेवा गतिविधियों में सक्रिय भागीदार।</p>
             </div>
