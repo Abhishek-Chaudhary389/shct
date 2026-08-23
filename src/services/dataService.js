@@ -437,5 +437,69 @@ export const updateNidhanReceiptStatus = async (id, newStatus) => {
   }
 };
 
+// ================= ANNUAL RENEWALS API =================
+const RENEWALS_COL = 'annual_renewals';
+
+export const addAnnualRenewalReceipt = async (receiptData) => {
+  try {
+    const data = {
+      ...receiptData,
+      submittedAt: new Date().toISOString(),
+      status: 'PENDING',
+      amount: "200"
+    };
+    const docRef = await addDoc(collection(db, RENEWALS_COL), data);
+    return { id: docRef.id, ...data };
+  } catch (error) {
+    console.error("Error adding annual renewal receipt:", error);
+    throw error;
+  }
+};
+
+export const getAnnualRenewalReceipts = async () => {
+  try {
+    const snapshot = await getDocs(collection(db, RENEWALS_COL));
+    const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    return data.sort((a, b) => new Date(b.submittedAt || 0) - new Date(a.submittedAt || 0));
+  } catch (error) {
+    console.error("Error fetching annual renewals:", error);
+    return [];
+  }
+};
+
+export const updateAnnualRenewalStatus = async (id, newStatus) => {
+  try {
+    const docRef = doc(db, RENEWALS_COL, id);
+    await updateDoc(docRef, { status: newStatus });
+    
+    // If approved, add a record to the main annual_donations collection
+    if (newStatus === 'APPROVED') {
+      const snap = await getDoc(docRef);
+      if (snap.exists()) {
+        const target = snap.data();
+        const donationSnapshot = await getDocs(collection(db, DONATIONS_COL));
+        const nextDonationSno = donationSnapshot.size + 20001;
+        const newDonation = {
+          sno: nextDonationSno,
+          name: target.name || target.donorName,
+          uniqueId: target.uniqueId || target.donorUniqueId,
+          amount: "200",
+          transactionId: target.transactionId,
+          trustName: "SILENT HELP CHARITABLE TRUST",
+          district: target.district || target.donorDistrict || '',
+          block: target.block || target.donorBlock || '',
+          sahyogDate: target.date || new Date().toISOString().split('T')[0],
+          isRenewal: true // Tag it as a renewal
+        };
+        await addDoc(collection(db, DONATIONS_COL), newDonation);
+      }
+    }
+    return true;
+  } catch (error) {
+    console.error("Error updating annual renewal status:", error);
+    throw error;
+  }
+};
+
 
 

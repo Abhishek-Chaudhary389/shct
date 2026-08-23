@@ -8,7 +8,9 @@ import {
   addBetiSahyogReceipt, 
   getBetiSahyogReceipts,
   addNidhanSahyogReceipt,
-  getNidhanSahyogReceipts
+  getNidhanSahyogReceipts,
+  getAnnualDonations,
+  addAnnualRenewalReceipt,
 } from '../../services/dataService';
 import html2canvas from 'html2canvas';
 import { compressImage } from '../../utils/imageCompressor';
@@ -31,6 +33,7 @@ const UserDashboard = () => {
   const [submittedNidhanReceiptsList, setSubmittedNidhanReceiptsList] = useState([]);
   const [selectedAlertForReceipt, setSelectedAlertForReceipt] = useState(null);
   const [pageSettings, setPageSettings] = useState(null);
+  const [donationsList, setDonationsList] = useState([]);
 
   const [user, setUser] = useState({
     name: '',
@@ -125,6 +128,9 @@ const UserDashboard = () => {
 
           const nidhanReceipts = await getNidhanSahyogReceipts();
           setSubmittedNidhanReceiptsList(nidhanReceipts);
+
+          const donations = await getAnnualDonations();
+          setDonationsList(donations);
         }
       }
     };
@@ -498,17 +504,203 @@ const UserDashboard = () => {
     </div>
   );
 
-  const ViewVarshikDanList = () => (
-    <div className="p-6">
-      <h3 className="text-xl font-bold text-[#8a3324] mb-6">View All Varshik Dan Suchi</h3>
-      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 inline-block">
-        <p className="text-lg text-gray-800 font-medium">You had not submitted Vyawastha shulk till now.</p>
+  const ViewVarshikDanList = () => {
+    const myDonations = donationsList.filter(d => d.uniqueId === user.uniqueId);
+
+    return (
+      <div className="p-6">
+        <h3 className="text-xl font-bold text-[#8a3324] mb-6 border-b border-gray-200 pb-2">View All Varshik Dan Suchi (वार्षिक दान सूची)</h3>
+        
+        {myDonations.length === 0 ? (
+          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 inline-block">
+            <p className="text-lg text-gray-800 font-medium">You had not submitted Vyawastha shulk till now.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {myDonations.map((d, idx) => (
+              <div key={idx} className="bg-white rounded-lg shadow-sm border border-gray-200 p-5 hover:shadow-md transition-shadow">
+                <h4 className="text-lg font-bold text-[#8a3324] mb-1">{d.name}</h4>
+                <p className="text-xs text-gray-500 font-mono">Unique ID : {d.uniqueId}</p>
+                <div className="text-xs font-bold text-green-700 bg-green-50 px-2 py-0.5 rounded w-max mt-2">
+                  {d.isRenewal ? "RENEWAL (नवीनीकरण)" : "REGISTRATION FEE (पंजीकरण शुल्क)"}
+                </div>
+                <hr className="border-t border-gray-100 my-4" />
+                <div className="space-y-2 text-sm text-gray-700 font-semibold">
+                  <p><span className="text-gray-400">Date:</span> {d.sahyogDate}</p>
+                  <p><span className="text-gray-400">Transaction ID:</span> <span className="font-mono text-xs break-all">{d.transactionId}</span></p>
+                  <p><span className="text-gray-400">Amount:</span> ₹ {d.amount}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
-      <div className="mt-8 text-center text-xs text-gray-400">
-        Copyright © 2024 Fast Relief Charitable Trust | All Rights Reserved
+    );
+  };
+
+  const UploadVarshikDanView = () => {
+    const [txnId, setTxnId] = useState('');
+    const [txnDate, setTxnDate] = useState(new Date().toISOString().split('T')[0]);
+    const [receiptImg, setReceiptImg] = useState('');
+    const [isUploading, setIsUploading] = useState(false);
+    const [uploadSuccess, setUploadSuccess] = useState(false);
+
+    const handleFileChange = async (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        try {
+          const base64 = await compressImage(file);
+          setReceiptImg(base64);
+        } catch (error) {
+          console.error("Error compressing image:", error);
+          alert("रसीद कंप्रेस करने में त्रुटि आई।");
+        }
+      }
+    };
+
+    const handleSubmitRenewal = async (e) => {
+      e.preventDefault();
+      if (!receiptImg) {
+        alert("कृपया भुगतान स्क्रीनशॉट अपलोड करें।");
+        return;
+      }
+
+      setIsUploading(true);
+
+      try {
+        let finalReceiptImage = receiptImg;
+        if (receiptImg && receiptImg.startsWith('data:image')) {
+          finalReceiptImage = await uploadToImageKit(receiptImg, `annual_renewal_receipt_${user.uniqueId}_${Date.now()}.jpg`);
+        }
+
+        const submissionData = {
+          name: user.name,
+          uniqueId: user.uniqueId,
+          aadhaar: user.aadhaar,
+          mobile: user.mobile,
+          district: user.district || '',
+          block: user.block || '',
+          transactionId: txnId,
+          date: txnDate,
+          amount: "200",
+          receiptImage: finalReceiptImage,
+          isRenewal: true
+        };
+
+        await addAnnualRenewalReceipt(submissionData);
+        setIsUploading(false);
+        setUploadSuccess(true);
+        
+        // Refresh local data list
+        const donations = await getAnnualDonations();
+        setDonationsList(donations);
+
+        setTimeout(() => {
+          setUploadSuccess(false);
+          setTxnId('');
+          setReceiptImg('');
+          setActiveTab('view_varshik'); 
+        }, 3000);
+      } catch (err) {
+        console.error(err);
+        setIsUploading(false);
+        alert("रसीद सबमिट करने में विफल।");
+      }
+    };
+
+    return (
+      <div className="p-6 max-w-3xl mx-auto">
+        <h3 className="text-xl font-bold text-[#087889] mb-6 border-b border-gray-200 pb-2">Upload Varshik Dan (नवीनीकरण ₹200)</h3>
+
+        <div className="bg-white rounded-xl shadow-md border border-gray-100 p-6">
+          {uploadSuccess ? (
+            <div className="bg-green-50 border-l-4 border-green-500 p-6 rounded-md text-center py-16">
+              <div className="text-green-500 text-6xl mb-4">✅</div>
+              <h2 className="text-2xl font-bold text-gray-800 mb-2">नवीनीकरण रसीद सफलतापूर्वक अपलोड की गई!</h2>
+              <p className="text-gray-600 font-medium">आपकी रसीद एडमिन के पास सत्यापन (Verification) के लिए भेज दी गई है।</p>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmitRenewal} className="space-y-6 text-sm font-semibold">
+              
+              {/* Payment Details Section */}
+              <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="col-span-full font-bold text-[#087889] border-b border-blue-200 pb-1.5">
+                  सहयोगकर्ता का विवरण (Your Info)
+                </div>
+                <div>
+                  <label className="block text-gray-600 mb-1">आपका नाम</label>
+                  <input type="text" disabled value={user.name} className="w-full px-3 py-2 bg-gray-100 border rounded-lg text-gray-500 cursor-not-allowed" />
+                </div>
+                <div>
+                  <label className="block text-gray-600 mb-1">यूनिक आईडी</label>
+                  <input type="text" disabled value={user.uniqueId} className="w-full px-3 py-2 bg-gray-100 border rounded-lg text-gray-500 cursor-not-allowed" />
+                </div>
+              </div>
+
+              {/* Transaction Details */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-gray-700 mb-1">ट्रांजेक्शन आईडी (Txn ID) <span className="text-red-500">*</span></label>
+                  <input 
+                    type="text" 
+                    required 
+                    value={txnId} 
+                    onChange={(e) => setTxnId(e.target.value)} 
+                    placeholder="UPI Txn ID / Ref ID"
+                    className="w-full px-3 py-2 bg-white border rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#087889]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-gray-700 mb-1">सहयोग तिथि <span className="text-red-500">*</span></label>
+                  <input 
+                    type="date" 
+                    required 
+                    value={txnDate} 
+                    onChange={(e) => setTxnDate(e.target.value)} 
+                    className="w-full px-3 py-2 bg-white border rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#087889]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-gray-700 mb-1">नवीनीकरण राशि (₹) <span className="text-red-500">*</span></label>
+                  <input 
+                    type="number" 
+                    disabled 
+                    value="200" 
+                    className="w-full px-3 py-2 bg-gray-100 border rounded-lg text-gray-500 cursor-not-allowed font-bold"
+                  />
+                </div>
+              </div>
+
+              {/* Upload Screenshot */}
+              <div>
+                <label className="block text-gray-700 mb-1">भुगतान रसीद / स्क्रीनशॉट अपलोड करें <span className="text-red-500">*</span></label>
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  required 
+                  onChange={handleFileChange} 
+                  className="w-full px-3 py-2 border rounded-lg text-sm bg-gray-50 focus:outline-none"
+                />
+                {receiptImg && <span className="text-xs text-green-600 font-bold block mt-1">✅ रसीद संलग्न कर दी गई है</span>}
+              </div>
+
+              {/* Submit Button */}
+              <div className="text-right border-t border-gray-100 pt-4">
+                <button 
+                  type="submit" 
+                  disabled={isUploading}
+                  className="px-8 py-3 rounded-lg text-white font-bold text-base shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 w-full sm:w-auto"
+                  style={{ backgroundColor: '#f08519' }}
+                >
+                  {isUploading ? "अपलोड हो रहा है..." : "रसीद जमा करें (Submit)"}
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const UploadBetiReceiptView = () => {
     const activeGroupAlerts = activeAlerts;
@@ -1314,7 +1506,7 @@ const UserDashboard = () => {
       case 'upload_death': return <UploadNidhanReceiptView />;
       case 'upload_beti': return <UploadBetiReceiptView />;
       case 'view_beti': return <ViewAllBetiSahyogList />;
-      case 'upload_varshik': return <PlaceholderView title="Upload Varshik Dan" />;
+      case 'upload_varshik': return <UploadVarshikDanView />;
       case 'referral': return <PlaceholderView title="Referral Points" />;
       case 'password': return <PlaceholderView title="Update Password" />;
       default: return <DashboardView />;

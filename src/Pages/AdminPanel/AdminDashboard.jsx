@@ -20,7 +20,9 @@ import {
   getBetiSahyogReceipts,
   updateBetiReceiptStatus,
   getNidhanSahyogReceipts,
-  updateNidhanReceiptStatus
+  updateNidhanReceiptStatus,
+  getAnnualRenewalReceipts,
+  updateAnnualRenewalStatus
 } from '../../services/dataService';
 import { compressImage } from '../../utils/imageCompressor';
 import { uploadToImageKit } from '../../utils/imageKitUploader';
@@ -39,6 +41,8 @@ const AdminDashboard = () => {
   const [homeAlertsList, setHomeAlertsList] = useState([]);
   const [betiReceiptsList, setBetiReceiptsList] = useState([]);
   const [nidhanReceiptsList, setNidhanReceiptsList] = useState([]);
+  const [renewalsList, setRenewalsList] = useState([]);
+  const [renewalsFilter, setRenewalsFilter] = useState('PENDING'); // 'PENDING' | 'APPROVED' | 'REJECTED' | 'ALL'
 
   const [homeSettings, setHomeSettings] = useState({
     headerTitle: '',
@@ -153,6 +157,14 @@ const AdminDashboard = () => {
     } catch (e) {
       console.error("Error loading nidhan receipts:", e);
     }
+
+    try {
+      const rReceipts = await getAnnualRenewalReceipts();
+      console.log("Loaded renewals list:", rReceipts.length);
+      setRenewalsList(rReceipts);
+    } catch (e) {
+      console.error("Error loading renewals receipts:", e);
+    }
     console.log("loadData complete.");
   };
 
@@ -186,6 +198,19 @@ const AdminDashboard = () => {
     try {
       await updateNidhanReceiptStatus(id, status);
       setNotification(`✅ रसीद स्थिति सफलतापूर्वक ${status === 'APPROVED' ? 'स्वीकृत' : 'अस्वीकृत'} कर दी गई है!`);
+      await loadData();
+      setTimeout(() => setNotification(''), 4000);
+    } catch (err) {
+      console.error(err);
+      setNotification('❌ स्थिति अपडेट करने में त्रुटि आई।');
+      setTimeout(() => setNotification(''), 4000);
+    }
+  };
+
+  const handleRenewalReceiptAction = async (id, status) => {
+    try {
+      await updateAnnualRenewalStatus(id, status);
+      setNotification(`✅ नवीनीकरण रसीद स्थिति सफलतापूर्वक ${status === 'APPROVED' ? 'स्वीकृत' : 'अस्वीकृत'} कर दी गई है!`);
       await loadData();
       setTimeout(() => setNotification(''), 4000);
     } catch (err) {
@@ -252,17 +277,22 @@ const AdminDashboard = () => {
   };
 
   const getGroupSizes = () => {
-    const counts = { A: 0, B: 0, C: 0, D: 0 };
+    const counts = {};
+    for (let i = 0; i < 26; i++) {
+      counts[String.fromCharCode(65 + i)] = 0;
+    }
     approvedList.forEach(m => {
       const g = m.group ? String(m.group).trim().toUpperCase() : 'A';
-      counts[g] = (counts[g] || 0) + 1;
+      if (counts[g] !== undefined) {
+        counts[g] = (counts[g] || 0) + 1;
+      }
     });
     return counts;
   };
 
   const getSmallestGroup = () => {
     const groupSizes = getGroupSizes();
-    const targetGroups = ['A', 'B', 'C', 'D'];
+    const targetGroups = Array.from({ length: 26 }, (_, i) => String.fromCharCode(65 + i));
     let smallestGroup = 'A';
     let minSize = Infinity;
     targetGroups.forEach(g => {
@@ -596,6 +626,19 @@ const AdminDashboard = () => {
                 )}
               </button>
 
+              <button 
+                onClick={() => setActiveTab('renewals')}
+                className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl font-bold text-sm transition-all shadow-sm ${activeTab === 'renewals' ? 'bg-[#087889] text-white border border-teal-500/30' : 'text-gray-300 hover:bg-gray-800 hover:text-white'}`}
+              >
+                <span className="text-lg">🔄</span> 
+                <span className="text-left flex-1">Renewals (नवीनीकरण)</span>
+                {renewalsList.filter(r => r.status === 'PENDING').length > 0 && (
+                  <span className="bg-[#f08519] text-white text-[10px] px-2 py-0.5 rounded-full font-black">
+                    {renewalsList.filter(r => r.status === 'PENDING').length}
+                  </span>
+                )}
+              </button>
+
               {/* SAHAYATA LIST ACCORDION */}
               <div className="pt-2">
                 <button 
@@ -734,8 +777,52 @@ const AdminDashboard = () => {
                   </div>
                 </div>
               </div>
-            ) : (
+            ) : activeTab === 'renewals' ? (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                {/* Pending Renewals */}
+                <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 border-t-4 border-t-amber-500 flex items-center justify-between hover:shadow-md transition-shadow">
+                  <div>
+                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">लंबित नवीनीकरण रसीदें</p>
+                    <h3 className="text-4xl font-black text-amber-600 mt-1">
+                      {renewalsList.filter(r => r.status === 'PENDING').length}
+                    </h3>
+                    <p className="text-xs text-gray-400 mt-1 font-medium">Pending Verification</p>
+                  </div>
+                  <div className="w-14 h-14 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center text-2xl font-bold">
+                    ⏳
+                  </div>
+                </div>
+
+                {/* Approved Renewals */}
+                <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 border-t-4 border-t-emerald-500 flex items-center justify-between hover:shadow-md transition-shadow">
+                  <div>
+                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">स्वीकृत नवीनीकरण रसीदें</p>
+                    <h3 className="text-4xl font-black text-emerald-600 mt-1">
+                      {renewalsList.filter(r => r.status === 'APPROVED').length}
+                    </h3>
+                    <p className="text-xs text-gray-400 mt-1 font-medium">Approved Renewals</p>
+                  </div>
+                  <div className="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center text-2xl font-bold">
+                    ✅
+                  </div>
+                </div>
+
+                {/* Rejected Renewals */}
+                <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 border-t-4 border-t-red-500 flex items-center justify-between hover:shadow-md transition-shadow">
+                  <div>
+                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">अस्वीकृत नवीनीकरण रसीदें</p>
+                    <h3 className="text-4xl font-black text-red-600 mt-1">
+                      {renewalsList.filter(r => r.status === 'REJECTED').length}
+                    </h3>
+                    <p className="text-xs text-gray-400 mt-1 font-medium">Rejected Renewals</p>
+                  </div>
+                  <div className="w-14 h-14 bg-red-50 text-red-600 rounded-2xl flex items-center justify-center text-2xl font-bold">
+                    ✕
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                 <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 border-t-4 border-t-amber-500 flex items-center justify-between hover:shadow-md transition-shadow">
                   <div>
                     <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">पेंडिंग आवेदन</p>
@@ -760,11 +847,24 @@ const AdminDashboard = () => {
                   </div>
                 </div>
 
+                <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 border-t-4 border-t-purple-500 flex items-center justify-between hover:shadow-md transition-shadow">
+                  <div>
+                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">कुल नवीनीकरण</p>
+                    <h3 className="text-4xl font-black text-purple-600 mt-1">
+                      {renewalsList.filter(r => r.status === 'APPROVED').length}
+                    </h3>
+                    <p className="text-xs text-gray-400 mt-1 font-medium">Renewals Count</p>
+                  </div>
+                  <div className="w-14 h-14 bg-purple-50 text-purple-600 rounded-2xl flex items-center justify-center text-2xl font-bold">
+                    🔄
+                  </div>
+                </div>
+
                 <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 border-t-4 border-t-[#f08519] flex items-center justify-between hover:shadow-md transition-shadow">
                   <div>
                     <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">कुल दान संग्रह</p>
                     <h3 className="text-3xl font-black text-[#f08519] mt-1">₹ {totalDonationSum}</h3>
-                    <p className="text-xs text-gray-400 mt-1 font-medium">Registration Fees</p>
+                    <p className="text-xs text-gray-400 mt-1 font-medium">Registration & Renewals</p>
                   </div>
                   <div className="w-14 h-14 bg-orange-50 text-[#f08519] rounded-2xl flex items-center justify-center text-2xl font-bold">
                     💰
@@ -968,18 +1068,25 @@ const AdminDashboard = () => {
                 <div>
                   <h3 className="text-xl font-extrabold text-gray-800 mb-6">सभी सक्रिय ग्रुप (Active Groups Sizes)</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {['A', 'B', 'C', 'D'].map((g) => {
+                    {Array.from({ length: 26 }, (_, i) => String.fromCharCode(65 + i)).map((g) => {
                       const size = getGroupSizes()[g] || 0;
                       const maxCapacity = Math.max(...Object.values(getGroupSizes()), 10) + 5;
                       const percentage = (size / maxCapacity) * 100;
                       
-                      const groupColors = {
-                        A: { border: 'border-t-teal-500', text: 'text-teal-600', bg: 'bg-teal-500' },
-                        B: { border: 'border-t-orange-500', text: 'text-orange-600', bg: 'bg-orange-500' },
-                        C: { border: 'border-t-indigo-500', text: 'text-indigo-600', bg: 'bg-indigo-500' },
-                        D: { border: 'border-t-rose-500', text: 'text-rose-600', bg: 'bg-rose-500' }
-                      };
-                      const color = groupColors[g] || groupColors.A;
+                      const colorsArray = [
+                        { border: 'border-t-teal-500', text: 'text-teal-600', bg: 'bg-teal-500' },
+                        { border: 'border-t-orange-500', text: 'text-orange-600', bg: 'bg-orange-500' },
+                        { border: 'border-t-indigo-500', text: 'text-indigo-600', bg: 'bg-indigo-500' },
+                        { border: 'border-t-rose-500', text: 'text-rose-600', bg: 'bg-rose-500' },
+                        { border: 'border-t-cyan-500', text: 'text-cyan-600', bg: 'bg-cyan-500' },
+                        { border: 'border-t-amber-500', text: 'text-amber-600', bg: 'bg-amber-500' },
+                        { border: 'border-t-purple-500', text: 'text-purple-600', bg: 'bg-purple-500' },
+                        { border: 'border-t-emerald-500', text: 'text-emerald-600', bg: 'bg-emerald-500' },
+                        { border: 'border-t-pink-500', text: 'text-pink-600', bg: 'bg-pink-500' },
+                        { border: 'border-t-violet-500', text: 'text-violet-600', bg: 'bg-violet-500' }
+                      ];
+                      const colorIndex = g.charCodeAt(0) % colorsArray.length;
+                      const color = colorsArray[colorIndex];
 
                       return (
                         <div 
@@ -1801,6 +1908,122 @@ const AdminDashboard = () => {
                       {nidhanReceiptsList.filter(r => nidhanFilter === 'ALL' ? true : r.status === nidhanFilter).length === 0 && (
                         <tr>
                           <td colSpan="6" className="text-center py-8 text-gray-500 font-bold">
+                            इस फिल्टर के लिए कोई रसीद नहीं है
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* TAB: RENEWALS VERIFICATION */}
+            {activeTab === 'renewals' && (
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-gray-100 pb-4 mb-6 gap-4">
+                  <div>
+                    <div className="flex flex-wrap items-center gap-3">
+                      <h3 className="text-xl font-extrabold text-gray-800">वार्षिक नवीनीकरण रसीदें (Annual Renewals)</h3>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">सदस्यों द्वारा अपलोड की गई नवीनीकरण भुगतान रसीदों का सत्यापन करें।</p>
+                  </div>
+                  {/* Filter Tabs */}
+                  <div className="flex flex-wrap bg-gray-100 p-1 rounded-xl border border-gray-200">
+                    {['PENDING', 'APPROVED', 'REJECTED', 'ALL'].map((f) => (
+                      <button
+                        key={f}
+                        onClick={() => setRenewalsFilter(f)}
+                        className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
+                          renewalsFilter === f 
+                            ? 'bg-[#087889] text-white shadow-sm' 
+                            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200/50'
+                        }`}
+                      >
+                        {f === 'PENDING' ? `⏳ लंबित (${renewalsList.filter(r => r.status === 'PENDING').length})` :
+                         f === 'APPROVED' ? `✅ स्वीकृत (${renewalsList.filter(r => r.status === 'APPROVED').length})` :
+                         f === 'REJECTED' ? `❌ अस्वीकृत (${renewalsList.filter(r => r.status === 'REJECTED').length})` :
+                         `🔎 सभी (${renewalsList.length})`}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse min-w-[1000px]">
+                    <thead>
+                      <tr className="bg-gray-50 text-gray-700 text-xs font-extrabold uppercase border-b border-gray-200">
+                        <th className="py-3 px-4">सहयोगकर्ता (Donor)</th>
+                        <th className="py-3 px-4">ट्रांजेक्शन (Transaction Details)</th>
+                        <th className="py-3 px-4 text-center">भुगतान रसीद</th>
+                        <th className="py-3 px-4 text-center">स्थिति (Status)</th>
+                        <th className="py-3 px-4 text-right">एक्शन</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100 text-sm font-medium">
+                      {renewalsList
+                        .filter(r => renewalsFilter === 'ALL' ? true : r.status === renewalsFilter)
+                        .map((receipt) => (
+                          <tr key={receipt.id} className="hover:bg-gray-50/50">
+                            <td className="py-3 px-4">
+                              <span className="font-bold text-gray-800">{receipt.name || receipt.donorName}</span>
+                              <div className="text-xs text-gray-500 font-semibold mt-0.5">ID: {receipt.uniqueId || receipt.donorUniqueId} | Mob: {receipt.mobile || receipt.donorMobile}</div>
+                            </td>
+                            <td className="py-3 px-4 text-xs font-bold text-gray-600">
+                              <div>Amt: <span className="text-teal-700 font-extrabold">₹ {receipt.amount}</span></div>
+                              <div className="mt-1 font-mono text-[10px] break-all">Txn: {receipt.transactionId}</div>
+                              <div className="text-gray-400 font-medium mt-0.5">Date: {receipt.date}</div>
+                            </td>
+                            <td className="py-3 px-4 text-center">
+                              {receipt.receiptImage ? (
+                                <button 
+                                  onClick={() => setSelectedReceiptForDetail(receipt)}
+                                  className="px-3 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-lg text-xs font-bold transition-colors"
+                                >
+                                  👁️ विवरण एवं रसीद (Detail)
+                                </button>
+                              ) : (
+                                <span className="text-gray-400 text-xs">No Image</span>
+                              )}
+                            </td>
+                            <td className="py-3 px-4 text-center">
+                              <span className={`px-2.5 py-1 text-[11px] font-black rounded-full shadow-sm ${
+                                receipt.status === 'APPROVED' ? 'bg-green-100 text-green-700' :
+                                receipt.status === 'REJECTED' ? 'bg-red-100 text-red-700' :
+                                'bg-amber-100 text-amber-700'
+                              }`}>
+                                {receipt.status === 'APPROVED' ? 'स्वीकृत' :
+                                 receipt.status === 'REJECTED' ? 'अस्वीकृत' :
+                                 'लंबित'}
+                              </span>
+                            </td>
+                            <td className="py-3 px-4 text-right">
+                              <div className="flex justify-end gap-2">
+                                {receipt.status !== 'APPROVED' && (
+                                  <button 
+                                    onClick={() => handleRenewalReceiptAction(receipt.id, 'APPROVED')} 
+                                    className="p-2 bg-green-50 text-green-600 hover:bg-green-100 rounded-lg transition-colors" 
+                                    title="Approve"
+                                  >
+                                    ✅
+                                  </button>
+                                )}
+                                {receipt.status !== 'REJECTED' && (
+                                  <button 
+                                    onClick={() => handleRenewalReceiptAction(receipt.id, 'REJECTED')} 
+                                    className="p-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg transition-colors" 
+                                    title="Reject"
+                                  >
+                                    ❌
+                                  </button>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      {renewalsList.filter(r => renewalsFilter === 'ALL' ? true : r.status === renewalsFilter).length === 0 && (
+                        <tr>
+                          <td colSpan="5" className="text-center py-8 text-gray-500 font-bold">
                             इस फिल्टर के लिए कोई रसीद नहीं है
                           </td>
                         </tr>

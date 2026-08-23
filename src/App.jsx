@@ -5,6 +5,8 @@ import Footer from './components/Footer';
 import Hero from './components/Home/Hero';
 import Schemes from './components/Home/Schemes';
 import Group from './components/Home/Group'; 
+import AboutPreview from './components/Home/AboutPreview';
+import RegistrationBanner from './components/Home/RegistrationBanner';
 
 // UserLogin फोल्डर से
 import Register from './Pages/UserLogin/Register'; 
@@ -48,6 +50,8 @@ const App = () => {
                 <Hero />
                 <Schemes />
                 <Group />
+                <AboutPreview />
+                <RegistrationBanner />
               </div>
               <Footer /> 
             </div>

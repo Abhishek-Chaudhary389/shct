@@ -243,18 +243,9 @@ const Navbar = () => {
               <Link to="/register" className={`h-full px-3 xl:px-4 flex items-center justify-center font-bold text-white text-[11px] xl:text-[12px] transition-colors whitespace-nowrap border-r border-[#d97314] ${isActive('/register') ? 'bg-orange-700 shadow-inner' : 'hover:bg-orange-600'}`} style={{ backgroundColor: logoOrange }}>
                 REGISTRATION
               </Link>
-              {isLoggedIn ? (
-                <button 
-                  onClick={handleLogout} 
-                  className="h-full px-3 xl:px-5 flex items-center justify-center font-bold text-white text-[11px] xl:text-[12px] transition-colors whitespace-nowrap bg-red-600 hover:bg-red-700"
-                >
-                  LOGOUT
-                </button>
-              ) : (
-                <Link to="/login" className={`h-full px-3 xl:px-5 flex items-center justify-center font-bold text-white text-[11px] xl:text-[12px] transition-colors whitespace-nowrap ${isActive('/login') ? 'bg-orange-700 shadow-inner' : 'hover:bg-orange-600'}`} style={{ backgroundColor: logoOrange }}>
-                  LOGIN
-                </Link>
-              )}
+              <Link to="/login" className={`h-full px-3 xl:px-5 flex items-center justify-center font-bold text-white text-[11px] xl:text-[12px] transition-colors whitespace-nowrap ${isActive('/login') ? 'bg-orange-700 shadow-inner' : 'hover:bg-orange-600'}`} style={{ backgroundColor: logoOrange }}>
+                LOGIN
+              </Link>
             </div>
           </div>
 
@@ -388,18 +379,9 @@ const Navbar = () => {
                 <Link to="/register" onClick={() => setIsMobileMenuOpen(false)} className={`w-1/2 py-3 text-white font-bold rounded shadow-md text-center text-sm ${isActive('/register') ? 'bg-orange-700' : ''}`} style={{ backgroundColor: logoOrange }}>
                   REGISTRATION
                 </Link>
-                {isLoggedIn ? (
-                  <button 
-                    onClick={() => { handleLogout(); setIsMobileMenuOpen(false); }} 
-                    className="w-1/2 py-3 text-white font-bold rounded shadow-md text-center text-sm bg-red-600 hover:bg-red-700"
-                  >
-                    LOGOUT
-                  </button>
-                ) : (
-                  <Link to="/login" onClick={() => setIsMobileMenuOpen(false)} className={`w-1/2 py-3 text-white font-bold rounded shadow-md text-center text-sm ${isActive('/login') ? 'bg-orange-700' : ''}`} style={{ backgroundColor: logoOrange }}>
-                    LOGIN
-                  </Link>
-                )}
+                <Link to="/login" onClick={() => setIsMobileMenuOpen(false)} className={`w-1/2 py-3 text-white font-bold rounded shadow-md text-center text-sm ${isActive('/login') ? 'bg-orange-700' : ''}`} style={{ backgroundColor: logoOrange }}>
+                  LOGIN
+                </Link>
               </div>
             </div>
           </div>
