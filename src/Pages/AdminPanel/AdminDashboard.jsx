@@ -50,7 +50,9 @@ const AdminDashboard = () => {
     alertPoints: '',
     instructionTitle: '',
     instructionText: '',
-    instructionNote: ''
+    instructionNote: '',
+    autoApproveBeti: false,
+    autoApproveNidhan: false
   });
 
   const [isSahayataMenuOpen, setIsSahayataMenuOpen] = useState(false);
@@ -177,6 +179,40 @@ const AdminDashboard = () => {
     } catch (err) {
       console.error(err);
       setNotification('❌ सेटिंग्स सहेजने में विफल।');
+      setTimeout(() => setNotification(''), 4000);
+    }
+  };
+
+  const handleToggleBetiAutoApprove = async () => {
+    try {
+      const updated = {
+        ...homeSettings,
+        autoApproveBeti: !homeSettings.autoApproveBeti
+      };
+      await saveHomePageSettings(updated);
+      setHomeSettings(updated);
+      setNotification(`✅ बेटी सहयोग ऑटो-वेरिफिकेशन ${updated.autoApproveBeti ? 'चालू (AUTO)' : 'बंद (MANUAL)'} कर दिया गया है!`);
+      setTimeout(() => setNotification(''), 4000);
+    } catch (err) {
+      console.error(err);
+      setNotification('❌ ऑटो-वेरिफिकेशन स्थिति बदलने में विफल।');
+      setTimeout(() => setNotification(''), 4000);
+    }
+  };
+
+  const handleToggleNidhanAutoApprove = async () => {
+    try {
+      const updated = {
+        ...homeSettings,
+        autoApproveNidhan: !homeSettings.autoApproveNidhan
+      };
+      await saveHomePageSettings(updated);
+      setHomeSettings(updated);
+      setNotification(`✅ मृत्यु सहयोग ऑटो-वेरिफिकेशन ${updated.autoApproveNidhan ? 'चालू (AUTO)' : 'बंद (MANUAL)'} कर दिया गया है!`);
+      setTimeout(() => setNotification(''), 4000);
+    } catch (err) {
+      console.error(err);
+      setNotification('❌ ऑटो-वेरिफिकेशन स्थिति बदलने में विफल।');
       setTimeout(() => setNotification(''), 4000);
     }
   };
@@ -1677,6 +1713,16 @@ const AdminDashboard = () => {
                       >
                         📥 Excel/CSV
                       </button>
+                      <button 
+                        onClick={handleToggleBetiAutoApprove}
+                        className={`px-3 py-1 border text-[11px] font-black rounded-lg shadow-sm transition-colors flex items-center gap-1.5 ${
+                          homeSettings.autoApproveBeti 
+                            ? 'bg-amber-50 text-amber-700 hover:bg-amber-100 border-amber-200' 
+                            : 'bg-gray-50 text-gray-500 hover:bg-gray-100 border-gray-200'
+                        }`}
+                      >
+                        🔄 ऑटो-वेरिफिकेशन: {homeSettings.autoApproveBeti ? 'चालू (AUTO)' : 'बंद (MANUAL)'}
+                      </button>
                     </div>
                     <p className="text-xs text-gray-500 mt-1">सदस्यों द्वारा अपलोड की गई सहयोग भुगतान रसीदों का सत्यापन करें।</p>
                   </div>
@@ -1803,6 +1849,16 @@ const AdminDashboard = () => {
                         className="px-3 py-1 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 text-[11px] font-black rounded-lg shadow-sm transition-colors flex items-center gap-1"
                       >
                         📥 Excel/CSV
+                      </button>
+                      <button 
+                        onClick={handleToggleNidhanAutoApprove}
+                        className={`px-3 py-1 border text-[11px] font-black rounded-lg shadow-sm transition-colors flex items-center gap-1.5 ${
+                          homeSettings.autoApproveNidhan 
+                            ? 'bg-amber-50 text-amber-700 hover:bg-amber-100 border-amber-200' 
+                            : 'bg-gray-50 text-gray-500 hover:bg-gray-100 border-gray-200'
+                        }`}
+                      >
+                        🔄 ऑटो-वेरिफिकेशन: {homeSettings.autoApproveNidhan ? 'चालू (AUTO)' : 'बंद (MANUAL)'}
                       </button>
                     </div>
                     <p className="text-xs text-gray-500 mt-1">सदस्यों द्वारा अपलोड की गई सहयोग भुगतान रसीदों का सत्यापन करें।</p>

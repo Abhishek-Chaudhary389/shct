@@ -11,8 +11,10 @@ import {
   getNidhanSahyogReceipts,
   getAnnualDonations,
   addAnnualRenewalReceipt,
+  updateUserPassword,
 } from '../../services/dataService';
-import html2canvas from 'html2canvas';
+import html2canvas from 'html2canvas-pro';
+import { logoBase64 } from '../../utils/logoBase64';
 import { compressImage } from '../../utils/imageCompressor';
 import { uploadToImageKit } from '../../utils/imageKitUploader';
 
@@ -35,7 +37,49 @@ const UserDashboard = () => {
   const [pageSettings, setPageSettings] = useState(null);
   const [donationsList, setDonationsList] = useState([]);
 
+  // Shared States for Centralized Receipt Image Generation
+  const [selectedDownloadReceipt, setSelectedDownloadReceipt] = useState(null);
+  const [downloadType, setDownloadType] = useState(''); // 'beti' or 'nidhan'
+
+  const triggerDownload = async (receipt, type) => {
+    setSelectedDownloadReceipt(receipt);
+    setDownloadType(type);
+    
+    // Wait for state to reflect in DOM
+    setTimeout(async () => {
+      const elementId = type === 'beti' ? 'printable-donation-receipt' : 'printable-donation-receipt-nidhan';
+      const receiptCard = document.getElementById(elementId);
+      if (!receiptCard) {
+        console.error("Receipt card element not found: ", elementId);
+        return;
+      }
+      
+      try {
+        const canvas = await html2canvas(receiptCard, {
+          scale: 2, 
+          useCORS: false,
+          allowTaint: true,
+          backgroundColor: '#ffffff'
+        });
+        const image = canvas.toDataURL('image/png');
+        const link = document.createElement('a');
+        link.href = image;
+        link.download = `Donation_Receipt_${type === 'beti' ? 'Beti' : 'Nidhan'}_${receipt.transactionId}.png`;
+        link.click();
+      } catch (error) {
+        console.error("Error generating receipt:", error);
+        alert("रसीद डाउनलोड करने में असमर्थ: " + (error.message || error));
+      } finally {
+        setSelectedDownloadReceipt(null);
+        setDownloadType('');
+      }
+    }, 150);
+  };
+
+
   const [user, setUser] = useState({
+    dbId: '',
+    isPendingUser: false,
     name: '',
     group: '',
     aadhaar: '',
@@ -77,6 +121,8 @@ const UserDashboard = () => {
 
         if (foundUser) {
           setUser({
+            dbId: foundUser.id || '',
+            isPendingUser: isPending,
             name: foundUser.name || '',
             group: isPending ? 'Pending' : (foundUser.group ? `Group ${foundUser.group}` : 'Group A'),
             aadhaar: foundUser.aadhaar || '',
@@ -420,15 +466,28 @@ const UserDashboard = () => {
         id="printable-id-card" 
         className="w-[350px] bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden relative"
       >
+        {/* Center Watermark Logo */}
+        <div className="absolute inset-0 flex items-center justify-center opacity-[0.07] pointer-events-none select-none transform translate-y-12">
+          <img src={logoBase64} alt="Watermark Logo" className="w-64 h-64 object-contain" />
+        </div>
+
         {/* Header */}
-        <div className="bg-[#087889] p-4 text-center text-white relative">
+        <div className="bg-[#087889] p-4 text-center text-white relative flex flex-col items-center justify-center">
           <div className="absolute top-0 right-0 w-16 h-16 bg-white/10 rounded-full -mt-4 -mr-4 blur-sm"></div>
-          <h2 className="text-lg font-black tracking-tight leading-tight uppercase">Fast Relief</h2>
-          <p className="text-[10px] font-bold tracking-widest text-teal-100 mt-0.5 uppercase">Charitable Trust</p>
+          
+          <div className="flex items-center gap-2.5">
+            <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center p-1 shadow-md">
+              <img src={logoBase64} alt="SHCT Logo" className="w-full h-full object-contain" />
+            </div>
+            <div className="text-left">
+              <h2 className="text-sm font-black tracking-tight leading-none uppercase">Silent Help</h2>
+              <p className="text-[8px] font-bold tracking-widest text-teal-100 uppercase mt-0.5">Charitable Trust</p>
+            </div>
+          </div>
         </div>
 
         {/* Body */}
-        <div className="p-5">
+        <div className="p-5 relative z-10">
           <div className="text-center mb-5 pb-4 border-b border-gray-100">
             <h3 className="text-xl font-bold text-gray-800 uppercase">{user.name || 'Member Name'}</h3>
             <p className="text-[11px] font-bold text-gray-500 uppercase mt-0.5">S/O, D/O, W/O: {user.fatherName || 'N/A'}</p>
@@ -456,7 +515,7 @@ const UserDashboard = () => {
         </div>
 
         {/* Footer */}
-        <div className="bg-gray-50 p-3 text-center border-t border-gray-100">
+        <div className="bg-gray-50 p-3 text-center border-t border-gray-100 relative z-10">
           <p className="text-[9px] font-bold text-gray-400 uppercase tracking-wide">Valid Member Identity Card</p>
           <p className="text-[8px] text-gray-400 mt-0.5">www.silenthelp.org</p>
         </div>
@@ -950,33 +1009,6 @@ const UserDashboard = () => {
 
   const ViewAllBetiSahyogList = () => {
     const approvedReceipts = submittedReceiptsList.filter(r => r.status === 'APPROVED');
-    const [selectedDownloadReceipt, setSelectedDownloadReceipt] = useState(null);
-
-    const handleDownloadReceipt = async (receipt) => {
-      setSelectedDownloadReceipt(receipt);
-      setTimeout(async () => {
-        const receiptCard = document.getElementById('printable-donation-receipt');
-        if (!receiptCard) return;
-        
-        try {
-          const canvas = await html2canvas(receiptCard, {
-            scale: 3, 
-            useCORS: true,
-            backgroundColor: '#ffffff'
-          });
-          const image = canvas.toDataURL('image/png');
-          const link = document.createElement('a');
-          link.href = image;
-          link.download = `Donation_Receipt_${receipt.transactionId}.png`;
-          link.click();
-          setSelectedDownloadReceipt(null);
-        } catch (error) {
-          console.error("Error generating receipt:", error);
-          alert("रसीद डाउनलोड करने में असमर्थ।");
-          setSelectedDownloadReceipt(null);
-        }
-      }, 500);
-    };
 
     return (
       <div className="p-6">
@@ -990,100 +1022,74 @@ const UserDashboard = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {approvedReceipts.map((receipt) => (
-              <div key={receipt.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-5 hover:shadow-md transition-shadow">
-                <h4 className="text-lg font-bold text-[#8a3324] mb-1">{receipt.donorName}</h4>
-                <p className="text-xs text-gray-500 font-mono">Unique ID : {receipt.donorUniqueId}</p>
-                <div className="text-xs font-bold text-green-700 bg-green-50 px-2 py-0.5 rounded w-max mt-2">APPROVED</div>
-                <hr className="border-t border-gray-100 my-4" />
-                <div className="space-y-2 text-sm text-gray-700 font-semibold mb-6">
-                  <p><span className="text-gray-400">Donated On:</span> {receipt.date}</p>
-                  <p><span className="text-gray-400">Transaction ID:</span> <span className="font-mono text-xs break-all">{receipt.transactionId}</span></p>
-                  <p><span className="text-gray-400">Amount:</span> ₹ {receipt.amount}</p>
-                  <p><span className="text-gray-400">For:</span> {receipt.beneficiaryName}</p>
+              <div 
+                key={receipt.id} 
+                className="bg-white p-5 relative rounded shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between"
+                style={{ border: '2px dashed red', minHeight: '380px' }}
+              >
+                {/* Center Watermark Logo */}
+                <div className="absolute inset-0 flex items-center justify-center opacity-[0.05] pointer-events-none select-none">
+                  <img src={logoBase64} alt="Watermark Logo" className="w-48 h-48 object-contain" />
                 </div>
-                <button 
-                  onClick={() => handleDownloadReceipt(receipt)}
-                  className="bg-[#f0ad4e] hover:bg-[#ec971f] text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors w-full sm:w-auto shadow-sm"
-                >
-                  Download Donation Receipt
-                </button>
+
+                <div>
+                  {/* Header */}
+                  <div className="text-center pb-3 mb-3 border-b border-gray-100">
+                    <img src={logoBase64} alt="Logo" className="w-12 h-12 object-contain mx-auto mb-1" />
+                    <h1 className="text-xs font-black uppercase text-red-600 tracking-tight leading-tight">
+                      SILENT HELP CHARITABLE TRUST
+                    </h1>
+                    <p className="text-[8px] text-gray-400 font-bold uppercase tracking-wider">
+                      रजि0न0 ( 57/2026 )
+                    </p>
+                  </div>
+
+                  {/* Body fields */}
+                  <div className="space-y-2 text-[11px] font-bold leading-normal text-left text-gray-700">
+                    <div className="flex items-start justify-between gap-1">
+                      <span className="text-gray-400 w-[55%]">Thank You For Donation To Sh./Smt./M/S :</span>
+                      <span className="text-gray-900 text-right w-[45%] break-words">{receipt.beneficiaryName || 'N/A'}</span>
+                    </div>
+                    <div className="flex items-start justify-between gap-1">
+                      <span className="text-gray-400 w-[55%]">From Sh./Smt./M/S :</span>
+                      <span className="text-gray-900 text-right w-[45%] break-words">{receipt.donorName || 'N/A'}</span>
+                    </div>
+                    <div className="flex items-start justify-between gap-1">
+                      <span className="text-gray-400 w-[55%]">Email :</span>
+                      <span className="text-gray-900 text-right w-[45%] break-all">{receipt.donorEmail || user.email || 'N/A'}</span>
+                    </div>
+                    <div className="flex items-start justify-between gap-1">
+                      <span className="text-gray-400 w-[55%]">Donated Amount :</span>
+                      <span className="text-gray-900 text-right w-[45%] text-red-600 font-black">₹ {parseFloat(receipt.amount || 0).toFixed(2)}</span>
+                    </div>
+                    <div className="flex items-start justify-between gap-1">
+                      <span className="text-gray-400 w-[55%]">On :</span>
+                      <span className="text-gray-900 text-right w-[45%]">{receipt.date || 'N/A'}</span>
+                    </div>
+                    <div className="flex items-start justify-between gap-1">
+                      <span className="text-gray-400 w-[55%]">Transaction ID :</span>
+                      <span className="text-gray-900 text-right w-[45%] font-mono break-all text-[10px]">{receipt.transactionId || 'N/A'}</span>
+                    </div>
+                    <div className="flex items-start justify-between gap-1">
+                      <span className="text-gray-400 w-[55%]">Cause For Donation :</span>
+                      <span className="text-gray-900 text-right w-[45%]">Beti Sahyog</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-4 pt-3 border-t border-gray-100 flex flex-col gap-2 relative z-10">
+                  <div className="text-center font-bold text-red-600 text-xs tracking-wide">
+                    Thank You For Your Donation
+                  </div>
+                  <button 
+                    onClick={() => triggerDownload(receipt, 'beti')}
+                    className="bg-[#f0ad4e] hover:bg-[#ec971f] text-white px-4 py-2 rounded-lg text-xs font-bold transition-colors w-full shadow-sm mt-1"
+                  >
+                    Download Donation Receipt
+                  </button>
+                </div>
               </div>
             ))}
-          </div>
-        )}
-
-        {/* ================= HIDDEN PRINTABLE RECEIPT TEMPLATE ================= */}
-        {selectedDownloadReceipt && (
-          <div className="fixed -left-[9999px] top-0">
-            <div 
-              id="printable-donation-receipt"
-              className="w-[450px] bg-white border-[10px] border-double border-teal-800 p-6 font-sans text-gray-800 relative"
-            >
-              {/* Header */}
-              <div className="text-center border-b-2 border-teal-800 pb-4 mb-4">
-                <h1 className="text-2xl font-black uppercase text-teal-800 tracking-tight leading-tight">Silent Help Charitable Trust</h1>
-                <p className="text-[10px] font-bold text-orange-500 uppercase tracking-widest mt-0.5">Silent Help, Loud Impact</p>
-                <p className="text-[9px] text-gray-500 mt-1">Registration No: SHCT/NGO/2024</p>
-              </div>
-
-              {/* Receipt Title */}
-              <div className="text-center mb-6">
-                <span className="bg-teal-50 text-teal-800 border border-teal-800/20 px-4 py-1.5 rounded-full font-black text-sm uppercase tracking-wide">
-                  DONATION RECEIPT (सहयोग रसीद)
-                </span>
-              </div>
-
-              {/* Body */}
-              <div className="space-y-4 text-sm font-semibold mb-6">
-                <div className="flex justify-between border-b border-gray-100 pb-1">
-                  <span className="text-gray-500">Donor Name (सहयोगी का नाम):</span>
-                  <span className="text-gray-900 font-bold">{selectedDownloadReceipt.donorName}</span>
-                </div>
-                <div className="flex justify-between border-b border-gray-100 pb-1">
-                  <span className="text-gray-500">Donor ID (यूनिक आईडी):</span>
-                  <span className="text-gray-900 font-mono font-bold">{selectedDownloadReceipt.donorUniqueId}</span>
-                </div>
-                <div className="flex justify-between border-b border-gray-100 pb-1">
-                  <span className="text-gray-500">Beneficiary Name (सहायता प्राप्तकर्ता):</span>
-                  <span className="text-gray-900 font-bold">{selectedDownloadReceipt.beneficiaryName}</span>
-                </div>
-                <div className="flex justify-between border-b border-gray-100 pb-1">
-                  <span className="text-gray-500">Group (ग्रुप):</span>
-                  <span className="text-gray-900 font-bold">Group {selectedDownloadReceipt.group}</span>
-                </div>
-                <div className="flex justify-between border-b border-gray-100 pb-1">
-                  <span className="text-gray-500">Transaction ID (Txn ID):</span>
-                  <span className="text-gray-900 font-mono font-bold text-xs">{selectedDownloadReceipt.transactionId}</span>
-                </div>
-                <div className="flex justify-between border-b border-gray-100 pb-1">
-                  <span className="text-gray-500">Date of Donation (सहयोग तिथि):</span>
-                  <span className="text-gray-900">{selectedDownloadReceipt.date}</span>
-                </div>
-                <div className="flex justify-between border-b border-gray-100 pb-1">
-                  <span className="text-gray-500">Scheme (योजना):</span>
-                  <span className="text-gray-900 text-xs font-bold text-teal-800">बेटी विवाह सहायता योजना</span>
-                </div>
-              </div>
-
-              {/* Amount Box */}
-              <div className="bg-teal-50 border border-teal-200 rounded-xl p-4 text-center mb-6">
-                <span className="text-xs text-gray-500 block uppercase font-bold tracking-wider">Amount Paid (सहयोग राशि)</span>
-                <span className="text-3xl font-black text-teal-800 mt-1 block">₹ {selectedDownloadReceipt.amount}/-</span>
-              </div>
-
-              {/* Footer Stamp / Seal */}
-              <div className="flex justify-between items-end pt-4 border-t border-gray-100 mt-4">
-                <div className="text-[10px] text-gray-400">
-                  *This is a computer generated receipt.<br/>No signature is required.
-                </div>
-                <div className="text-center">
-                  <div className="w-16 h-16 border-2 border-dashed border-orange-500 rounded-full flex items-center justify-center text-[10px] text-orange-600 font-bold uppercase rotate-12 mx-auto">
-                    SHCT SEAL
-                  </div>
-                  <span className="text-[10px] font-bold text-gray-500 mt-1 block uppercase">Authorized Signatory</span>
-                </div>
-              </div>
-            </div>
           </div>
         )}
       </div>
@@ -1338,33 +1344,6 @@ const UserDashboard = () => {
 
   const ViewAllNidhanSahyogList = () => {
     const approvedReceipts = submittedNidhanReceiptsList.filter(r => r.status === 'APPROVED');
-    const [selectedDownloadReceipt, setSelectedDownloadReceipt] = useState(null);
-
-    const handleDownloadReceipt = async (receipt) => {
-      setSelectedDownloadReceipt(receipt);
-      setTimeout(async () => {
-        const receiptCard = document.getElementById('printable-donation-receipt-nidhan');
-        if (!receiptCard) return;
-        
-        try {
-          const canvas = await html2canvas(receiptCard, {
-            scale: 3, 
-            useCORS: true,
-            backgroundColor: '#ffffff'
-          });
-          const image = canvas.toDataURL('image/png');
-          const link = document.createElement('a');
-          link.href = image;
-          link.download = `Donation_Receipt_Nidhan_${receipt.transactionId}.png`;
-          link.click();
-          setSelectedDownloadReceipt(null);
-        } catch (error) {
-          console.error("Error generating receipt:", error);
-          alert("रसीद डाउनलोड करने में असमर्थ।");
-          setSelectedDownloadReceipt(null);
-        }
-      }, 500);
-    };
 
     return (
       <div className="p-6">
@@ -1378,102 +1357,193 @@ const UserDashboard = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {approvedReceipts.map((receipt) => (
-              <div key={receipt.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-5 hover:shadow-md transition-shadow">
-                <h4 className="text-lg font-bold text-[#8a3324] mb-1">{receipt.donorName}</h4>
-                <p className="text-xs text-gray-500 font-mono">Unique ID : {receipt.donorUniqueId}</p>
-                <div className="text-xs font-bold text-green-700 bg-green-50 px-2 py-0.5 rounded w-max mt-2">APPROVED</div>
-                <hr className="border-t border-gray-100 my-4" />
-                <div className="space-y-2 text-sm text-gray-700 font-semibold mb-6">
-                  <p><span className="text-gray-400">Donated On:</span> {receipt.date}</p>
-                  <p><span className="text-gray-400">Transaction ID:</span> <span className="font-mono text-xs break-all">{receipt.transactionId}</span></p>
-                  <p><span className="text-gray-400">Amount:</span> ₹ {receipt.amount}</p>
-                  <p><span className="text-gray-400">For:</span> {receipt.beneficiaryName}</p>
+              <div 
+                key={receipt.id} 
+                className="bg-white p-5 relative rounded shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between"
+                style={{ border: '2px dashed red', minHeight: '380px' }}
+              >
+                {/* Center Watermark Logo */}
+                <div className="absolute inset-0 flex items-center justify-center opacity-[0.05] pointer-events-none select-none">
+                  <img src={logoBase64} alt="Watermark Logo" className="w-48 h-48 object-contain" />
                 </div>
-                <button 
-                  onClick={() => handleDownloadReceipt(receipt)}
-                  className="bg-[#f0ad4e] hover:bg-[#ec971f] text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors w-full sm:w-auto shadow-sm"
-                >
-                  Download Donation Receipt
-                </button>
+
+                <div>
+                  {/* Header */}
+                  <div className="text-center pb-3 mb-3 border-b border-gray-100">
+                    <img src={logoBase64} alt="Logo" className="w-12 h-12 object-contain mx-auto mb-1" />
+                    <h1 className="text-xs font-black uppercase text-red-600 tracking-tight leading-tight">
+                      SILENT HELP CHARITABLE TRUST
+                    </h1>
+                    <p className="text-[8px] text-gray-400 font-bold uppercase tracking-wider">
+                      रजि0न0 ( 57/2026 )
+                    </p>
+                  </div>
+
+                  {/* Body fields */}
+                  <div className="space-y-2 text-[11px] font-bold leading-normal text-left text-gray-700">
+                    <div className="flex items-start justify-between gap-1">
+                      <span className="text-gray-400 w-[55%]">Thank You For Donation To Sh./Smt./M/S :</span>
+                      <span className="text-gray-900 text-right w-[45%] break-words">{receipt.beneficiaryName || 'N/A'}</span>
+                    </div>
+                    <div className="flex items-start justify-between gap-1">
+                      <span className="text-gray-400 w-[55%]">From Sh./Smt./M/S :</span>
+                      <span className="text-gray-900 text-right w-[45%] break-words">{receipt.donorName || 'N/A'}</span>
+                    </div>
+                    <div className="flex items-start justify-between gap-1">
+                      <span className="text-gray-400 w-[55%]">Email :</span>
+                      <span className="text-gray-900 text-right w-[45%] break-all">{receipt.donorEmail || user.email || 'N/A'}</span>
+                    </div>
+                    <div className="flex items-start justify-between gap-1">
+                      <span className="text-gray-400 w-[55%]">Donated Amount :</span>
+                      <span className="text-gray-900 text-right w-[45%] text-red-600 font-black">₹ {parseFloat(receipt.amount || 0).toFixed(2)}</span>
+                    </div>
+                    <div className="flex items-start justify-between gap-1">
+                      <span className="text-gray-400 w-[55%]">On :</span>
+                      <span className="text-gray-900 text-right w-[45%]">{receipt.date || 'N/A'}</span>
+                    </div>
+                    <div className="flex items-start justify-between gap-1">
+                      <span className="text-gray-400 w-[55%]">Transaction ID :</span>
+                      <span className="text-gray-900 text-right w-[45%] font-mono break-all text-[10px]">{receipt.transactionId || 'N/A'}</span>
+                    </div>
+                    <div className="flex items-start justify-between gap-1">
+                      <span className="text-gray-400 w-[55%]">Cause For Donation :</span>
+                      <span className="text-gray-900 text-right w-[45%]">Death Sahyog</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-4 pt-3 border-t border-gray-100 flex flex-col gap-2 relative z-10">
+                  <div className="text-center font-bold text-red-600 text-xs tracking-wide">
+                    Thank You For Your Donation
+                  </div>
+                  <button 
+                    onClick={() => triggerDownload(receipt, 'nidhan')}
+                    className="bg-[#f0ad4e] hover:bg-[#ec971f] text-white px-4 py-2 rounded-lg text-xs font-bold transition-colors w-full shadow-sm mt-1"
+                  >
+                    Download Donation Receipt
+                  </button>
+                </div>
               </div>
             ))}
           </div>
         )}
+      </div>
+    );
+  };
 
-        {/* ================= HIDDEN PRINTABLE RECEIPT TEMPLATE ================= */}
-        {selectedDownloadReceipt && (
-          <div className="fixed -left-[9999px] top-0">
-            <div 
-              id="printable-donation-receipt-nidhan"
-              className="w-[450px] bg-white border-[10px] border-double border-teal-800 p-6 font-sans text-gray-800 relative"
-            >
-              {/* Header */}
-              <div className="text-center border-b-2 border-teal-800 pb-4 mb-4">
-                <h1 className="text-2xl font-black uppercase text-teal-800 tracking-tight leading-tight">Silent Help Charitable Trust</h1>
-                <p className="text-[10px] font-bold text-orange-500 uppercase tracking-widest mt-0.5">Silent Help, Loud Impact</p>
-                <p className="text-[9px] text-gray-500 mt-1">Registration No: SHCT/NGO/2024</p>
-              </div>
+  const UpdatePasswordView = () => {
+    const [newPassword, setNewPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [isUpdating, setIsUpdating] = useState(false);
+    const [successMessage, setSuccessMessage] = useState('');
+    const [errorMessage, setErrorMessage] = useState('');
 
-              {/* Receipt Title */}
-              <div className="text-center mb-6">
-                <span className="bg-teal-50 text-teal-800 border border-teal-800/20 px-4 py-1.5 rounded-full font-black text-sm uppercase tracking-wide">
-                  DONATION RECEIPT (सहयोग रसीद)
-                </span>
-              </div>
+    const handlePasswordUpdate = async (e) => {
+      e.preventDefault();
+      setSuccessMessage('');
+      setErrorMessage('');
 
-              {/* Body */}
-              <div className="space-y-4 text-sm font-semibold mb-6">
-                <div className="flex justify-between border-b border-gray-100 pb-1">
-                  <span className="text-gray-500">Donor Name (सहयोगी का नाम):</span>
-                  <span className="text-gray-900 font-bold">{selectedDownloadReceipt.donorName}</span>
-                </div>
-                <div className="flex justify-between border-b border-gray-100 pb-1">
-                  <span className="text-gray-500">Donor ID (यूनिक आईडी):</span>
-                  <span className="text-gray-900 font-mono font-bold">{selectedDownloadReceipt.donorUniqueId}</span>
-                </div>
-                <div className="flex justify-between border-b border-gray-100 pb-1">
-                  <span className="text-gray-500">Beneficiary Name (सहायता प्राप्तकर्ता):</span>
-                  <span className="text-gray-900 font-bold">{selectedDownloadReceipt.beneficiaryName}</span>
-                </div>
-                <div className="flex justify-between border-b border-gray-100 pb-1">
-                  <span className="text-gray-500">Group (ग्रुप):</span>
-                  <span className="text-gray-900 font-bold">Group {selectedDownloadReceipt.group}</span>
-                </div>
-                <div className="flex justify-between border-b border-gray-100 pb-1">
-                  <span className="text-gray-500">Transaction ID (Txn ID):</span>
-                  <span className="text-gray-900 font-mono font-bold text-xs">{selectedDownloadReceipt.transactionId}</span>
-                </div>
-                <div className="flex justify-between border-b border-gray-100 pb-1">
-                  <span className="text-gray-500">Date of Donation (सहयोग तिथि):</span>
-                  <span className="text-gray-900">{selectedDownloadReceipt.date}</span>
-                </div>
-                <div className="flex justify-between border-b border-gray-100 pb-1">
-                  <span className="text-gray-500">Scheme (योजना):</span>
-                  <span className="text-gray-900 text-xs font-bold text-teal-800">मृत्यु सहायता योजना</span>
-                </div>
-              </div>
+      if (!newPassword) {
+        setErrorMessage('कृपया नया पासवर्ड दर्ज करें।');
+        return;
+      }
 
-              {/* Amount Box */}
-              <div className="bg-teal-50 border border-teal-200 rounded-xl p-4 text-center mb-6">
-                <span className="text-xs text-gray-500 block uppercase font-bold tracking-wider">Amount Paid (सहयोग राशि)</span>
-                <span className="text-3xl font-black text-teal-800 mt-1 block">₹ {selectedDownloadReceipt.amount}/-</span>
-              </div>
+      if (newPassword.length < 6) {
+        setErrorMessage('पासवर्ड कम से कम 6 अक्षरों का होना चाहिए।');
+        return;
+      }
 
-              {/* Footer Stamp / Seal */}
-              <div className="flex justify-between items-end pt-4 border-t border-gray-100 mt-4">
-                <div className="text-[10px] text-gray-400">
-                  *This is a computer generated receipt.<br/>No signature is required.
-                </div>
-                <div className="text-center">
-                  <div className="w-16 h-16 border-2 border-dashed border-orange-500 rounded-full flex items-center justify-center text-[10px] text-orange-600 font-bold uppercase rotate-12 mx-auto">
-                    SHCT SEAL
-                  </div>
-                  <span className="text-[10px] font-bold text-gray-500 mt-1 block uppercase">Authorized Signatory</span>
-                </div>
-              </div>
+      if (newPassword !== confirmPassword) {
+        setErrorMessage('दोनों पासवर्ड मेल नहीं खाते हैं।');
+        return;
+      }
+
+      setIsUpdating(true);
+      try {
+        await updateUserPassword(user.dbId, user.isPendingUser, newPassword);
+        setSuccessMessage('आपका पासवर्ड सफलतापूर्वक अपडेट हो गया है!');
+        setNewPassword('');
+        setConfirmPassword('');
+      } catch (error) {
+        console.error("Password update error:", error);
+        setErrorMessage('पासवर्ड अपडेट करने में विफलता। कृपया बाद में पुनः प्रयास करें।');
+      } finally {
+        setIsUpdating(false);
+      }
+    };
+
+    return (
+      <div className="p-6 max-w-lg mx-auto">
+        <div className="bg-white rounded-2xl p-6 md:p-8 shadow-md border border-gray-100 relative overflow-hidden">
+          {/* Background Decorative Circles */}
+          <div className="absolute top-0 right-0 w-24 h-24 bg-[#087889] opacity-5 rounded-bl-full -z-10"></div>
+          
+          <h3 className="text-xl font-bold text-gray-800 mb-2 flex items-center gap-2">
+            <span>🔒</span> पासवर्ड बदलें (Change Password)
+          </h3>
+          <p className="text-xs text-gray-400 font-medium mb-6">अपने लॉगिन अकाउंट की सुरक्षा के लिए एक मजबूत पासवर्ड बनाएं।</p>
+
+          {successMessage && (
+            <div className="mb-4 p-3 bg-green-50 border-l-4 border-green-500 text-green-700 text-sm font-semibold rounded-r-lg flex items-center gap-2">
+              <span>✅</span> {successMessage}
             </div>
-          </div>
-        )}
+          )}
+
+          {errorMessage && (
+            <div className="mb-4 p-3 bg-red-50 border-l-4 border-red-500 text-red-700 text-sm font-semibold rounded-r-lg flex items-center gap-2">
+              <span>⚠️</span> {errorMessage}
+            </div>
+          )}
+
+          <form onSubmit={handlePasswordUpdate} className="space-y-5">
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-1">
+                नया पासवर्ड (New Password) <span className="text-red-500">*</span>
+              </label>
+              <input 
+                type="password"
+                required
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="कम से कम 6 अक्षरों का पासवर्ड डालें"
+                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#087889] focus:border-[#087889] transition-colors font-medium"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-1">
+                नया पासवर्ड पुष्टि करें (Confirm New Password) <span className="text-red-500">*</span>
+              </label>
+              <input 
+                type="password"
+                required
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="नया पासवर्ड दोबारा डालें"
+                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#087889] focus:border-[#087889] transition-colors font-medium"
+              />
+            </div>
+
+            <button 
+              type="submit"
+              disabled={isUpdating}
+              className={`w-full py-3 px-4 rounded-xl text-white font-bold tracking-wide transition-all shadow-md flex items-center justify-center gap-2 ${
+                isUpdating 
+                  ? 'bg-gray-400 cursor-not-allowed' 
+                  : 'bg-[#087889] hover:bg-[#06616e] active:scale-[0.98]'
+              }`}
+            >
+              {isUpdating ? (
+                <>
+                  <span className="animate-spin inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full"></span>
+                  अपडेट हो रहा है...
+                </>
+              ) : (
+                'पासवर्ड अपडेट करें (Update Password)'
+              )}
+            </button>
+          </form>
+        </div>
       </div>
     );
   };
@@ -1508,7 +1578,7 @@ const UserDashboard = () => {
       case 'view_beti': return <ViewAllBetiSahyogList />;
       case 'upload_varshik': return <UploadVarshikDanView />;
       case 'referral': return <PlaceholderView title="Referral Points" />;
-      case 'password': return <PlaceholderView title="Update Password" />;
+      case 'password': return <UpdatePasswordView />;
       default: return <DashboardView />;
     }
   };
@@ -1521,9 +1591,9 @@ const UserDashboard = () => {
       <div className="w-64 bg-[#2f3d4a] text-gray-300 flex flex-col h-full shrink-0 shadow-xl z-20 overflow-y-auto">
         {/* Sidebar Logo */}
         <div className="h-16 flex items-center justify-center border-b border-gray-600/50 bg-[#25303a]">
-          {/* Circular logo placeholder since actual logo path is not imported */}
+          {/* Circular logo */}
           <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center p-1">
-             <div className="w-full h-full border-2 border-red-500 rounded-full flex items-center justify-center text-[10px] font-bold text-blue-900 leading-tight text-center">SHCT</div>
+              <img src={logoBase64} alt="SHCT Logo" className="w-full h-full object-contain" />
           </div>
         </div>
         
@@ -1582,6 +1652,149 @@ const UserDashboard = () => {
           {renderContent()}
         </main>
 
+      </div>
+
+      {/* Central hidden templates at root body layer */}
+      <div 
+        style={{ 
+          position: 'absolute', 
+          left: '-9999px', 
+          top: 0, 
+          width: '450px',
+          overflow: 'hidden'
+        }}
+      >
+        {/* Beti template */}
+        <div 
+          id="printable-donation-receipt"
+          className="w-[450px] bg-white p-6 font-sans text-gray-800 relative"
+          style={{ border: '2px dashed red' }}
+        >
+          {/* Center Watermark Logo */}
+          <div className="absolute inset-0 flex items-center justify-center opacity-[0.07] pointer-events-none select-none">
+            <img src={logoBase64} alt="Watermark Logo" className="w-64 h-64 object-contain" />
+          </div>
+
+          {/* Header */}
+          <div className="text-center pb-4 mb-4">
+            <img src={logoBase64} alt="Logo" className="w-16 h-16 object-contain mx-auto mb-2" />
+            <h1 className="text-lg font-black uppercase text-red-600 tracking-tight leading-tight">
+              SILENT HELP CHARITABLE TRUST
+            </h1>
+            <p className="text-[9px] text-gray-400 font-bold uppercase tracking-wider mt-0.5">
+              Silent Help, Loud Impact • रजि0न0 ( 57/2026 )
+            </p>
+          </div>
+
+          {/* Divider */}
+          <div className="border-t border-gray-200 my-3"></div>
+
+          {/* Body fields (Left labels, Right values) */}
+          <div className="space-y-3.5 text-xs font-bold leading-normal text-left">
+            <div className="flex items-start justify-between gap-2">
+              <span className="text-gray-500 w-[55%]">Thank You For Donation To Sh./Smt./M/S :</span>
+              <span className="text-gray-900 text-right w-[45%] break-words">{(selectedDownloadReceipt && selectedDownloadReceipt.beneficiaryName) || 'N/A'}</span>
+            </div>
+            <div className="flex items-start justify-between gap-2">
+              <span className="text-gray-500 w-[55%]">From Sh./Smt./M/S :</span>
+              <span className="text-gray-900 text-right w-[45%] break-words">{(selectedDownloadReceipt && selectedDownloadReceipt.donorName) || 'N/A'}</span>
+            </div>
+            <div className="flex items-start justify-between gap-2">
+              <span className="text-gray-500 w-[55%]">Email :</span>
+              <span className="text-gray-900 text-right w-[45%] break-all">{(selectedDownloadReceipt && selectedDownloadReceipt.donorEmail) || user.email || 'N/A'}</span>
+            </div>
+            <div className="flex items-start justify-between gap-2">
+              <span className="text-gray-500 w-[55%]">Donated Amount :</span>
+              <span className="text-gray-900 text-right w-[45%]">₹ {parseFloat((selectedDownloadReceipt && selectedDownloadReceipt.amount) || 0).toFixed(2)}</span>
+            </div>
+            <div className="flex items-start justify-between gap-2">
+              <span className="text-gray-500 w-[55%]">On :</span>
+              <span className="text-gray-900 text-right w-[45%]">{(selectedDownloadReceipt && selectedDownloadReceipt.date) || 'N/A'}</span>
+            </div>
+            <div className="flex items-start justify-between gap-2">
+              <span className="text-gray-500 w-[55%]">Transaction ID :</span>
+              <span className="text-gray-900 text-right w-[45%] font-mono break-all">{(selectedDownloadReceipt && selectedDownloadReceipt.transactionId) || 'N/A'}</span>
+            </div>
+            <div className="flex items-start justify-between gap-2">
+              <span className="text-gray-500 w-[55%]">Cause For Donation :</span>
+              <span className="text-gray-900 text-right w-[45%]">Beti Sahyog</span>
+            </div>
+          </div>
+
+          {/* Divider */}
+          <div className="border-t border-gray-200 my-4"></div>
+
+          {/* Thank You Note */}
+          <div className="text-center font-bold text-red-600 text-sm tracking-wide">
+            Thank You For Your Donation
+          </div>
+        </div>
+
+        {/* Nidhan template */}
+        <div 
+          id="printable-donation-receipt-nidhan"
+          className="w-[450px] bg-white p-6 font-sans text-gray-800 relative"
+          style={{ border: '2px dashed red' }}
+        >
+          {/* Center Watermark Logo */}
+          <div className="absolute inset-0 flex items-center justify-center opacity-[0.07] pointer-events-none select-none">
+            <img src={logoBase64} alt="Watermark Logo" className="w-64 h-64 object-contain" />
+          </div>
+
+          {/* Header */}
+          <div className="text-center pb-4 mb-4">
+            <img src={logoBase64} alt="Logo" className="w-16 h-16 object-contain mx-auto mb-2" />
+            <h1 className="text-lg font-black uppercase text-red-600 tracking-tight leading-tight">
+              SILENT HELP CHARITABLE TRUST
+            </h1>
+            <p className="text-[9px] text-gray-400 font-bold uppercase tracking-wider mt-0.5">
+              Silent Help, Loud Impact • रजि0न0 ( 57/2026 )
+            </p>
+          </div>
+
+          {/* Divider */}
+          <div className="border-t border-gray-200 my-3"></div>
+
+          {/* Body fields (Left labels, Right values) */}
+          <div className="space-y-3.5 text-xs font-bold leading-normal text-left">
+            <div className="flex items-start justify-between gap-2">
+              <span className="text-gray-500 w-[55%]">Thank You For Donation To Sh./Smt./M/S :</span>
+              <span className="text-gray-900 text-right w-[45%] break-words">{(selectedDownloadReceipt && selectedDownloadReceipt.beneficiaryName) || 'N/A'}</span>
+            </div>
+            <div className="flex items-start justify-between gap-2">
+              <span className="text-gray-500 w-[55%]">From Sh./Smt./M/S :</span>
+              <span className="text-gray-900 text-right w-[45%] break-words">{(selectedDownloadReceipt && selectedDownloadReceipt.donorName) || 'N/A'}</span>
+            </div>
+            <div className="flex items-start justify-between gap-2">
+              <span className="text-gray-500 w-[55%]">Email :</span>
+              <span className="text-gray-900 text-right w-[45%] break-all">{(selectedDownloadReceipt && selectedDownloadReceipt.donorEmail) || user.email || 'N/A'}</span>
+            </div>
+            <div className="flex items-start justify-between gap-2">
+              <span className="text-gray-500 w-[55%]">Donated Amount :</span>
+              <span className="text-gray-900 text-right w-[45%]">₹ {parseFloat((selectedDownloadReceipt && selectedDownloadReceipt.amount) || 0).toFixed(2)}</span>
+            </div>
+            <div className="flex items-start justify-between gap-2">
+              <span className="text-gray-500 w-[55%]">On :</span>
+              <span className="text-gray-900 text-right w-[45%]">{(selectedDownloadReceipt && selectedDownloadReceipt.date) || 'N/A'}</span>
+            </div>
+            <div className="flex items-start justify-between gap-2">
+              <span className="text-gray-500 w-[55%]">Transaction ID :</span>
+              <span className="text-gray-900 text-right w-[45%] font-mono break-all">{(selectedDownloadReceipt && selectedDownloadReceipt.transactionId) || 'N/A'}</span>
+            </div>
+            <div className="flex items-start justify-between gap-2">
+              <span className="text-gray-500 w-[55%]">Cause For Donation :</span>
+              <span className="text-gray-900 text-right w-[45%] font-bold">Death Sahyog</span>
+            </div>
+          </div>
+
+          {/* Divider */}
+          <div className="border-t border-gray-200 my-4"></div>
+
+          {/* Thank You Note */}
+          <div className="text-center font-bold text-red-600 text-sm tracking-wide">
+            Thank You For Your Donation
+          </div>
+        </div>
       </div>
 
     </div>

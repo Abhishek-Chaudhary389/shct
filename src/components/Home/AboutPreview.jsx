@@ -48,93 +48,69 @@ const AboutPreview = () => {
             <p className="text-gray-500 text-sm mt-2 font-medium">Silent Help Charitable Trust के प्रमुख नेतृत्वकर्ता</p>
           </div>
           
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-5xl mx-auto px-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 max-w-5xl mx-auto px-2 md:px-4 justify-center">
             
             {/* Profile 1: Founder & President */}
-            <div className="bg-white rounded-3xl p-8 shadow-md border border-gray-100 hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 flex flex-col sm:flex-row items-center gap-6 relative overflow-hidden group">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-orange-100/30 to-amber-100/30 rounded-bl-full -z-10 transition-all duration-500 group-hover:scale-110"></div>
+            <div className="bg-white rounded-2xl md:rounded-3xl p-3 md:p-6 shadow-md border border-gray-100 hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 flex flex-col items-center text-center relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-20 h-20 md:w-24 md:h-24 bg-gradient-to-br from-orange-100/20 to-amber-100/20 rounded-bl-full -z-10 transition-all duration-500 group-hover:scale-110"></div>
               
-              <div className="relative shrink-0">
-                <div className="w-44 h-56 rounded-2xl bg-gradient-to-tr from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden relative shadow-inner ring-4 ring-orange-500/20 ring-offset-4 ring-offset-white group-hover:ring-orange-500/50 transition-all duration-500">
-                  <img src={arifBroadwayImg} className="w-full h-full object-cover rounded-2xl group-hover:scale-105 transition-transform duration-500" alt="आरिफ ब्रॉडवे" />
-                </div>
+              <div className="w-24 h-32 sm:w-36 sm:h-44 rounded-xl md:rounded-2xl bg-gradient-to-tr from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden relative shadow-inner ring-2 md:ring-4 ring-orange-500/20 group-hover:ring-orange-500/50 transition-all duration-500 mb-3 md:mb-4 shrink-0 mx-auto">
+                <img src={arifBroadwayImg} className="w-full h-full object-cover rounded-xl md:rounded-2xl group-hover:scale-105 transition-transform duration-500" alt="आरिफ ब्रॉडवे" />
               </div>
 
-              <div className="text-center sm:text-left flex-1">
-                <span className="text-[10px] font-black uppercase tracking-widest text-[#f08519] bg-orange-50 px-3 py-1 rounded-full">LEADERSHIP</span>
-                <h3 className="text-2xl font-black text-gray-800 tracking-tight mt-2 mb-1">आरिफ ब्रॉडवे</h3>
-                <p className="text-sm font-extrabold text-[#f08519] flex items-center gap-1.5 justify-center sm:justify-start">
-                  संस्थापक/अध्यक्ष
-                </p>
-                <p className="text-xs text-gray-400 mt-2 font-medium leading-relaxed">Silent Help Charitable Trust and LocalShaadi.in  के संस्थापक और अध्यक्ष के रूप में मुख्य मार्गदर्शक।</p>
-              </div>
+              <span className="text-[8px] md:text-[9px] font-black uppercase tracking-widest text-[#f08519] bg-orange-50 px-2 py-0.5 rounded-full">LEADERSHIP</span>
+              <h4 className="text-xs sm:text-base md:text-lg font-black text-gray-800 tracking-tight mt-1.5 md:mt-2 mb-0.5 truncate w-full">आरिफ ब्रॉडवे</h4>
+              <p className="text-[9px] md:text-[11px] font-black uppercase tracking-wider text-[#f08519] truncate w-full">संस्थापक/अध्यक्ष</p>
+              <p className="text-[10px] md:text-xs text-gray-500 mt-2 font-medium leading-relaxed hidden sm:block">Silent Help Charitable Trust के संस्थापक और अध्यक्ष।</p>
             </div>
 
             {/* Profile 2: Co-Founder & Secretary */}
-            <div className="bg-white rounded-3xl p-8 shadow-md border border-gray-100 hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 flex flex-col sm:flex-row items-center gap-6 relative overflow-hidden group">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-teal-100/30 to-emerald-100/30 rounded-bl-full -z-10 transition-all duration-500 group-hover:scale-110"></div>
+            <div className="bg-white rounded-2xl md:rounded-3xl p-3 md:p-6 shadow-md border border-gray-100 hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 flex flex-col items-center text-center relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-20 h-20 md:w-24 md:h-24 bg-gradient-to-br from-teal-100/20 to-emerald-100/20 rounded-bl-full -z-10 transition-all duration-500 group-hover:scale-110"></div>
               
-              <div className="relative shrink-0">
-                <div className="w-44 h-56 rounded-2xl bg-gradient-to-tr from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden relative shadow-inner ring-4 ring-teal-500/20 ring-offset-4 ring-offset-white group-hover:ring-teal-500/50 transition-all duration-500">
-                  <img src={tasadduqHusainImg} className="w-full h-full object-cover rounded-2xl group-hover:scale-105 transition-transform duration-500" alt="तसद्दुक हुसैन" />
-                </div>
+              <div className="w-24 h-32 sm:w-36 sm:h-44 rounded-xl md:rounded-2xl bg-gradient-to-tr from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden relative shadow-inner ring-2 md:ring-4 ring-teal-500/20 group-hover:ring-teal-500/50 transition-all duration-500 mb-3 md:mb-4 shrink-0 mx-auto">
+                <img src={tasadduqHusainImg} className="w-full h-full object-cover rounded-xl md:rounded-2xl group-hover:scale-105 transition-transform duration-500" alt="तसद्दुक हुसैन" />
               </div>
 
-              <div className="text-center sm:text-left flex-1">
-                <span className="text-[10px] font-black uppercase tracking-widest text-[#087889] bg-teal-50 px-3 py-1 rounded-full">LEADERSHIP</span>
-                <h3 className="text-2xl font-black text-gray-800 tracking-tight mt-2 mb-1">तसद्दुक हुसैन</h3>
-                <p className="text-sm font-extrabold text-[#087889] flex items-center gap-1.5 justify-center sm:justify-start">
-                  सह संस्थापक/सचिव
-                </p>
-                <p className="text-xs text-gray-400 mt-2 font-medium leading-relaxed">Silent Help Charitable Trust के सह-संस्थापक एवं सचिव के रूप में मुख्य कार्यभार संभाल रहे हैं।</p>
-              </div>
+              <span className="text-[8px] md:text-[9px] font-black uppercase tracking-widest text-[#087889] bg-teal-50 px-2 py-0.5 rounded-full">LEADERSHIP</span>
+              <h4 className="text-xs sm:text-base md:text-lg font-black text-gray-800 tracking-tight mt-1.5 md:mt-2 mb-0.5 truncate w-full">तसद्दुक हुसैन</h4>
+              <p className="text-[9px] md:text-[11px] font-black uppercase tracking-wider text-[#087889] truncate w-full">सह संस्थापक/सचिव</p>
+              <p className="text-[10px] md:text-xs text-gray-500 mt-2 font-medium leading-relaxed hidden sm:block">Silent Help Charitable Trust के सह-संस्थापक एवं सचिव।</p>
             </div>
 
             {/* Profile 3: Co-Founder & Treasurer */}
-            <div className="bg-white rounded-3xl p-8 shadow-md border border-gray-100 hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 flex flex-col sm:flex-row items-center gap-6 relative overflow-hidden group">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-indigo-100/30 to-purple-100/30 rounded-bl-full -z-10 transition-all duration-500 group-hover:scale-110"></div>
+            <div className="bg-white rounded-2xl md:rounded-3xl p-3 md:p-6 shadow-md border border-gray-100 hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 flex flex-col items-center text-center relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-20 h-20 md:w-24 md:h-24 bg-gradient-to-br from-indigo-100/20 to-purple-100/20 rounded-bl-full -z-10 transition-all duration-500 group-hover:scale-110"></div>
               
-              <div className="relative shrink-0">
-                <div className="w-44 h-56 rounded-2xl bg-gradient-to-tr from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden relative shadow-inner ring-4 ring-indigo-500/20 ring-offset-4 ring-offset-white group-hover:ring-indigo-500/50 transition-all duration-500">
-                  <img src={akhtarKhanImg} className="w-full h-full object-cover rounded-2xl group-hover:scale-105 transition-transform duration-500" alt="अख़्तर खान" />
-                </div>
+              <div className="w-24 h-32 sm:w-36 sm:h-44 rounded-xl md:rounded-2xl bg-gradient-to-tr from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden relative shadow-inner ring-2 md:ring-4 ring-indigo-500/20 group-hover:ring-indigo-500/50 transition-all duration-500 mb-3 md:mb-4 shrink-0 mx-auto">
+                <img src={akhtarKhanImg} className="w-full h-full object-cover rounded-xl md:rounded-2xl group-hover:scale-105 transition-transform duration-500" alt="अख़्तर खान" />
               </div>
 
-              <div className="text-center sm:text-left flex-1">
-                <span className="text-[10px] font-black uppercase tracking-widest text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full">FINANCE</span>
-                <h3 className="text-2xl font-black text-gray-800 tracking-tight mt-2 mb-1">अख़्तर खान</h3>
-                <p className="text-sm font-extrabold text-indigo-600 flex items-center gap-1.5 justify-center sm:justify-start">
-                  सह संस्थापक/कोषाध्यक्ष
-                </p>
-                <p className="text-xs text-gray-400 mt-2 font-medium leading-relaxed">Silent Help Charitable Trust के सह-संस्थापक एवं कोषाध्यक्ष के रूप में वित्तीय प्रबंधन संभाल रहे हैं।</p>
-              </div>
+              <span className="text-[8px] md:text-[9px] font-black uppercase tracking-widest text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">FINANCE</span>
+              <h4 className="text-xs sm:text-base md:text-lg font-black text-gray-800 tracking-tight mt-1.5 md:mt-2 mb-0.5 truncate w-full">अख़्तर खान</h4>
+              <p className="text-[9px] md:text-[11px] font-black uppercase tracking-wider text-indigo-600 truncate w-full">सह संस्थापक/कोषाध्यक्ष</p>
+              <p className="text-[10px] md:text-xs text-gray-500 mt-2 font-medium leading-relaxed hidden sm:block">Silent Help Charitable Trust के सह-संस्थापक एवं कोषाध्यक्ष।</p>
             </div>
 
             {/* Profile 4: Spokesperson */}
-            <div className="bg-white rounded-3xl p-8 shadow-md border border-gray-100 hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 flex flex-col sm:flex-row items-center gap-6 relative overflow-hidden group">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-rose-100/30 to-pink-100/30 rounded-bl-full -z-10 transition-all duration-500 group-hover:scale-110"></div>
+            <div className="bg-white rounded-2xl md:rounded-3xl p-3 md:p-6 shadow-md border border-gray-100 hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 flex flex-col items-center text-center relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-20 h-20 md:w-24 md:h-24 bg-gradient-to-br from-rose-100/20 to-pink-100/20 rounded-bl-full -z-10 transition-all duration-500 group-hover:scale-110"></div>
               
-              <div className="relative shrink-0">
-                <div className="w-44 h-56 rounded-2xl bg-gradient-to-tr from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden relative shadow-inner ring-4 ring-rose-500/20 ring-offset-4 ring-offset-white group-hover:ring-rose-500/50 transition-all duration-500">
-                  <img src={sahilAnsariImg} className="w-full h-full object-cover rounded-2xl group-hover:scale-105 transition-transform duration-500" alt="साहिल अंसारी" />
-                </div>
+              <div className="w-24 h-32 sm:w-36 sm:h-44 rounded-xl md:rounded-2xl bg-gradient-to-tr from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden relative shadow-inner ring-2 md:ring-4 ring-rose-500/20 group-hover:ring-rose-500/50 transition-all duration-500 mb-3 md:mb-4 shrink-0 mx-auto">
+                <img src={sahilAnsariImg} className="w-full h-full object-cover rounded-xl md:rounded-2xl group-hover:scale-105 transition-transform duration-500" alt="साहिल अंसारी" />
               </div>
 
-              <div className="text-center sm:text-left flex-1">
-                <span className="text-[10px] font-black uppercase tracking-widest text-rose-600 bg-rose-50 px-3 py-1 rounded-full">MEDIA</span>
-                <h3 className="text-2xl font-black text-gray-800 tracking-tight mt-2 mb-1">साहिल अंसारी</h3>
-                <p className="text-sm font-extrabold text-rose-600 flex items-center gap-1.5 justify-center sm:justify-start">
-                  प्रवक्ता
-                </p>
-                <p className="text-xs text-gray-400 mt-2 font-medium leading-relaxed">Silent Help Charitable Trust के प्रवक्ता के रूप में सामाजिक संवाद और जनसंपर्क संभाल रहे हैं।</p>
-              </div>
+              <span className="text-[8px] md:text-[9px] font-black uppercase tracking-widest text-rose-600 bg-rose-50 px-2 py-0.5 rounded-full">MEDIA</span>
+              <h4 className="text-xs sm:text-base md:text-lg font-black text-gray-800 tracking-tight mt-1.5 md:mt-2 mb-0.5 truncate w-full">साहिल अंसारी</h4>
+              <p className="text-[9px] md:text-[11px] font-black uppercase tracking-wider text-rose-600 truncate w-full">प्रवक्ता</p>
+              <p className="text-[10px] md:text-xs text-gray-500 mt-2 font-medium leading-relaxed hidden sm:block">Silent Help Charitable Trust के प्रवक्ता।</p>
             </div>
 
           </div>
         </div>
 
         {/* ================= MEMBERS SECTION ================= */}
-        <div>
+        <div className="mb-16">
           <div className="text-center mb-12">
             <h3 className="text-2xl md:text-3xl font-extrabold text-gray-800 tracking-tight relative inline-block">
               हमारे समर्पित सदस्य
@@ -143,36 +119,35 @@ const AboutPreview = () => {
             <p className="text-gray-500 text-sm mt-2 font-medium">Silent Help Charitable Trust के समर्पित सदस्य</p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl mx-auto px-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 max-w-5xl mx-auto px-2 md:px-4 justify-center">
             
             {/* Member 1: बासित अंसारी */}
-            <div className="bg-white rounded-3xl p-6 shadow-md border border-gray-100 hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 flex flex-col items-center text-center relative overflow-hidden group">
-              <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-teal-100/20 to-emerald-100/20 rounded-bl-full -z-10"></div>
+            <div className="bg-white rounded-2xl md:rounded-3xl p-3 md:p-6 shadow-md border border-gray-100 hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 flex flex-col items-center text-center relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-20 h-20 md:w-24 md:h-24 bg-gradient-to-br from-teal-100/20 to-emerald-100/20 rounded-bl-full -z-10 transition-all duration-500 group-hover:scale-110"></div>
               
-              <div className="w-36 h-44 rounded-2xl bg-gradient-to-tr from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden relative shadow-inner ring-4 ring-teal-500/20 group-hover:ring-teal-500/50 transition-all duration-500 mb-4 shrink-0 mx-auto">
-                <img src={basitAnsariImg} className="w-full h-full object-cover rounded-2xl group-hover:scale-105 transition-transform duration-500" alt="बासित अंसारी" />
+              <div className="w-24 h-32 sm:w-36 sm:h-44 rounded-xl md:rounded-2xl bg-gradient-to-tr from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden relative shadow-inner ring-2 md:ring-4 ring-teal-500/20 group-hover:ring-teal-500/50 transition-all duration-500 mb-3 md:mb-4 shrink-0 mx-auto">
+                <img src={basitAnsariImg} className="w-full h-full object-cover rounded-xl md:rounded-2xl group-hover:scale-105 transition-transform duration-500" alt="बासित अंसारी" />
               </div>
 
-              <span className="text-[9px] font-black uppercase tracking-widest text-[#087889] bg-teal-50 px-3 py-0.5 rounded-full">TRUST MEMBER</span>
-              <h4 className="text-xl font-black text-gray-800 tracking-tight mt-2 mb-1">बासित अंसारी</h4>
-              <p className="text-xs text-gray-400 mt-1 font-semibold uppercase tracking-wider text-[#087889]">सदस्य</p>
-              <p className="text-xs text-gray-500 mt-2 font-medium leading-relaxed">ट्रस्ट के समर्पित सदस्य के रूप में समाज सेवा गतिविधियों में सक्रिय भागीदार।</p>
+              <span className="text-[8px] md:text-[9px] font-black uppercase tracking-widest text-[#087889] bg-teal-50 px-2 py-0.5 rounded-full">TRUST MEMBER</span>
+              <h4 className="text-xs sm:text-base md:text-lg font-black text-gray-800 tracking-tight mt-1.5 md:mt-2 mb-0.5 truncate w-full">बासित अंसारी</h4>
+              <p className="text-[9px] md:text-[11px] font-black uppercase tracking-wider text-[#087889] truncate w-full">सदस्य</p>
+              <p className="text-[10px] md:text-xs text-gray-500 mt-2 font-medium leading-relaxed hidden sm:block">ट्रस्ट के समर्पित सदस्य के रूप में समाज सेवा गतिविधियों में सक्रिय भागीदार।</p>
             </div>
 
             {/* Member 2: राजेश */}
-            <div className="bg-white rounded-3xl p-6 shadow-md border border-gray-100 hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 flex flex-col items-center text-center relative overflow-hidden group">
-              <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-teal-100/20 to-emerald-100/20 rounded-bl-full -z-10"></div>
+            <div className="bg-white rounded-2xl md:rounded-3xl p-3 md:p-6 shadow-md border border-gray-100 hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 flex flex-col items-center text-center relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-20 h-20 md:w-24 md:h-24 bg-gradient-to-br from-teal-100/20 to-emerald-100/20 rounded-bl-full -z-10 transition-all duration-500 group-hover:scale-110"></div>
               
-              <div className="w-36 h-44 rounded-2xl bg-gradient-to-tr from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden relative shadow-inner ring-4 ring-teal-500/20 group-hover:ring-teal-500/50 transition-all duration-500 mb-4 shrink-0 mx-auto">
-                <span className="text-5xl text-gray-300 select-none group-hover:scale-110 transition-transform duration-500">👤</span>
+              <div className="w-24 h-32 sm:w-36 sm:h-44 rounded-xl md:rounded-2xl bg-gradient-to-tr from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden relative shadow-inner ring-2 md:ring-4 ring-teal-500/20 group-hover:ring-teal-500/50 transition-all duration-500 mb-3 md:mb-4 shrink-0 mx-auto">
+                <span className="text-4xl sm:text-5xl text-gray-300 select-none group-hover:scale-110 transition-transform duration-500">👤</span>
               </div>
 
-              <span className="text-[9px] font-black uppercase tracking-widest text-[#087889] bg-teal-50 px-3 py-0.5 rounded-full">TRUST MEMBER</span>
-              <h4 className="text-xl font-black text-gray-800 tracking-tight mt-2 mb-1">राजेश</h4>
-              <p className="text-xs text-gray-400 mt-1 font-semibold uppercase tracking-wider text-[#087889]">सदस्य</p>
-              <p className="text-xs text-gray-500 mt-2 font-medium leading-relaxed">ट्रस्ट के समर्पित सदस्य के रूप में समाज सेवा गतिविधियों में सक्रिय भागीदार।</p>
+              <span className="text-[8px] md:text-[9px] font-black uppercase tracking-widest text-[#087889] bg-teal-50 px-2 py-0.5 rounded-full">TRUST MEMBER</span>
+              <h4 className="text-xs sm:text-base md:text-lg font-black text-gray-800 tracking-tight mt-1.5 md:mt-2 mb-0.5 truncate w-full">राजेश</h4>
+              <p className="text-[9px] md:text-[11px] font-black uppercase tracking-wider text-[#087889] truncate w-full">सदस्य</p>
+              <p className="text-[10px] md:text-xs text-gray-500 mt-2 font-medium leading-relaxed hidden sm:block">ट्रस्ट के समर्पित सदस्य के रूप में समाज सेवा गतिविधियों में सक्रिय भागीदार।</p>
             </div>
-
 
           </div>
         </div>

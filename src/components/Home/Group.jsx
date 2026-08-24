@@ -95,25 +95,40 @@ const Group = () => {
             <span className="text-[#f08519] mr-3">📋</span> ग्रुप सूची (Group Directory)
           </h2>
           
-          <div className="bg-white rounded-2xl shadow-md border-t-[6px] p-6 md:p-8" style={{ borderColor: logoTeal }}>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-4">
-              {loading ? (
-                <div className="col-span-full text-center text-gray-500 py-4">Loading active groups...</div>
-              ) : groupDetails.length === 0 ? (
-                <div className="col-span-full text-center text-gray-500 py-4">वर्तमान में कोई ग्रुप सूची उपलब्ध नहीं है।</div>
-              ) : groupDetails.map((item, index) => (
-                <div key={index} className="flex items-center p-3 rounded-lg hover:bg-teal-50 transition-colors border border-transparent hover:border-teal-100">
-                  <div className="text-white px-4 py-2 rounded-md font-bold text-sm whitespace-nowrap shadow-sm" style={{ backgroundColor: logoTeal }}>
-                    GROUP - {item.group}
-                  </div>
-                  <span className="text-xl mx-3" style={{ color: logoOrange }}>👉</span>
-                  <div className="font-bold text-gray-700 text-sm md:text-base">
-                    {item.member} {item.address ? `(${item.address.split(',')[0].replace('जिला-','').trim()})` : ''}
-                  </div>
-                </div>
-              ))}
+          {loading ? (
+            <div className="bg-white rounded-2xl shadow-md p-8 text-center text-gray-500 font-bold">
+              Loading active groups...
             </div>
-          </div>
+          ) : groupDetails.length === 0 ? (
+            <div className="bg-white rounded-2xl shadow-md p-8 text-center text-gray-500 font-bold">
+              वर्तमान में कोई ग्रुप सूची उपलब्ध नहीं है।
+            </div>
+          ) : (
+            <div className="bg-white rounded-2xl shadow-md border-t-[6px] p-5 md:p-8" style={{ borderColor: logoTeal }}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-4">
+                {groupDetails.map((item, index) => (
+                  <div 
+                    key={index} 
+                    onClick={() => {
+                      const element = document.getElementById(`group-detail-card-${item.group}`);
+                      if (element) {
+                        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                      }
+                    }}
+                    className="flex items-center p-2.5 rounded-lg hover:bg-teal-50/50 transition-colors border border-transparent hover:border-teal-100/50 cursor-pointer"
+                  >
+                    <div className="text-white px-3 md:px-4 py-1.5 md:py-2 rounded-md font-bold text-xs md:text-sm whitespace-nowrap shadow-sm shrink-0" style={{ backgroundColor: logoTeal }}>
+                      GROUP - {item.group}
+                    </div>
+                    <span className="text-base md:text-xl mx-2 md:mx-3 shrink-0" style={{ color: logoOrange }}>👉</span>
+                    <div className="font-bold text-gray-700 text-xs md:text-base truncate">
+                      {item.member} {item.address ? `(${item.address.split(',')[0].replace('जिला-','').trim()})` : ''}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* ================= GROUP DETAILS CARDS (NEW PHOTO DESIGN) ================= */}
@@ -125,7 +140,8 @@ const Group = () => {
           {groupDetails.map((detail, index) => (
             <div 
               key={index} 
-              className="bg-[#f2fafe] border-l-[8px] rounded-r-2xl p-6 md:p-10 shadow-sm hover:shadow-md transition-shadow"
+              id={`group-detail-card-${detail.group}`}
+              className="bg-[#f2fafe] border-l-[8px] rounded-r-2xl p-6 md:p-10 shadow-sm hover:shadow-md transition-shadow scroll-mt-28"
               style={{ borderColor: logoTeal }}
             >
               

@@ -361,10 +361,21 @@ const BETI_RECEIPTS_COL = 'beti_sahayog_receipts';
 
 export const addBetiSahyogReceipt = async (receiptData) => {
   try {
+    let status = 'PENDING';
+    try {
+      const settingsRef = doc(db, SETTINGS_COL, HOME_PAGE_DOC_ID);
+      const settingsSnap = await getDoc(settingsRef);
+      if (settingsSnap.exists() && settingsSnap.data().autoApproveBeti === true) {
+        status = 'APPROVED';
+      }
+    } catch (err) {
+      console.error("Error reading autoApprove settings for Beti:", err);
+    }
+
     const data = {
       ...receiptData,
       submittedAt: new Date().toISOString(),
-      status: 'PENDING'
+      status: status
     };
     const docRef = await addDoc(collection(db, BETI_RECEIPTS_COL), data);
     return { id: docRef.id, ...data };
@@ -402,10 +413,21 @@ const NIDHAN_RECEIPTS_COL = 'nidhan_sahayog_receipts';
 
 export const addNidhanSahyogReceipt = async (receiptData) => {
   try {
+    let status = 'PENDING';
+    try {
+      const settingsRef = doc(db, SETTINGS_COL, HOME_PAGE_DOC_ID);
+      const settingsSnap = await getDoc(settingsRef);
+      if (settingsSnap.exists() && settingsSnap.data().autoApproveNidhan === true) {
+        status = 'APPROVED';
+      }
+    } catch (err) {
+      console.error("Error reading autoApprove settings for Nidhan:", err);
+    }
+
     const data = {
       ...receiptData,
       submittedAt: new Date().toISOString(),
-      status: 'PENDING'
+      status: status
     };
     const docRef = await addDoc(collection(db, NIDHAN_RECEIPTS_COL), data);
     return { id: docRef.id, ...data };
@@ -497,6 +519,18 @@ export const updateAnnualRenewalStatus = async (id, newStatus) => {
     return true;
   } catch (error) {
     console.error("Error updating annual renewal status:", error);
+    throw error;
+  }
+};
+
+export const updateUserPassword = async (docId, isPending, newPassword) => {
+  try {
+    const colName = isPending ? PENDING_COL : APPROVED_COL;
+    const docRef = doc(db, colName, docId);
+    await updateDoc(docRef, { password: newPassword });
+    return true;
+  } catch (error) {
+    console.error("Error updating user password:", error);
     throw error;
   }
 };
