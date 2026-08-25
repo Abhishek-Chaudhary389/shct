@@ -5,6 +5,8 @@ import tasadduqHusainImg from '../assets/तसद्दुक हुसैन.j
 import akhtarKhanImg from '../assets/अख़्तर खान.jpeg';
 import sahilAnsariImg from '../assets/साहिल अंसारी.jpeg';
 import basitAnsariImg from '../assets/बासित अंसारी.jpeg';
+import rajeshImg from '../assets/राजेश.jpeg';
+import alamgirAnsariImg from '../assets/आलमगीर अंसारी.jpeg';
 
 const AboutSHCT = () => {
   return (
@@ -80,7 +82,6 @@ const AboutSHCT = () => {
               {/* Text Area */}
               <div className="text-center sm:text-left flex-1">
                 <span className="text-[10px] font-black uppercase tracking-widest text-[#f08519] bg-orange-50 px-3 py-1 rounded-full">LEADERSHIP</span>
-                <h3 className="text-2xl font-black text-gray-800 tracking-tight mt-2 mb-1">आरिफ ब्रॉडवे</h3>
                 <h3 className="text-2xl font-black text-gray-800 tracking-tight mt-2 mb-1">आरिफ ब्रॉडवे</h3>
                 <p className="text-sm font-extrabold text-[#f08519] flex items-center gap-1.5 justify-center sm:justify-start">
                   संस्थापक/अध्यक्ष
@@ -158,6 +159,29 @@ const AboutSHCT = () => {
               </div>
             </div>
 
+            {/* Profile 5: City President - Maghar Unit */}
+            <div className="bg-white rounded-3xl p-8 shadow-md border border-gray-100 hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 flex flex-col sm:flex-row items-center gap-6 relative overflow-hidden group">
+              {/* Background gradient hint */}
+              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-orange-100/30 to-amber-100/30 rounded-bl-full -z-10 transition-all duration-500 group-hover:scale-110"></div>
+              
+              {/* Image Box Wrapper */}
+              <div className="relative shrink-0">
+                <div className="w-44 h-56 rounded-2xl bg-gradient-to-tr from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden relative shadow-inner ring-4 ring-orange-500/20 ring-offset-4 ring-offset-white group-hover:ring-orange-500/50 transition-all duration-500">
+                  <img src={alamgirAnsariImg} className="w-full h-full object-cover rounded-2xl group-hover:scale-105 transition-transform duration-500" alt="आलमगीर अंसारी" />
+                </div>
+              </div>
+
+              {/* Text Area */}
+              <div className="text-center sm:text-left flex-1">
+                <span className="text-[10px] font-black uppercase tracking-widest text-[#f08519] bg-orange-50 px-3 py-1 rounded-full">LEADERSHIP</span>
+                <h3 className="text-2xl font-black text-gray-800 tracking-tight mt-2 mb-1">आलमगीर अंसारी</h3>
+                <p className="text-sm font-extrabold text-[#f08519] flex items-center gap-1.5 justify-center sm:justify-start">
+                  नगर अध्यक्ष - SHCT मगहर इकाई
+                </p>
+                <p className="text-xs text-gray-400 mt-2 font-medium leading-relaxed">Silent Help Charitable Trust के मगहर इकाई के नगर अध्यक्ष के रूप में नेतृत्वकर्ता।</p>
+              </div>
+            </div>
+
           </div>
         </div>
 
@@ -197,8 +221,7 @@ const AboutSHCT = () => {
               
               {/* Photo Box on Top */}
               <div className="w-36 h-44 rounded-2xl bg-gradient-to-tr from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden relative shadow-inner ring-4 ring-teal-500/20 group-hover:ring-teal-500/50 transition-all duration-500 mb-4 shrink-0 mx-auto">
-                {/* 👤 PHOTO PLACEHOLDER: Replace this span with an img element when ready */}
-                <span className="text-5xl text-gray-300 select-none group-hover:scale-110 transition-transform duration-500">👤</span>
+                <img src={rajeshImg} className="w-full h-full object-cover rounded-2xl group-hover:scale-105 transition-transform duration-500" alt="राजेश" />
               </div>
 
               {/* Text Underneath */}

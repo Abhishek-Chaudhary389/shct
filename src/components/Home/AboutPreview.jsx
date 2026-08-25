@@ -6,6 +6,8 @@ import tasadduqHusainImg from '../../assets/तसद्दुक हुसै�
 import akhtarKhanImg from '../../assets/अख़्तर खान.jpeg';
 import sahilAnsariImg from '../../assets/साहिल अंसारी.jpeg';
 import basitAnsariImg from '../../assets/बासित अंसारी.jpeg';
+import rajeshImg from '../../assets/राजेश.jpeg';
+import alamgirAnsariImg from '../../assets/आलमगीर अंसारी.jpeg';
 
 const AboutPreview = () => {
   return (
@@ -106,6 +108,20 @@ const AboutPreview = () => {
               <p className="text-[10px] md:text-xs text-gray-500 mt-2 font-medium leading-relaxed hidden sm:block">Silent Help Charitable Trust के प्रवक्ता।</p>
             </div>
 
+            {/* Profile 5: City President - Maghar Unit */}
+            <div className="bg-white rounded-2xl md:rounded-3xl p-3 md:p-6 shadow-md border border-gray-100 hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 flex flex-col items-center text-center relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-20 h-20 md:w-24 md:h-24 bg-gradient-to-br from-orange-100/20 to-amber-100/20 rounded-bl-full -z-10 transition-all duration-500 group-hover:scale-110"></div>
+              
+              <div className="w-24 h-32 sm:w-36 sm:h-44 rounded-xl md:rounded-2xl bg-gradient-to-tr from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden relative shadow-inner ring-2 md:ring-4 ring-orange-500/20 group-hover:ring-orange-500/50 transition-all duration-500 mb-3 md:mb-4 shrink-0 mx-auto">
+                <img src={alamgirAnsariImg} className="w-full h-full object-cover rounded-xl md:rounded-2xl group-hover:scale-105 transition-transform duration-500" alt="आलमगीर अंसारी" />
+              </div>
+
+              <span className="text-[8px] md:text-[9px] font-black uppercase tracking-widest text-[#f08519] bg-orange-50 px-2 py-0.5 rounded-full">LEADERSHIP</span>
+              <h4 className="text-xs sm:text-base md:text-lg font-black text-gray-800 tracking-tight mt-1.5 md:mt-2 mb-0.5 truncate w-full">आलमगीर अंसारी</h4>
+              <p className="text-[9px] md:text-[11px] font-black uppercase tracking-wider text-[#f08519] truncate w-full">नगर अध्यक्ष - SHCT मगहर इकाई</p>
+              <p className="text-[10px] md:text-xs text-gray-500 mt-2 font-medium leading-relaxed hidden sm:block">Silent Help Charitable Trust के मगहर इकाई के नगर अध्यक्ष।</p>
+            </div>
+
           </div>
         </div>
 
@@ -140,7 +156,7 @@ const AboutPreview = () => {
               <div className="absolute top-0 right-0 w-20 h-20 md:w-24 md:h-24 bg-gradient-to-br from-teal-100/20 to-emerald-100/20 rounded-bl-full -z-10 transition-all duration-500 group-hover:scale-110"></div>
               
               <div className="w-24 h-32 sm:w-36 sm:h-44 rounded-xl md:rounded-2xl bg-gradient-to-tr from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden relative shadow-inner ring-2 md:ring-4 ring-teal-500/20 group-hover:ring-teal-500/50 transition-all duration-500 mb-3 md:mb-4 shrink-0 mx-auto">
-                <span className="text-4xl sm:text-5xl text-gray-300 select-none group-hover:scale-110 transition-transform duration-500">👤</span>
+                <img src={rajeshImg} className="w-full h-full object-cover rounded-xl md:rounded-2xl group-hover:scale-105 transition-transform duration-500" alt="राजेश" />
               </div>
 
               <span className="text-[8px] md:text-[9px] font-black uppercase tracking-widest text-[#087889] bg-teal-50 px-2 py-0.5 rounded-full">TRUST MEMBER</span>
