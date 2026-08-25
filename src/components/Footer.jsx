@@ -17,8 +17,8 @@ const Footer = () => {
           {/* Column 1: About NGO */}
           <div>
             <div className="flex items-center space-x-4 mb-6">
-              <div className="w-20 h-20 bg-white rounded-full overflow-hidden flex items-center justify-center shrink-0">
-                <img src={logoImg} alt="SHCT Logo" className="w-full h-full object-contain scale-[1.5]" />
+              <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center p-[1px] shadow-md shrink-0 overflow-hidden">
+                <img src={logoImg} alt="SHCT Logo" className="w-full h-full object-contain" />
               </div>
               <div>
                 <h3 className="text-2xl font-bold text-[#f08519]">SHCT</h3>
