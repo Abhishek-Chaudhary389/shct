@@ -5,6 +5,7 @@ import { getApprovedMembers } from '../../services/dataService';
 const RegistrationBanner = () => {
   const qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=upi://pay?pa=fastrelief@sbi%26pn=FAST%2520RELIEF%2520CHARITABLE%2520TRUST%26cu=INR";
 
+
   const [memberCount, setMemberCount] = useState(0);
   const [displayCount, setDisplayCount] = useState(0);
   const [loading, setLoading] = useState(true);

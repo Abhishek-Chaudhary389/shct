@@ -17,6 +17,7 @@ const indianStates = [
 
 const Register = () => {
   const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
     name: '', aadhaar: '', fatherName: '', dob: '', password: '', mobile: '',
     gender: '', occupation: '', state: 'Uttar Pradesh', district: '', block: '', email: '', address: '',
