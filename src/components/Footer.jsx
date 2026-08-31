@@ -118,9 +118,9 @@ const Footer = () => {
         </div>
 
         {/* Bottom Copyright Section */}
-        <div className="pt-6 border-t border-gray-800 flex flex-col items-center justify-center text-xs text-gray-500 font-medium space-y-2 text-center">
-          <p>&copy; {new Date().getFullYear()} Silent Help Charitable Trust. All Rights Reserved.</p>
-          <p>
+        <div className="pt-6 border-t border-gray-800 flex flex-col md:flex-row items-start md:items-center justify-between text-xs text-gray-500 font-medium gap-3">
+          <p className="text-left">&copy; {new Date().getFullYear()} Silent Help Charitable Trust. All Rights Reserved.</p>
+          <p className="text-left md:text-right">
             Designed and Developed by <a href="https://www.snstudio.in/" target="_blank" rel="noopener noreferrer" className="text-amber-400 hover:text-[#f08519] font-bold transition-colors">SN Studio</a> <span className="text-red-500">♥</span>
           </p>
         </div>

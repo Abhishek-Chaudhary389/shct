@@ -86,7 +86,7 @@ export const getAnnualDonations = async () => {
   }
 };
 
-export const approveRegistration = async (id, group = 'A') => {
+export const approveRegistration = async (id, group = '') => {
   try {
     const pendingRef = doc(db, PENDING_COL, id);
     const pendingSnap = await getDoc(pendingRef);
@@ -280,7 +280,7 @@ export const addHomeAlert = async (alertData) => {
   try {
     const newAlert = {
       ...alertData,
-      isActive: false, // Default to hidden
+      isActive: true, // Default to visible/live
       createdAt: new Date().toISOString()
     };
     const docRef = await addDoc(collection(db, HOME_ALERTS_COL), newAlert);
@@ -317,31 +317,37 @@ const SETTINGS_COL = 'system_settings';
 const HOME_PAGE_DOC_ID = 'home_page';
 
 export const getHomePageSettings = async () => {
+  const defaults = {
+    headerTitle: "बेटी विवाह सहायता योजना",
+    alertTitle: "सहयोग अलर्ट - 1",
+    alertPoints: "सहयोग की अंतिम तिथि: 10 जुलाई से 26 जुलाई 2026 तक\nनियम: 1 ट्रांजेक्शन = 1 रसीद अपलोड",
+    instructionTitle: "महत्वपूर्ण निर्देश",
+    instructionText: "वेबसाइट पर अपना आधार कार्ड नंबर और पासवर्ड डालकर LOGIN करें और अपना GROUP देख लें। आप जिस GROUP में हैं, सिर्फ उसी GROUP में दिखने वाले परिवार के खाते में न्यूनतम राशि (50 रुपए) ऑनलाइन (UPI/Net Banking) भेजें।",
+    instructionNote: "नोट: किसी अन्य GROUP में भेजा गया सहयोग मान्य नहीं होगा। सहयोग भेजने के बाद ट्रांजेक्शन स्क्रीनशॉट और ID अपलोड करना अनिवार्य है।",
+    autoApproveBeti: false,
+    autoApproveNidhan: false,
+    scheme1Title: "आकस्मिक निधन सहायता योजना",
+    scheme1Text: "SHCT अपने सदस्यों एवं उनके परिवारों के साथ हर परिस्थिति में खड़ा रहने के उद्देश्य से आकस्मिक निधन सहायता योजना संचालित करता है। यदि किसी सदस्य का असामयिक निधन हो जाता है, तो संस्था निर्धारित नियमों के अनुसार उसके परिवार को आर्थिक सहायता प्रदान करती है, ताकि कठिन समय में उन्हें आवश्यक सहयोग मिल सके। इस योजना से संबंधित पात्रता, नियम एवं सहायता प्रक्रिया की विस्तृत जानकारी नीचे दिए गए बटन के माध्यम से देखी जा सकती है।",
+    scheme1BtnText: "दिवंगत सहायता विवरण",
+    scheme2Title: "बेटी विवाह सहायता योजना",
+    scheme2Text: "SHCT समाज के जरूरतमंद सदस्य परिवारों की सहायता के उद्देश्य से बेटी विवाह सहायता योजना संचालित करता है। इस योजना के अंतर्गत पात्र सदस्यों की बेटियों के विवाह के अवसर पर संस्था द्वारा निर्धारित प्रक्रिया एवं नियमों के अनुसार आर्थिक सहयोग प्रदान किया जाता है। योजना की पात्रता, आवश्यक दस्तावेज़ एवं आवेदन प्रक्रिया की पूरी जानकारी नीचे दिए गए बटन पर उपलब्ध है।",
+    scheme2BtnText: "बेटी विवाह सहायता विवरण"
+  };
+
   try {
     const docRef = doc(db, SETTINGS_COL, HOME_PAGE_DOC_ID);
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
-      return docSnap.data();
+      const data = docSnap.data();
+      return {
+        ...defaults,
+        ...data
+      };
     }
-    // Return default settings if none exist yet
-    return {
-      headerTitle: "बेटी विवाह सहायता योजना",
-      alertTitle: "सहयोग अलर्ट - 1",
-      alertPoints: "सहयोग की अंतिम तिथि: 10 जुलाई से 26 जुलाई 2026 तक\nनियम: 1 ट्रांजेक्शन = 1 रसीद अपलोड",
-      instructionTitle: "महत्वपूर्ण निर्देश",
-      instructionText: "वेबसाइट पर अपना आधार कार्ड नंबर और पासवर्ड डालकर LOGIN करें और अपना GROUP देख लें। आप जिस GROUP में हैं, सिर्फ उसी GROUP में दिखने वाले परिवार के खाते में न्यूनतम राशि (50 रुपए) ऑनलाइन (UPI/Net Banking) भेजें।",
-      instructionNote: "नोट: किसी अन्य GROUP में भेजा गया सहयोग मान्य नहीं होगा। सहयोग भेजने के बाद ट्रांजेक्शन स्क्रीनशॉट और ID अपलोड करना अनिवार्य है।"
-    };
+    return defaults;
   } catch (error) {
     console.error("Error fetching home settings:", error);
-    return {
-      headerTitle: "बेटी विवाह सहायता योजना",
-      alertTitle: "सहयोग अलर्ट - 1",
-      alertPoints: "सहयोग की अंतिम तिथि: 10 जुलाई से 26 जुलाई 2026 तक\nनियम: 1 ट्रांजेक्शन = 1 रसीद अपलोड",
-      instructionTitle: "महत्वपूर्ण निर्देश",
-      instructionText: "वेबसाइट पर अपना आधार कार्ड नंबर और पासवर्ड डालकर LOGIN करें और अपना GROUP देख लें। आप जिस GROUP में हैं, सिर्फ उसी GROUP में दिखने वाले परिवार के खाते में न्यूनतम राशि (50 रुपए) ऑनलाइन (UPI/Net Banking) भेजें।",
-      instructionNote: "नोट: किसी अन्य GROUP में भेजा गया सहयोग मान्य नहीं होगा। सहयोग भेजने के बाद ट्रांजेक्शन स्क्रीनशॉट और ID अपलोड करना अनिवार्य है।"
-    };
+    return defaults;
   }
 };
 
@@ -531,6 +537,44 @@ export const updateUserPassword = async (docId, isPending, newPassword) => {
     return true;
   } catch (error) {
     console.error("Error updating user password:", error);
+    throw error;
+  }
+};
+
+// ================= DYNAMIC GROUPS CONFIG API =================
+export const getGroupsConfig = async () => {
+  try {
+    const docRef = doc(db, SETTINGS_COL, 'groups_config');
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      return docSnap.data();
+    }
+    // Default values: Groups are OFF by default, and activeGroups has A and B
+    return { activeGroups: ['A', 'B'], isActive: false };
+  } catch (error) {
+    console.error("Error fetching groups config:", error);
+    return { activeGroups: ['A', 'B'], isActive: false };
+  }
+};
+
+export const saveGroupsConfig = async (config) => {
+  try {
+    const docRef = doc(db, SETTINGS_COL, 'groups_config');
+    await setDoc(docRef, config);
+    return true;
+  } catch (error) {
+    console.error("Error saving groups config:", error);
+    throw error;
+  }
+};
+
+export const updateMemberGroup = async (memberId, groupCode) => {
+  try {
+    const docRef = doc(db, APPROVED_COL, memberId);
+    await updateDoc(docRef, { group: groupCode });
+    return true;
+  } catch (error) {
+    console.error("Error updating member group:", error);
     throw error;
   }
 };

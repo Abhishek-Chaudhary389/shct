@@ -1,10 +1,37 @@
- import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { getHomePageSettings } from '../../services/dataService';
 
 const Schemes = () => {
   // Logo colors
   const logoTeal = "#087889";
   const logoOrange = "#f08519";
+
+  const [settings, setSettings] = useState({
+    scheme1Title: "आकस्मिक निधन सहायता योजना",
+    scheme1Text: "SHCT अपने सदस्यों एवं उनके परिवारों के साथ हर परिस्थिति में खड़ा रहने के उद्देश्य से आकस्मिक निधन सहायता योजना संचालित करता है। यदि किसी सदस्य का असामयिक निधन हो जाता है, तो संस्था निर्धारित नियमों के अनुसार उसके परिवार को आर्थिक सहायता प्रदान करती है, ताकि कठिन समय में उन्हें आवश्यक सहयोग मिल सके। इस योजना से संबंधित पात्रता, नियम एवं सहायता प्रक्रिया की विस्तृत जानकारी नीचे दिए गए बटन के माध्यम से देखी जा सकती है।",
+    scheme1BtnText: "दिवंगत सहायता विवरण",
+    scheme2Title: "बेटी विवाह सहायता योजना",
+    scheme2Text: "SHCT समाज के जरूरतमंद सदस्य परिवारों की सहायता के उद्देश्य से बेटी विवाह सहायता योजना संचालित करता है। इस योजना के अंतर्गत पात्र सदस्यों की बेटियों के विवाह के अवसर पर संस्था द्वारा निर्धारित प्रक्रिया एवं नियमों के अनुसार आर्थिक सहयोग प्रदान किया जाता है। योजना की पात्रता, आवश्यक दस्तावेज़ एवं आवेदन प्रक्रिया की पूरी जानकारी नीचे दिए गए बटन पर उपलब्ध है।",
+    scheme2BtnText: "बेटी विवाह सहायता विवरण"
+  });
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const data = await getHomePageSettings();
+        if (data) {
+          setSettings(prev => ({
+            ...prev,
+            ...data
+          }));
+        }
+      } catch (error) {
+        console.error("Error fetching homepage settings in Schemes component:", error);
+      }
+    };
+    fetchSettings();
+  }, []);
 
   return (
     <section className="w-full bg-gray-50 py-20 font-sans">
@@ -30,12 +57,11 @@ const Schemes = () => {
             </div>
 
             <h3 className="text-2xl font-bold mb-4 mt-5" style={{ color: logoOrange }}>
-              आकस्मिक निधन सहायता योजना
+              {settings.scheme1Title}
             </h3>
             
-            {/* flex-grow लगाने से दोनों बॉक्सेस के बटन हमेशा एक ही लेवल पर रहेंगे */}
             <p className="text-base leading-relaxed mb-8 font-medium flex-grow text-justify" style={{ color: logoTeal }}>
-              SHCT अपने सदस्यों एवं उनके परिवारों के साथ हर परिस्थिति में खड़ा रहने के उद्देश्य से आकस्मिक निधन सहायता योजना संचालित करता है। यदि किसी सदस्य का असामयिक निधन हो जाता है, तो संस्था निर्धारित नियमों के अनुसार उसके परिवार को आर्थिक सहायता प्रदान करती है, ताकि कठिन समय में उन्हें आवश्यक सहयोग मिल सके। इस योजना से संबंधित पात्रता, नियम एवं सहायता प्रक्रिया की विस्तृत जानकारी नीचे दिए गए बटन के माध्यम से देखी जा सकती है।
+              {settings.scheme1Text}
             </p>
             
             <Link 
@@ -43,7 +69,7 @@ const Schemes = () => {
               className="w-full py-3.5 rounded-xl font-bold text-white shadow-md transition-transform hover:scale-[1.02] active:scale-95 text-lg block text-center"
               style={{ backgroundColor: logoOrange }}
             >
-              👉 दिवंगत सहायता विवरण
+              👉 {settings.scheme1BtnText}
             </Link>
           </div>
 
@@ -56,20 +82,20 @@ const Schemes = () => {
               <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
             </div>
 
-            <h3 className="text-2xl font-bold mb-4 mt-5" style={{ color: logoOrange }}>
-              बेटी विवाह सहायता योजना
+            <h3 className="text-2xl font-bold mb-4 mt-5" style={{ color: logoTeal }}>
+              {settings.scheme2Title}
             </h3>
             
             <p className="text-base leading-relaxed mb-8 font-medium flex-grow text-justify" style={{ color: logoTeal }}>
-              SHCT समाज के जरूरतमंद सदस्य परिवारों की सहायता के उद्देश्य से बेटी विवाह सहायता योजना संचालित करता है। इस योजना के अंतर्गत पात्र सदस्यों की बेटियों के विवाह के अवसर पर संस्था द्वारा निर्धारित प्रक्रिया एवं नियमों के अनुसार आर्थिक सहयोग प्रदान किया जाता है। योजना की पात्रता, आवश्यक दस्तावेज़ एवं आवेदन प्रक्रिया की पूरी जानकारी नीचे दिए गए बटन पर उपलब्ध है।
+              {settings.scheme2Text}
             </p>
             
             <Link 
               to="/sahayata-list/beti"
               className="w-full py-3.5 rounded-xl font-bold text-white shadow-md transition-transform hover:scale-[1.02] active:scale-95 text-lg block text-center"
-              style={{ backgroundColor: logoOrange }}
+              style={{ backgroundColor: logoTeal }}
             >
-              👉 बेटी विवाह सहायता विवरण
+              👉 {settings.scheme2BtnText}
             </Link>
           </div>
 

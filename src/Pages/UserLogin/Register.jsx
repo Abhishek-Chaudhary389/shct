@@ -64,7 +64,7 @@ const Register = () => {
       }, 1500);
     } catch (error) {
       setIsSubmitting(false);
-      alert('पंजीकरण में त्रुटि आई। कृपया पुनः प्रयास करें।');
+      alert('पंजीकरण में त्रुटि आई: ' + (error.message || error));
       console.error(error);
     }
   };

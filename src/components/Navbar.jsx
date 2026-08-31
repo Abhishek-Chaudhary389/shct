@@ -32,7 +32,7 @@ const Navbar = () => {
       setIsMobileSahayogFormOpen(false);
       setIsMobileMenuOpen(false);
       navigate('/login', { 
-        state: { message: 'Sahayog Form का उपयोग करने के लिए कृपया पहले लॉगिन करें।' } 
+        state: { message: 'Aavedan Form का उपयोग करने के लिए कृपया पहले लॉगिन करें।' } 
       });
     } else {
       setIsDesktopSahayogFormOpen(!isDesktopSahayogFormOpen);
@@ -65,14 +65,48 @@ const Navbar = () => {
           
           {/* TOP ROW: Info & Contacts */}
           <div className="h-[70px] bg-white flex justify-between items-center px-3 xl:px-4">
-            <div className="flex items-center space-x-2 cursor-pointer group shrink-0">
-              <div className="p-2 rounded-full text-white transition-transform group-hover:scale-105" style={{ backgroundColor: logoOrange }}>
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" /></svg>
-              </div>
-              <div className="flex items-baseline whitespace-nowrap">
-                <span className="text-lg xl:text-xl font-serif italic text-gray-800 tracking-tight">Hope, Care & </span>
-                <span className="text-lg xl:text-xl font-serif italic text-gray-800 tracking-tight border-b-2 border-gray-400 ml-1"> Support </span>
-              </div>
+            {/* Social Icons Bar */}
+            <div className="flex items-center space-x-3.5 xl:space-x-5 shrink-0">
+              <a 
+                href="#" 
+                onClick={(e) => e.preventDefault()}
+                className="w-10 h-10 rounded-full flex items-center justify-center text-gray-500 hover:text-white hover:bg-emerald-500 border border-gray-200 hover:border-emerald-500 transition-all duration-300 shadow-sm hover:shadow-md hover:-translate-y-0.5"
+                title="WhatsApp"
+              >
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 16 16">
+                  <path d="M13.601 2.326A7.85 7.85 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.9 7.9 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.9 7.9 0 0 0 13.6 2.326zM7.994 14.521a6.6 6.6 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.56 6.56 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592m3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.73.73 0 0 0-.529.247c-.182.198-.691.677-.691 1.654s.71 1.916.81 2.049c.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232"/>
+                </svg>
+              </a>
+              <a 
+                href="#" 
+                onClick={(e) => e.preventDefault()}
+                className="w-10 h-10 rounded-full flex items-center justify-center text-gray-500 hover:text-white hover:bg-blue-600 border border-gray-200 hover:border-blue-600 transition-all duration-300 shadow-sm hover:shadow-md hover:-translate-y-0.5"
+                title="Facebook"
+              >
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                </svg>
+              </a>
+              <a 
+                href="#" 
+                onClick={(e) => e.preventDefault()}
+                className="w-10 h-10 rounded-full flex items-center justify-center text-gray-500 hover:text-white hover:bg-[#0a66c2] border border-gray-200 hover:border-[#0a66c2] transition-all duration-300 shadow-sm hover:shadow-md hover:-translate-y-0.5"
+                title="LinkedIn"
+              >
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M22.23 0H1.77C.8 0 0 .77 0 1.72v20.56C0 23.23.8 24 1.77 24h20.46c.98 0 1.77-.77 1.77-1.72V1.72C24 .77 23.2 0 22.23 0zM7.12 20.45H3.56V9h3.56v11.45zM5.34 7.43c-1.14 0-2.06-.92-2.06-2.06 0-1.14.92-2.06 2.06-2.06 1.14 0 2.06.92 2.06 2.06 0 1.14-.92 2.06-2.06 2.06zm15.11 13.02h-3.56v-5.6c0-1.34-.03-3.05-1.86-3.05-1.86 0-2.14 1.45-2.14 2.95v5.7H9.33V9h3.42v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.45v6.29z"/>
+                </svg>
+              </a>
+              <a 
+                href="#" 
+                onClick={(e) => e.preventDefault()}
+                className="w-10 h-10 rounded-full flex items-center justify-center text-gray-500 hover:text-white hover:bg-black border border-gray-200 hover:border-black transition-all duration-300 shadow-sm hover:shadow-md hover:-translate-y-0.5"
+                title="Twitter / X"
+              >
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                </svg>
+              </a>
             </div>
 
             <div className="flex space-x-2 xl:space-x-4 items-center text-xs xl:text-sm shrink-0">
@@ -184,10 +218,10 @@ const Navbar = () => {
               {!isLoggedIn ? (
                 <Link 
                   to="/login" 
-                  state={{ message: 'Sahayog Form का उपयोग करने के लिए कृपया पहले लॉगिन करें।' }}
+                  state={{ message: 'Aavedan Form का उपयोग करने के लिए कृपया पहले लॉगिन करें।' }}
                   className={`h-full px-2 flex items-center transition-colors whitespace-nowrap ${isActive('/login') ? 'bg-[#06616e] text-orange-200 border-b-2 border-orange-400' : 'hover:bg-[#06616e]'}`}
                 >
-                  Sahayog Form
+                  Aavedan Form
                 </Link>
               ) : (
                 <div 
@@ -197,7 +231,7 @@ const Navbar = () => {
                   onClick={() => setIsDesktopSahayogFormOpen(!isDesktopSahayogFormOpen)}
                 >
                   <span className="flex items-center gap-0.5">
-                    Sahayog Form
+                    Aavedan Form
                     <svg className={`w-3.5 h-3.5 transition-transform duration-300 ${isDesktopSahayogFormOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
                   </span>
                   
@@ -206,8 +240,8 @@ const Navbar = () => {
                       className="absolute top-[50px] left-0 w-56 bg-white text-gray-800 shadow-2xl rounded-md flex flex-col overflow-hidden border-t-4 z-[9999]" 
                       style={{ borderColor: logoOrange }}
                     >
-                      <Link to="/beti-sahayog-form" className={`px-4 py-3 border-b border-gray-100 font-medium text-[13px] ${isActive('/beti-sahayog-form') ? 'text-[#f08519] bg-orange-50 font-bold' : 'hover:bg-gray-50 hover:text-[#f08519]'}`}>Beti Sahayog Form</Link>
-                      <Link to="/nidhan-sahayog-form" className={`px-4 py-3 font-medium text-[13px] ${isActive('/nidhan-sahayog-form') ? 'text-[#f08519] bg-orange-50 font-bold' : 'hover:bg-gray-50 hover:text-[#f08519]'}`}>Nidhan Sahayog Form</Link>
+                      <Link to="/beti-sahayog-form" className={`px-4 py-3 border-b border-gray-100 font-medium text-[13px] ${isActive('/beti-sahayog-form') ? 'text-[#f08519] bg-orange-50 font-bold' : 'hover:bg-gray-50 hover:text-[#f08519]'}`}>Beti Aavedan Form</Link>
+                      <Link to="/nidhan-sahayog-form" className={`px-4 py-3 font-medium text-[13px] ${isActive('/nidhan-sahayog-form') ? 'text-[#f08519] bg-orange-50 font-bold' : 'hover:bg-gray-50 hover:text-[#f08519]'}`}>Nidhan Aavedan Form</Link>
                     </div>
                   )}
                 </div>
@@ -328,11 +362,11 @@ const Navbar = () => {
             {!isLoggedIn ? (
               <Link 
                 to="/login" 
-                state={{ message: 'Sahayog Form का उपयोग करने के लिए कृपया पहले लॉगिन करें।' }}
+                state={{ message: 'Aavedan Form का उपयोग करने के लिए कृपया पहले लॉगिन करें।' }}
                 onClick={() => setIsMobileMenuOpen(false)}
                 className="py-3 px-6 border-b border-white/20 hover:bg-[#06616e] transition-colors block text-white font-semibold"
               >
-                Sahayog Form
+                Aavedan Form
               </Link>
             ) : (
               <div>
@@ -340,14 +374,14 @@ const Navbar = () => {
                   onClick={() => setIsMobileSahayogFormOpen(!isMobileSahayogFormOpen)} 
                   className="w-full text-left py-3 px-6 border-b border-white/20 flex justify-between items-center focus:outline-none"
                 >
-                  Sahayog Form
+                  Aavedan Form
                   <svg className={`w-5 h-5 transition-transform duration-300 ${isMobileSahayogFormOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
                 </button>
                 
                 {isMobileSahayogFormOpen && (
                   <div className="bg-[#06616e] flex flex-col text-sm border-b border-white/20">
-                    <Link to="/beti-sahayog-form" onClick={() => setIsMobileMenuOpen(false)} className={`py-3 px-10 border-b border-white/10 transition-colors ${isActive('/beti-sahayog-form') ? 'bg-black/30 text-orange-200 font-bold' : 'hover:bg-white/10'}`}>Beti Sahayog Form</Link>
-                    <Link to="/nidhan-sahayog-form" onClick={() => setIsMobileMenuOpen(false)} className={`py-3 px-10 transition-colors ${isActive('/nidhan-sahayog-form') ? 'bg-black/30 text-orange-200 font-bold' : 'hover:bg-white/10'}`}>Nidhan Sahayog Form</Link>
+                    <Link to="/beti-sahayog-form" onClick={() => setIsMobileMenuOpen(false)} className={`py-3 px-10 border-b border-white/10 transition-colors ${isActive('/beti-sahayog-form') ? 'bg-black/30 text-orange-200 font-bold' : 'hover:bg-white/10'}`}>Beti Aavedan Form</Link>
+                    <Link to="/nidhan-sahayog-form" onClick={() => setIsMobileMenuOpen(false)} className={`py-3 px-10 transition-colors ${isActive('/nidhan-sahayog-form') ? 'bg-black/30 text-orange-200 font-bold' : 'hover:bg-white/10'}`}>Nidhan Aavedan Form</Link>
                   </div>
                 )}
               </div>

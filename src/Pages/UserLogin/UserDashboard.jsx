@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { 
   getPendingRegistrations, 
   getApprovedMembers, 
@@ -12,6 +12,7 @@ import {
   getAnnualDonations,
   addAnnualRenewalReceipt,
   updateUserPassword,
+  getGroupsConfig,
 } from '../../services/dataService';
 import html2canvas from 'html2canvas-pro';
 import { logoBase64 } from '../../utils/logoBase64';
@@ -36,6 +37,8 @@ const UserDashboard = () => {
   const [selectedAlertForReceipt, setSelectedAlertForReceipt] = useState(null);
   const [pageSettings, setPageSettings] = useState(null);
   const [donationsList, setDonationsList] = useState([]);
+  const [isGroupsActive, setIsGroupsActive] = useState(false);
+  const [isAavedanMenuOpen, setIsAavedanMenuOpen] = useState(false);
 
   // Shared States for Centralized Receipt Image Generation
   const [selectedDownloadReceipt, setSelectedDownloadReceipt] = useState(null);
@@ -47,7 +50,12 @@ const UserDashboard = () => {
     
     // Wait for state to reflect in DOM
     setTimeout(async () => {
-      const elementId = type === 'beti' ? 'printable-donation-receipt' : 'printable-donation-receipt-nidhan';
+      let elementId = 'printable-donation-receipt';
+      if (type === 'nidhan') {
+        elementId = 'printable-donation-receipt-nidhan';
+      } else if (type === 'varshik') {
+        elementId = 'printable-donation-receipt-varshik';
+      }
       const receiptCard = document.getElementById(elementId);
       if (!receiptCard) {
         console.error("Receipt card element not found: ", elementId);
@@ -64,7 +72,10 @@ const UserDashboard = () => {
         const image = canvas.toDataURL('image/png');
         const link = document.createElement('a');
         link.href = image;
-        link.download = `Donation_Receipt_${type === 'beti' ? 'Beti' : 'Nidhan'}_${receipt.transactionId}.png`;
+        let filenameType = 'Beti';
+        if (type === 'nidhan') filenameType = 'Nidhan';
+        else if (type === 'varshik') filenameType = 'Varshik_Dan';
+        link.download = `Donation_Receipt_${filenameType}_${receipt.transactionId}.png`;
         link.click();
       } catch (error) {
         console.error("Error generating receipt:", error);
@@ -120,11 +131,25 @@ const UserDashboard = () => {
         }
 
         if (foundUser) {
+          // Fetch groups configuration
+          const grpConfig = await getGroupsConfig();
+          const groupsActive = grpConfig ? grpConfig.isActive : false;
+          setIsGroupsActive(groupsActive);
+
+          let displayGroup = '';
+          if (isPending) {
+            displayGroup = 'Pending';
+          } else if (groupsActive) {
+            displayGroup = foundUser.group ? `Group ${foundUser.group}` : 'Not Assigned (असाइन नहीं है)';
+          } else {
+            displayGroup = 'Closed (ग्रुप बंद है)';
+          }
+
           setUser({
             dbId: foundUser.id || '',
             isPendingUser: isPending,
             name: foundUser.name || '',
-            group: isPending ? 'Pending' : (foundUser.group ? `Group ${foundUser.group}` : 'Group A'),
+            group: displayGroup,
             aadhaar: foundUser.aadhaar || '',
             fatherName: foundUser.fatherName || '',
             dob: foundUser.dob || '',
@@ -159,13 +184,16 @@ const UserDashboard = () => {
           }
 
           // Filter active alerts for this user's group and matching active scheme type
-          const userRawGroup = normalizeGroup(foundUser.group || 'A');
-          const myActiveAlerts = allAlerts.filter(alert => 
-            alert.isActive && 
-            alert.group && 
-            normalizeGroup(alert.group) === userRawGroup &&
-            (alert.type || 'beti') === activeType
-          );
+          let myActiveAlerts = [];
+          if (groupsActive && foundUser.group) {
+            const userRawGroup = normalizeGroup(foundUser.group);
+            myActiveAlerts = allAlerts.filter(alert => 
+              alert.isActive && 
+              alert.group && 
+              normalizeGroup(alert.group) === userRawGroup &&
+              (alert.type || 'beti') === activeType
+            );
+          }
           setActiveAlerts(myActiveAlerts);
 
           // Fetch all receipts
@@ -234,9 +262,19 @@ const UserDashboard = () => {
 
         {activeAlerts.length === 0 ? (
           <div className="bg-white rounded-xl p-8 border border-gray-200 shadow-sm text-center">
-            <span className="text-4xl mb-3 block">🎉</span>
-            <p className="text-gray-600 font-bold text-lg">आपके ग्रुप ({user.group}) में वर्तमान में कोई सक्रिय सहयोग अलर्ट नहीं है।</p>
-            <p className="text-gray-400 text-sm mt-1">जब एडमिन आपके ग्रुप के लिए नया सहयोग अलर्ट लाइव करेगा, तो उसका विवरण यहाँ दिखाई देगा।</p>
+            {isGroupsActive ? (
+              <>
+                <span className="text-4xl mb-3 block">🎉</span>
+                <p className="text-gray-600 font-bold text-lg">आपके ग्रुप ({user.group}) में वर्तमान में कोई सक्रिय सहयोग अलर्ट नहीं है।</p>
+                <p className="text-gray-400 text-sm mt-1">जब एडमिन आपके ग्रुप के लिए नया सहयोग अलर्ट लाइव करेगा, तो उसका विवरण यहाँ दिखाई देगा।</p>
+              </>
+            ) : (
+              <>
+                <span className="text-4xl mb-3 block">🔒</span>
+                <p className="text-gray-600 font-bold text-lg">ग्रुप प्रबंधन वर्तमान में बंद है।</p>
+                <p className="text-gray-400 text-sm mt-1">जब एडमिन द्वारा ग्रुप प्रबंधन सक्रिय किया जाएगा, तब आपके ग्रुप के अलर्ट यहाँ प्रदर्शित होंगे।</p>
+              </>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-8">
@@ -472,18 +510,13 @@ const UserDashboard = () => {
         </div>
 
         {/* Header */}
-        <div className="bg-[#087889] p-4 text-center text-white relative flex flex-col items-center justify-center">
-          <div className="absolute top-0 right-0 w-16 h-16 bg-white/10 rounded-full -mt-4 -mr-4 blur-sm"></div>
-          
-          <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center p-1 shadow-md">
-              <img src={logoBase64} alt="SHCT Logo" className="w-full h-full object-contain" />
-            </div>
-            <div className="text-left">
-              <h2 className="text-sm font-black tracking-tight leading-none uppercase">Silent Help</h2>
-              <p className="text-[8px] font-bold tracking-widest text-teal-100 uppercase mt-0.5">Charitable Trust</p>
-            </div>
+        <div className="bg-[#077d8c] px-4 py-3 flex items-center gap-3 relative rounded-t-xl">
+          <div className="w-11 h-11 bg-white rounded-full flex items-center justify-center p-[2.5px] shrink-0 shadow-md">
+            <img src={logoBase64} alt="SHCT Logo" className="w-full h-full object-contain" />
           </div>
+          <h2 className="text-base font-black text-white tracking-tight uppercase leading-tight text-left">
+            SILENT HELP CHARITABLE TRUST
+          </h2>
         </div>
 
         {/* Body */}
@@ -495,10 +528,6 @@ const UserDashboard = () => {
           </div>
 
           <div className="space-y-3">
-            <div className="flex justify-between items-center text-sm">
-              <span className="font-bold text-gray-500">Group:</span>
-              <span className="font-black text-gray-800 bg-gray-100 px-2 py-0.5 rounded">{user.group || 'N/A'}</span>
-            </div>
             <div className="flex justify-between items-center text-sm">
               <span className="font-bold text-gray-500">Mobile:</span>
               <span className="font-bold text-gray-800">{user.mobile || 'N/A'}</span>
@@ -568,29 +597,99 @@ const UserDashboard = () => {
 
     return (
       <div className="p-6">
-        <h3 className="text-xl font-bold text-[#8a3324] mb-6 border-b border-gray-200 pb-2">View All Varshik Dan Suchi (वार्षिक दान सूची)</h3>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 border-b border-gray-200 pb-4">
+          <div>
+            <h3 className="text-2xl font-black text-[#8a3324] tracking-tight">View All Varshik Dan Suchi</h3>
+            <p className="text-sm text-gray-500 font-medium">वार्षिक दान सूची - आपके द्वारा जमा किया गया वार्षिक सदस्यता/नवीनीकरण शुल्क</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs bg-[#8a3324]/10 text-[#8a3324] font-bold px-3 py-1 rounded-full border border-[#8a3324]/20">
+              Total Receipts: {myDonations.length}
+            </span>
+          </div>
+        </div>
         
         {myDonations.length === 0 ? (
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 inline-block">
-            <p className="text-lg text-gray-800 font-medium">You had not submitted Vyawastha shulk till now.</p>
+          <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 text-center max-w-md mx-auto py-12">
+            <div className="text-5xl mb-4">📄</div>
+            <p className="text-lg text-gray-800 font-bold mb-1">No Records Found</p>
+            <p className="text-sm text-gray-500 font-medium">You have not submitted annual/renewal fee yet.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {myDonations.map((d, idx) => (
-              <div key={idx} className="bg-white rounded-lg shadow-sm border border-gray-200 p-5 hover:shadow-md transition-shadow">
-                <h4 className="text-lg font-bold text-[#8a3324] mb-1">{d.name}</h4>
-                <p className="text-xs text-gray-500 font-mono">Unique ID : {d.uniqueId}</p>
-                <div className="text-xs font-bold text-green-700 bg-green-50 px-2 py-0.5 rounded w-max mt-2">
-                  {d.isRenewal ? "RENEWAL (नवीनीकरण)" : "REGISTRATION FEE (पंजीकरण शुल्क)"}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {myDonations.map((d, idx) => {
+              const isRenewal = d.isRenewal;
+              return (
+                <div 
+                  key={idx} 
+                  className="bg-white rounded-2xl border border-gray-100 shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col justify-between relative group"
+                >
+                  {/* Decorative Header Accent */}
+                  <div className="h-2 bg-gradient-to-r from-[#8a3324] via-amber-600 to-[#8a3324]" />
+                  
+                  <div className="p-6 flex-1">
+                    {/* Top Branding Section */}
+                    <div className="flex items-center justify-between gap-2 mb-4">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-full bg-red-50 p-1 flex items-center justify-center border border-red-100">
+                          <img src={logoBase64} alt="SHCT Logo" className="w-full h-full object-contain" />
+                        </div>
+                        <span className="text-[10px] font-black text-gray-800 tracking-wider uppercase leading-none">
+                          SHCT NGO
+                        </span>
+                      </div>
+                      
+                      {/* Premium Badge */}
+                      <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border ${
+                        isRenewal 
+                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200/50' 
+                          : 'bg-blue-50 text-blue-700 border-blue-200/50'
+                      }`}>
+                        {isRenewal ? "RENEWAL (नवीनीकरण)" : "REGISTRATION (पंजीकरण)"}
+                      </span>
+                    </div>
+
+                    {/* Donor Info */}
+                    <div className="mb-4">
+                      <h4 className="text-lg font-black text-gray-800 leading-tight mb-0.5">{d.name}</h4>
+                      <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">
+                        ID: <span className="text-gray-600 font-mono font-medium">{d.uniqueId}</span>
+                      </p>
+                    </div>
+
+                    {/* Receipt Details Table */}
+                    <div className="bg-gray-50/50 rounded-xl p-4 border border-gray-100 space-y-2.5 text-xs">
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-400 font-bold uppercase tracking-wider">Date</span>
+                        <span className="text-gray-800 font-semibold">{d.sahyogDate}</span>
+                      </div>
+                      <div className="flex items-start justify-between gap-4">
+                        <span className="text-gray-400 font-bold uppercase tracking-wider shrink-0">Txn ID</span>
+                        <span className="text-gray-800 font-mono break-all text-right font-medium">{d.transactionId}</span>
+                      </div>
+                      <div className="border-t border-dashed border-gray-200 my-1 pt-1.5 flex items-center justify-between">
+                        <span className="text-gray-400 font-bold uppercase tracking-wider">Amount</span>
+                        <span className="text-sm font-black text-emerald-600">₹ {d.amount || "200"}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Action Section */}
+                  <div className="p-4 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
+                    <span className="text-[10px] text-gray-400 font-medium">Receipt verified ✅</span>
+                    <button
+                      onClick={() => triggerDownload(d, 'varshik')}
+                      className="flex items-center gap-1.5 bg-[#8a3324] hover:bg-[#a6402f] text-white px-3.5 py-1.5 rounded-lg text-xs font-bold shadow-sm transition-all duration-200 cursor-pointer active:scale-95"
+                    >
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                      </svg>
+                      Download Receipt
+                    </button>
+                  </div>
                 </div>
-                <hr className="border-t border-gray-100 my-4" />
-                <div className="space-y-2 text-sm text-gray-700 font-semibold">
-                  <p><span className="text-gray-400">Date:</span> {d.sahyogDate}</p>
-                  <p><span className="text-gray-400">Transaction ID:</span> <span className="font-mono text-xs break-all">{d.transactionId}</span></p>
-                  <p><span className="text-gray-400">Amount:</span> ₹ {d.amount}</p>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
@@ -828,6 +927,7 @@ const UserDashboard = () => {
           donorUniqueId: user.uniqueId,
           donorAadhaar: user.aadhaar,
           donorMobile: user.mobile,
+          donorEmail: user.email,
           donorDistrict: user.district || '',
           donorBlock: user.block || '',
           beneficiaryName: selectedAlert.member,
@@ -1008,7 +1108,10 @@ const UserDashboard = () => {
   };
 
   const ViewAllBetiSahyogList = () => {
-    const approvedReceipts = submittedReceiptsList.filter(r => r.status === 'APPROVED');
+    const approvedReceipts = submittedReceiptsList.filter(r => 
+      r.status === 'APPROVED' && 
+      r.donorAadhaar === user.aadhaar
+    );
 
     return (
       <div className="p-6">
@@ -1056,7 +1159,7 @@ const UserDashboard = () => {
                     </div>
                     <div className="flex items-start justify-between gap-1">
                       <span className="text-gray-400 w-[55%]">Email :</span>
-                      <span className="text-gray-900 text-right w-[45%] break-all">{receipt.donorEmail || user.email || 'N/A'}</span>
+                      <span className="text-gray-900 text-right w-[45%] break-all">{receipt.donorEmail || 'N/A'}</span>
                     </div>
                     <div className="flex items-start justify-between gap-1">
                       <span className="text-gray-400 w-[55%]">Donated Amount :</span>
@@ -1163,6 +1266,7 @@ const UserDashboard = () => {
           donorUniqueId: user.uniqueId,
           donorAadhaar: user.aadhaar,
           donorMobile: user.mobile,
+          donorEmail: user.email,
           donorDistrict: user.district || '',
           donorBlock: user.block || '',
           beneficiaryName: selectedAlert.member,
@@ -1343,7 +1447,10 @@ const UserDashboard = () => {
   };
 
   const ViewAllNidhanSahyogList = () => {
-    const approvedReceipts = submittedNidhanReceiptsList.filter(r => r.status === 'APPROVED');
+    const approvedReceipts = submittedNidhanReceiptsList.filter(r => 
+      r.status === 'APPROVED' && 
+      r.donorAadhaar === user.aadhaar
+    );
 
     return (
       <div className="p-6">
@@ -1391,7 +1498,7 @@ const UserDashboard = () => {
                     </div>
                     <div className="flex items-start justify-between gap-1">
                       <span className="text-gray-400 w-[55%]">Email :</span>
-                      <span className="text-gray-900 text-right w-[45%] break-all">{receipt.donorEmail || user.email || 'N/A'}</span>
+                      <span className="text-gray-900 text-right w-[45%] break-all">{receipt.donorEmail || 'N/A'}</span>
                     </div>
                     <div className="flex items-start justify-between gap-1">
                       <span className="text-gray-400 w-[55%]">Donated Amount :</span>
@@ -1591,10 +1698,9 @@ const UserDashboard = () => {
       <div className="w-64 bg-[#2f3d4a] text-gray-300 flex flex-col h-full shrink-0 shadow-xl z-20 overflow-y-auto">
         {/* Sidebar Logo */}
         <div className="h-16 flex items-center justify-center border-b border-gray-600/50 bg-[#25303a]">
-          {/* Circular logo */}
-          <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center p-1">
-              <img src={logoBase64} alt="SHCT Logo" className="w-full h-full object-contain" />
-          </div>
+          <span className="text-2xl font-black tracking-widest text-white uppercase select-none">
+            SHCT
+          </span>
         </div>
         
         {/* Menu Section Label */}
@@ -1605,21 +1711,203 @@ const UserDashboard = () => {
         {/* Navigation Menu */}
         <nav className="flex-1 pb-4">
           <ul className="space-y-0.5">
-            {menuItems.map(item => (
-              <li key={item.id}>
-                <button
-                  onClick={() => setActiveTab(item.id)}
-                  className={`w-full flex items-center gap-3 px-5 py-3 text-sm font-medium transition-colors ${
-                    activeTab === item.id 
-                      ? 'bg-[#1e2730] text-white border-l-4 border-white' 
-                      : 'hover:bg-[#384857] hover:text-white border-l-4 border-transparent'
-                  }`}
+            {/* Dashboard */}
+            <li>
+              <button
+                onClick={() => setActiveTab('dashboard')}
+                className={`w-full flex items-center gap-3 px-5 py-3 text-sm font-medium transition-colors ${
+                  activeTab === 'dashboard' 
+                    ? 'bg-[#1e2730] text-white border-l-4 border-white' 
+                    : 'hover:bg-[#384857] hover:text-white border-l-4 border-transparent'
+                }`}
+              >
+                <span className="text-lg opacity-85">⊞</span>
+                <span className="text-left flex-1">Dashboard</span>
+              </button>
+            </li>
+
+            {/* Profile */}
+            <li>
+              <button
+                onClick={() => setActiveTab('profile')}
+                className={`w-full flex items-center gap-3 px-5 py-3 text-sm font-medium transition-colors ${
+                  activeTab === 'profile' 
+                    ? 'bg-[#1e2730] text-white border-l-4 border-white' 
+                    : 'hover:bg-[#384857] hover:text-white border-l-4 border-transparent'
+                }`}
+              >
+                <span className="text-lg opacity-85">👤</span>
+                <span className="text-left flex-1">Profile</span>
+              </button>
+            </li>
+
+            {/* ID Card */}
+            <li>
+              <button
+                onClick={() => setActiveTab('idcard')}
+                className={`w-full flex items-center gap-3 px-5 py-3 text-sm font-medium transition-colors ${
+                  activeTab === 'idcard' 
+                    ? 'bg-[#1e2730] text-white border-l-4 border-white' 
+                    : 'hover:bg-[#384857] hover:text-white border-l-4 border-transparent'
+                }`}
+              >
+                <span className="text-lg opacity-85">🪪</span>
+                <span className="text-left flex-1">ID Card</span>
+              </button>
+            </li>
+
+            {/* AAVEDAN FORM ACCORDION */}
+            <li>
+              <div>
+                <button 
+                  onClick={() => setIsAavedanMenuOpen(!isAavedanMenuOpen)}
+                  className="w-full flex items-center justify-between px-5 py-3 text-sm font-medium transition-colors hover:bg-[#384857] hover:text-white border-l-4 border-transparent"
                 >
-                  <span className="text-lg opacity-80">{item.icon}</span>
-                  <span className="text-left">{item.label}</span>
+                  <div className="flex items-center gap-3">
+                    <span className="text-lg opacity-85">📋</span>
+                    <span>Aavedan Form</span>
+                  </div>
+                  <svg className={`w-4 h-4 transition-transform ${isAavedanMenuOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
                 </button>
-              </li>
-            ))}
+                
+                {isAavedanMenuOpen && (
+                  <div className="mt-0.5 space-y-0.5 pl-4 border-l-2 border-gray-600/50 ml-6">
+                    <Link 
+                      to="/beti-sahayog-form"
+                      className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-xs font-medium text-gray-400 hover:bg-[#1e2730] hover:text-white transition-all"
+                    >
+                      <span>👩</span> <span className="text-left flex-1">Beti Aavedan Form</span>
+                    </Link>
+                    <Link 
+                      to="/nidhan-sahayog-form"
+                      className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-xs font-medium text-gray-400 hover:bg-[#1e2730] hover:text-white transition-all"
+                    >
+                      <span>🕊️</span> <span className="text-left flex-1">Nidhan Aavedan Form</span>
+                    </Link>
+                  </div>
+                )}
+              </div>
+            </li>
+
+            {/* Upload Nidhan Receipt */}
+            <li>
+              <button
+                onClick={() => setActiveTab('upload_death')}
+                className={`w-full flex items-center gap-3 px-5 py-3 text-sm font-medium transition-colors ${
+                  activeTab === 'upload_death' 
+                    ? 'bg-[#1e2730] text-white border-l-4 border-white' 
+                    : 'hover:bg-[#384857] hover:text-white border-l-4 border-transparent'
+                }`}
+              >
+                <span className="text-lg opacity-85">☁️</span>
+                <span className="text-left flex-1">Upload Nidhan Receipt</span>
+              </button>
+            </li>
+
+            {/* View All Nidhan / Sahyog List */}
+            <li>
+              <button
+                onClick={() => setActiveTab('view_sahyog')}
+                className={`w-full flex items-center gap-3 px-5 py-3 text-sm font-medium transition-colors ${
+                  activeTab === 'view_sahyog' 
+                    ? 'bg-[#1e2730] text-white border-l-4 border-white' 
+                    : 'hover:bg-[#384857] hover:text-white border-l-4 border-transparent'
+                }`}
+              >
+                <span className="text-lg opacity-85">📚</span>
+                <span className="text-left flex-1">View All Nidhan / Sahyog List</span>
+              </button>
+            </li>
+
+            {/* Upload Beti Vivah Sahyog Receipt */}
+            <li>
+              <button
+                onClick={() => setActiveTab('upload_beti')}
+                className={`w-full flex items-center gap-3 px-5 py-3 text-sm font-medium transition-colors ${
+                  activeTab === 'upload_beti' 
+                    ? 'bg-[#1e2730] text-white border-l-4 border-white' 
+                    : 'hover:bg-[#384857] hover:text-white border-l-4 border-transparent'
+                }`}
+              >
+                <span className="text-lg opacity-85">☁️</span>
+                <span className="text-left flex-1">Upload Beti Vivah Sahyog Receipt</span>
+              </button>
+            </li>
+
+            {/* View All Beti Vivah Sahyog List */}
+            <li>
+              <button
+                onClick={() => setActiveTab('view_beti')}
+                className={`w-full flex items-center gap-3 px-5 py-3 text-sm font-medium transition-colors ${
+                  activeTab === 'view_beti' 
+                    ? 'bg-[#1e2730] text-white border-l-4 border-white' 
+                    : 'hover:bg-[#384857] hover:text-white border-l-4 border-transparent'
+                }`}
+              >
+                <span className="text-lg opacity-85">📚</span>
+                <span className="text-left flex-1">View All Beti Vivah Sahyog List</span>
+              </button>
+            </li>
+
+            {/* Upload Varshik Dan */}
+            <li>
+              <button
+                onClick={() => setActiveTab('upload_varshik')}
+                className={`w-full flex items-center gap-3 px-5 py-3 text-sm font-medium transition-colors ${
+                  activeTab === 'upload_varshik' 
+                    ? 'bg-[#1e2730] text-white border-l-4 border-white' 
+                    : 'hover:bg-[#384857] hover:text-white border-l-4 border-transparent'
+                }`}
+              >
+                <span className="text-lg opacity-85">☁️</span>
+                <span className="text-left flex-1">Upload Varshik Dan</span>
+              </button>
+            </li>
+
+            {/* View All Varshik Dan Suchi */}
+            <li>
+              <button
+                onClick={() => setActiveTab('view_varshik')}
+                className={`w-full flex items-center gap-3 px-5 py-3 text-sm font-medium transition-colors ${
+                  activeTab === 'view_varshik' 
+                    ? 'bg-[#1e2730] text-white border-l-4 border-white' 
+                    : 'hover:bg-[#384857] hover:text-white border-l-4 border-transparent'
+                }`}
+              >
+                <span className="text-lg opacity-85">📑</span>
+                <span className="text-left flex-1">View All Varshik Dan Suchi</span>
+              </button>
+            </li>
+
+            {/* Referral Points */}
+            <li>
+              <button
+                onClick={() => setActiveTab('referral')}
+                className={`w-full flex items-center gap-3 px-5 py-3 text-sm font-medium transition-colors ${
+                  activeTab === 'referral' 
+                    ? 'bg-[#1e2730] text-white border-l-4 border-white' 
+                    : 'hover:bg-[#384857] hover:text-white border-l-4 border-transparent'
+                }`}
+              >
+                <span className="text-lg opacity-85">👥</span>
+                <span className="text-left flex-1">Referral Points</span>
+              </button>
+            </li>
+
+            {/* Update Password */}
+            <li>
+              <button
+                onClick={() => setActiveTab('password')}
+                className={`w-full flex items-center gap-3 px-5 py-3 text-sm font-medium transition-colors ${
+                  activeTab === 'password' 
+                    ? 'bg-[#1e2730] text-white border-l-4 border-white' 
+                    : 'hover:bg-[#384857] hover:text-white border-l-4 border-transparent'
+                }`}
+              >
+                <span className="text-lg opacity-85">👁️</span>
+                <span className="text-left flex-1">Update Password</span>
+              </button>
+            </li>
           </ul>
         </nav>
       </div>
@@ -1701,7 +1989,7 @@ const UserDashboard = () => {
             </div>
             <div className="flex items-start justify-between gap-2">
               <span className="text-gray-500 w-[55%]">Email :</span>
-              <span className="text-gray-900 text-right w-[45%] break-all">{(selectedDownloadReceipt && selectedDownloadReceipt.donorEmail) || user.email || 'N/A'}</span>
+              <span className="text-gray-900 text-right w-[45%] break-all">{(selectedDownloadReceipt && selectedDownloadReceipt.donorEmail) || 'N/A'}</span>
             </div>
             <div className="flex items-start justify-between gap-2">
               <span className="text-gray-500 w-[55%]">Donated Amount :</span>
@@ -1767,7 +2055,7 @@ const UserDashboard = () => {
             </div>
             <div className="flex items-start justify-between gap-2">
               <span className="text-gray-500 w-[55%]">Email :</span>
-              <span className="text-gray-900 text-right w-[45%] break-all">{(selectedDownloadReceipt && selectedDownloadReceipt.donorEmail) || user.email || 'N/A'}</span>
+              <span className="text-gray-900 text-right w-[45%] break-all">{(selectedDownloadReceipt && selectedDownloadReceipt.donorEmail) || 'N/A'}</span>
             </div>
             <div className="flex items-start justify-between gap-2">
               <span className="text-gray-500 w-[55%]">Donated Amount :</span>
@@ -1793,6 +2081,90 @@ const UserDashboard = () => {
           {/* Thank You Note */}
           <div className="text-center font-bold text-red-600 text-sm tracking-wide">
             Thank You For Your Donation
+          </div>
+        </div>
+
+        {/* Varshik Template */}
+        <div 
+          id="printable-donation-receipt-varshik"
+          className="w-[450px] bg-white p-6 font-sans text-gray-800 relative"
+          style={{ border: '2px dashed #8a3324' }}
+        >
+          {/* Center Watermark Logo */}
+          <div className="absolute inset-0 flex items-center justify-center opacity-[0.06] pointer-events-none select-none">
+            <img src={logoBase64} alt="Watermark Logo" className="w-64 h-64 object-contain" />
+          </div>
+
+          {/* Header */}
+          <div className="text-center pb-3 border-b border-gray-100">
+            <img src={logoBase64} alt="Logo" className="w-16 h-16 object-contain mx-auto mb-2" />
+            <h1 className="text-lg font-black uppercase text-[#8a3324] tracking-tight leading-tight">
+              SILENT HELP CHARITABLE TRUST
+            </h1>
+            <p className="text-[9px] text-gray-400 font-bold uppercase tracking-wider mt-0.5">
+              Silent Help, Loud Impact • रजि0न0 ( 57/2026 )
+            </p>
+          </div>
+
+          {/* Receipt Title */}
+          <div className="text-center my-3 bg-amber-50 border border-amber-100 py-1 rounded">
+            <span className="text-xs font-black uppercase text-amber-800 tracking-wider">
+              Annual Donation Receipt (वार्षिक दान रसीद)
+            </span>
+          </div>
+
+          {/* Body fields (Left labels, Right values) */}
+          <div className="space-y-3.5 text-xs font-bold leading-normal text-left my-4">
+            <div className="flex items-start justify-between gap-2">
+              <span className="text-gray-500 w-[50%]">Donor Name :</span>
+              <span className="text-gray-900 text-right w-[50%] break-words">{(selectedDownloadReceipt && selectedDownloadReceipt.name) || 'N/A'}</span>
+            </div>
+            <div className="flex items-start justify-between gap-2">
+              <span className="text-gray-500 w-[50%]">Unique ID :</span>
+              <span className="text-gray-900 text-right w-[50%] font-mono uppercase">{(selectedDownloadReceipt && selectedDownloadReceipt.uniqueId) || 'N/A'}</span>
+            </div>
+            <div className="flex items-start justify-between gap-2">
+              <span className="text-gray-500 w-[50%]">Purpose of Sahyog :</span>
+              <span className="text-gray-900 text-right w-[50%]">
+                {selectedDownloadReceipt && selectedDownloadReceipt.isRenewal 
+                  ? 'Annual Renewal (वार्षिक नवीनीकरण)' 
+                  : 'Membership Registration (सदस्यता पंजीकरण)'}
+              </span>
+            </div>
+            <div className="flex items-start justify-between gap-2">
+              <span className="text-gray-500 w-[50%]">Amount Paid :</span>
+              <span className="text-emerald-600 text-right w-[50%] font-black">₹ {parseFloat((selectedDownloadReceipt && selectedDownloadReceipt.amount) || 200).toFixed(2)}</span>
+            </div>
+            <div className="flex items-start justify-between gap-2">
+              <span className="text-gray-500 w-[50%]">Donation Date :</span>
+              <span className="text-gray-900 text-right w-[50%]">{(selectedDownloadReceipt && selectedDownloadReceipt.sahyogDate) || 'N/A'}</span>
+            </div>
+            <div className="flex items-start justify-between gap-2">
+              <span className="text-gray-500 w-[50%]">Transaction ID :</span>
+              <span className="text-gray-900 text-right w-[50%] font-mono break-all">{(selectedDownloadReceipt && selectedDownloadReceipt.transactionId) || 'N/A'}</span>
+            </div>
+            <div className="flex items-start justify-between gap-2">
+              <span className="text-gray-500 w-[50%]">Payment Status :</span>
+              <span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded text-[10px] font-black tracking-wide">SUCCESSFUL / VERIFIED</span>
+            </div>
+          </div>
+
+          {/* Divider */}
+          <div className="border-t border-gray-100 my-4"></div>
+
+          {/* Thank You Note & Trust Stamp Placeholder */}
+          <div className="flex items-center justify-between mt-6 pt-2">
+            <div className="text-left">
+              <p className="text-[10px] text-gray-400 font-bold uppercase">Issued By</p>
+              <p className="text-xs font-black text-gray-700 mt-1">SHCT Administration</p>
+            </div>
+            <div className="text-center font-bold text-[#8a3324] text-xs tracking-wider border border-[#8a3324]/20 bg-red-50/50 px-3 py-1 rounded uppercase">
+              Official Receipt
+            </div>
+          </div>
+
+          <div className="text-center font-bold text-gray-400 text-[10px] tracking-wide mt-6 border-t border-gray-100 pt-3">
+            Thank you for supporting Silent Help Charitable Trust.
           </div>
         </div>
       </div>

@@ -22,7 +22,10 @@ import {
   getNidhanSahyogReceipts,
   updateNidhanReceiptStatus,
   getAnnualRenewalReceipts,
-  updateAnnualRenewalStatus
+  updateAnnualRenewalStatus,
+  getGroupsConfig,
+  saveGroupsConfig,
+  updateMemberGroup
 } from '../../services/dataService';
 import { compressImage } from '../../utils/imageCompressor';
 import { uploadToImageKit } from '../../utils/imageKitUploader';
@@ -52,7 +55,13 @@ const AdminDashboard = () => {
     instructionText: '',
     instructionNote: '',
     autoApproveBeti: false,
-    autoApproveNidhan: false
+    autoApproveNidhan: false,
+    scheme1Title: '',
+    scheme1Text: '',
+    scheme1BtnText: '',
+    scheme2Title: '',
+    scheme2Text: '',
+    scheme2BtnText: ''
   });
 
   const [isSahayataMenuOpen, setIsSahayataMenuOpen] = useState(false);
@@ -60,6 +69,7 @@ const AdminDashboard = () => {
 
   const [notification, setNotification] = useState('');
   const [selectedReceipt, setSelectedReceipt] = useState(null);
+  const [isSavingAlert, setIsSavingAlert] = useState(false);
   const [selectedMemberForDetail, setSelectedMemberForDetail] = useState(null);
   const [selectedGroups, setSelectedGroups] = useState({});
 
@@ -68,6 +78,8 @@ const AdminDashboard = () => {
   const [selectedReceiptForDetail, setSelectedReceiptForDetail] = useState(null);
   const [registrationFilter, setRegistrationFilter] = useState('PENDING'); // 'PENDING' | 'APPROVED' | 'REJECTED' | 'ALL'
   const [registrationAutoAssign, setRegistrationAutoAssign] = useState(false); // Auto assign rule toggle
+  const [groupsConfig, setGroupsConfig] = useState({ activeGroups: ['A', 'B'], isActive: false });
+  const [isSavingGroups, setIsSavingGroups] = useState(false);
 
   const [newHomeAlert, setNewHomeAlert] = useState({
     group: '', member: '', uniqueId: '', date: '', address: '', 
@@ -166,6 +178,14 @@ const AdminDashboard = () => {
       setRenewalsList(rReceipts);
     } catch (e) {
       console.error("Error loading renewals receipts:", e);
+    }
+
+    try {
+      const gConfig = await getGroupsConfig();
+      console.log("Loaded groups config in AdminDashboard:", gConfig);
+      setGroupsConfig(gConfig || { activeGroups: ['A', 'B'], isActive: false });
+    } catch (e) {
+      console.error("Error loading groups config:", e);
     }
     console.log("loadData complete.");
   };
@@ -365,8 +385,7 @@ const AdminDashboard = () => {
     });
     return Object.keys(districts)
       .map(name => ({ name, count: districts[name] }))
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 5);
+      .sort((a, b) => b.count - a.count);
   };
 
   const getAidDistributed = () => {
@@ -413,15 +432,11 @@ const AdminDashboard = () => {
     navigate('/admin-login');
   };
 
-  const handleApprove = async (id, name, manualGroup) => {
+  const handleApprove = async (id, name) => {
     try {
-      let groupToAssign = manualGroup;
-      if (registrationAutoAssign) {
-        groupToAssign = getSmallestGroup();
-      }
-      const res = await approveRegistration(id, groupToAssign);
+      const res = await approveRegistration(id, '');
       if (res) {
-        setNotification(`✅ ${name} को सफलतापूर्वक अप्रूव कर दिया गया है (ग्रुप: ${groupToAssign})! डेटा Member List और Annual Donation List में जोड़ दिया गया है।`);
+        setNotification(`✅ ${name} को सफलतापूर्वक अप्रूव कर दिया गया है! डेटा Member List और Annual Donation List में जोड़ दिया गया है।`);
         await loadData();
         setTimeout(() => setNotification(''), 5000);
       }
@@ -429,6 +444,152 @@ const AdminDashboard = () => {
       console.error(e);
       setNotification(`❌ Error approving ${name}`);
       setTimeout(() => setNotification(''), 5000);
+    }
+  };
+
+  const handleToggleGroupsConfig = async (status) => {
+    try {
+      setIsSavingGroups(true);
+      const updatedConfig = { ...groupsConfig, isActive: status };
+      await saveGroupsConfig(updatedConfig);
+      setGroupsConfig(updatedConfig);
+      setNotification(`✅ ग्रुप प्रबंधन सफलतापूर्वक ${status ? 'सक्रिय' : 'बंद'} कर दिया गया है!`);
+      
+      // If turned OFF, clear all group assignments in approved_members!
+      if (!status) {
+        setNotification('⌛ सभी सदस्यों के ग्रुप को रीसेट किया जा रहा है...');
+        for (const member of approvedList) {
+          if (member.group) {
+            await updateMemberGroup(member.id, '');
+          }
+        }
+        await loadData();
+        setNotification('✅ ग्रुप प्रबंधन बंद हो गया है और सभी सदस्यों के ग्रुप रीसेट कर दिए गए हैं।');
+      }
+      setTimeout(() => setNotification(''), 4000);
+    } catch (err) {
+      console.error("Failed to toggle groups config:", err);
+      setNotification('❌ ग्रुप सेटिंग्स अपडेट करने में त्रुटि आई।');
+      setTimeout(() => setNotification(''), 4000);
+    } finally {
+      setIsSavingGroups(false);
+    }
+  };
+
+  const handleAddGroup = async () => {
+    const lastGroup = groupsConfig.activeGroups[groupsConfig.activeGroups.length - 1] || '@';
+    const nextGroupCode = String.fromCharCode(lastGroup.charCodeAt(0) + 1);
+    if (nextGroupCode > 'Z') {
+      alert("Z से अधिक ग्रुप नहीं बनाए जा सकते!");
+      return;
+    }
+    
+    try {
+      setIsSavingGroups(true);
+      const updatedGroups = [...groupsConfig.activeGroups, nextGroupCode];
+      const updatedConfig = { ...groupsConfig, activeGroups: updatedGroups };
+      await saveGroupsConfig(updatedConfig);
+      setGroupsConfig(updatedConfig);
+      setNotification(`✅ नया ग्रुप ${nextGroupCode} सफलतापूर्वक जोड़ा गया!`);
+      setTimeout(() => setNotification(''), 3000);
+    } catch (err) {
+      console.error(err);
+      setNotification('❌ ग्रुप जोड़ने में त्रुटि आई।');
+      setTimeout(() => setNotification(''), 3000);
+    } finally {
+      setIsSavingGroups(false);
+    }
+  };
+
+  const handleRemoveGroup = async () => {
+    if (groupsConfig.activeGroups.length <= 1) {
+      alert("कम से कम एक ग्रुप सक्रिय होना अनिवार्य है!");
+      return;
+    }
+    
+    const removedGroup = groupsConfig.activeGroups[groupsConfig.activeGroups.length - 1];
+    try {
+      setIsSavingGroups(true);
+      const updatedGroups = groupsConfig.activeGroups.slice(0, -1);
+      const updatedConfig = { ...groupsConfig, activeGroups: updatedGroups };
+      await saveGroupsConfig(updatedConfig);
+      setGroupsConfig(updatedConfig);
+      
+      setNotification(`⌛ ग्रुप ${removedGroup} के सदस्यों को रीसेट किया जा रहा है...`);
+      for (const member of approvedList) {
+        if (member.group === removedGroup) {
+          await updateMemberGroup(member.id, '');
+        }
+      }
+      await loadData();
+      setNotification(`✅ ग्रुप ${removedGroup} को हटा दिया गया है।`);
+      setTimeout(() => setNotification(''), 3000);
+    } catch (err) {
+      console.error(err);
+      setNotification('❌ ग्रुप हटाने में त्रुटि आई।');
+      setTimeout(() => setNotification(''), 3000);
+    } finally {
+      setIsSavingGroups(false);
+    }
+  };
+
+  const handleAutoDistribute = async () => {
+    if (groupsConfig.activeGroups.length === 0) {
+      alert("कृपया पहले कम से कम एक ग्रुप सक्रिय करें!");
+      return;
+    }
+    
+    if (approvedList.length === 0) {
+      alert("वितरण के लिए कोई अप्रूव्ड सदस्य नहीं है!");
+      return;
+    }
+    
+    try {
+      setIsSavingGroups(true);
+      setNotification('⌛ सभी सदस्यों को ग्रुप्स में समान रूप से विभाजित किया जा रहा है...');
+      
+      // Sort approvedList by uniqueId to make distribution stable
+      const sortedMembers = [...approvedList].sort((a, b) => {
+        const idA = a.uniqueId || '';
+        const idB = b.uniqueId || '';
+        return idA.localeCompare(idB);
+      });
+      
+      const activeGroups = groupsConfig.activeGroups;
+      
+      for (let i = 0; i < sortedMembers.length; i++) {
+        const member = sortedMembers[i];
+        const assignedGroup = activeGroups[i % activeGroups.length];
+        if (member.group !== assignedGroup) {
+          await updateMemberGroup(member.id, assignedGroup);
+        }
+      }
+      
+      await loadData();
+      setNotification('✅ सभी सदस्यों को ग्रुप्स में समान रूप से सफलतापूर्वक वितरित कर दिया गया है!');
+      setTimeout(() => setNotification(''), 4000);
+    } catch (err) {
+      console.error(err);
+      setNotification('❌ ऑटो-वितरण करने में त्रुटि आई।');
+      setTimeout(() => setNotification(''), 4000);
+    } finally {
+      setIsSavingGroups(false);
+    }
+  };
+
+  const handleManualTransfer = async (memberId, groupCode) => {
+    try {
+      setIsSavingGroups(true);
+      await updateMemberGroup(memberId, groupCode);
+      await loadData();
+      setNotification('✅ सदस्य का ग्रुप सफलतापूर्वक परिवर्तित कर दिया गया है!');
+      setTimeout(() => setNotification(''), 3000);
+    } catch (err) {
+      console.error(err);
+      setNotification('❌ मैन्युअल ट्रांसफर में त्रुटि आई।');
+      setTimeout(() => setNotification(''), 3000);
+    } finally {
+      setIsSavingGroups(false);
     }
   };
 
@@ -481,6 +642,7 @@ const AdminDashboard = () => {
 
   const handleCreateHomeAlert = async (e) => {
     e.preventDefault();
+    setIsSavingAlert(true);
     try {
       let finalQrCode = newHomeAlert.qrCodeBase64;
       if (newHomeAlert.qrCodeBase64 && newHomeAlert.qrCodeBase64.startsWith('data:image')) {
@@ -492,13 +654,17 @@ const AdminDashboard = () => {
         qrCodeBase64: finalQrCode
       });
       setNewHomeAlert({ group: '', member: '', uniqueId: '', date: '', address: '', daughter: '', marriageDate: '', accName: '', accNo: '', ifsc: '', branch: '', bank: '', minSupport: '50 रुपए', qrCodeBase64: '', type: 'beti' });
+      
+      const fileInput = document.getElementById('qr-code-file-input');
+      if (fileInput) fileInput.value = '';
+
       await loadData();
-      setNotification('नया होम पेज अलर्ट सफलतापूर्वक जोड़ दिया गया है!');
-      setTimeout(() => setNotification(''), 3000);
+      setIsSavingAlert(false);
+      alert('नया होम पेज अलर्ट सफलतापूर्वक जोड़ दिया गया है और यह लाइव हो चुका है!');
     } catch (error) {
       console.error(error);
-      setNotification('अलर्ट जोड़ने में समस्या आई।');
-      setTimeout(() => setNotification(''), 3000);
+      setIsSavingAlert(false);
+      alert('अलर्ट जोड़ने में समस्या आई: ' + (error.message || error));
     }
   };
 
@@ -612,6 +778,12 @@ const AdminDashboard = () => {
                 
                 {isHomeMenuOpen && (
                   <div className="mt-2 space-y-2 pl-4 border-l-2 border-gray-800 ml-4">
+                    <button 
+                      onClick={() => setActiveTab('schemes_settings')}
+                      className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl font-semibold text-xs transition-all ${activeTab === 'schemes_settings' ? 'bg-[#087889] text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
+                    >
+                      <span>📋</span> <span className="text-left flex-1">Yojna Settings (योजनाएं)</span>
+                    </button>
                     <button 
                       onClick={() => setActiveTab('settings')}
                       className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl font-semibold text-xs transition-all ${activeTab === 'settings' ? 'bg-[#087889] text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
@@ -1022,26 +1194,28 @@ const AdminDashboard = () => {
                   </div>
 
                   {/* District Members distribution */}
-                  <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 flex flex-col">
-                    <div className="border-b border-gray-100 pb-4 mb-6">
-                      <h3 className="text-lg font-bold text-gray-800">शीर्ष 5 जिला भागीदारी (Top 5 Districts)</h3>
-                      <p className="text-xs text-gray-400 mt-0.5">संस्था में जुड़े सदस्यों की जिलावार संख्या</p>
+                  <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 flex flex-col h-[280px]">
+                    <div className="border-b border-gray-100 pb-3 mb-4 shrink-0">
+                      <h3 className="text-lg font-bold text-gray-800">जिला भागीदारी (District Participation)</h3>
+                      <p className="text-xs text-gray-400 mt-0.5">संस्था में जुड़े सदस्यों की जिलावार संख्या (सभी जिले)</p>
                     </div>
-
-                    <div className="flex-1 flex flex-col justify-center space-y-4">
-                      {getDistrictStats().length === 0 ? (
-                        <p className="text-sm text-gray-400 text-center py-10 font-bold">कोई सदस्य डेटा उपलब्ध नहीं है</p>
-                      ) : (
-                        getDistrictStats().map((dist, idx) => {
-                          const maxCount = Math.max(...getDistrictStats().map(d => d.count), 1);
+ 
+                    <div className="flex-1 overflow-y-auto pr-2 space-y-4">
+                      {(() => {
+                        const distStats = getDistrictStats();
+                        if (distStats.length === 0) {
+                          return <p className="text-sm text-gray-400 text-center py-10 font-bold">कोई सदस्य डेटा उपलब्ध नहीं है</p>;
+                        }
+                        const maxCount = Math.max(...distStats.map(d => d.count), 1);
+                        const colors = ["bg-[#087889]", "bg-[#f08519]", "bg-teal-600", "bg-orange-500", "bg-cyan-600"];
+                        return distStats.map((dist, idx) => {
                           const percentage = (dist.count / maxCount) * 100;
-                          const colors = ["bg-[#087889]", "bg-[#f08519]", "bg-teal-600", "bg-orange-500", "bg-cyan-600"];
                           return (
                             <div key={idx} className="space-y-1.5">
                               <div className="flex justify-between items-center text-xs font-bold text-gray-700">
                                 <span className="flex items-center gap-2">
-                                  <span className="w-5 h-5 bg-gray-100 rounded-full flex items-center justify-center text-[10px] text-gray-500">{idx + 1}</span>
-                                  {dist.name}
+                                  <span className="w-5 h-5 bg-gray-100 rounded-full flex items-center justify-center text-[10px] text-gray-500 font-bold">{idx + 1}</span>
+                                  <span className="capitalize">{dist.name}</span>
                                 </span>
                                 <span className="font-mono text-[#087889]">{dist.count} सदस्य</span>
                               </div>
@@ -1053,8 +1227,8 @@ const AdminDashboard = () => {
                               </div>
                             </div>
                           );
-                        })
-                      )}
+                        });
+                      })()}
                     </div>
                   </div>
                 </div>
@@ -1073,96 +1247,187 @@ const AdminDashboard = () => {
             {/* TAB: GROUP MANAGEMENT */}
             {activeTab === 'groups' && (
               <div className="space-y-8">
-                {/* Auto Assign Toggle card */}
+                
+                {/* 1. Group Management Master Toggle */}
                 <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                   <div>
-                    <h3 className="text-lg font-bold text-gray-800">ग्रुप ऑटो-असाइनमेंट सेटिंग्स (Auto-Assignment Rule)</h3>
+                    <h3 className="text-lg font-bold text-gray-800">ग्रुप प्रबंधन नियंत्रण (Group Management Master Toggle)</h3>
                     <p className="text-xs text-gray-500 mt-1">
-                      यदि सक्षम है, तो नए यूज़र्स को अप्रूव करते समय सिस्टम स्वचालित रूप से उन्हें सबसे छोटे ग्रुप (सबसे कम सदस्य संख्या वाले ग्रुप) में डाल देगा।
+                      यहाँ से ग्रुप सिस्टम को चालू या बंद किया जा सकता है। बंद करने पर यूज़र डैशबोर्ड से मदद (Cooperation Alerts) हट जाएगी।
                     </p>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className={`text-xs font-bold ${registrationAutoAssign ? 'text-emerald-600' : 'text-gray-400'}`}>
-                      {registrationAutoAssign ? 'ऑटो-असाइनमेंट चालू है' : 'ऑटो-असाइनमेंट बंद है'}
+                    <span className={`text-xs font-bold ${groupsConfig.isActive ? 'text-emerald-600' : 'text-gray-400'}`}>
+                      {groupsConfig.isActive ? 'ग्रुप प्रबंधन सक्रिय है' : 'ग्रुप प्रबंधन बंद है'}
                     </span>
                     <button 
-                      onClick={() => setRegistrationAutoAssign(!registrationAutoAssign)}
+                      onClick={() => handleToggleGroupsConfig(!groupsConfig.isActive)}
+                      disabled={isSavingGroups}
                       className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                        registrationAutoAssign ? 'bg-emerald-600' : 'bg-gray-200'
+                        groupsConfig.isActive ? 'bg-emerald-600' : 'bg-gray-200'
                       }`}
                     >
                       <span
                         className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                          registrationAutoAssign ? 'translate-x-5' : 'translate-x-0'
+                          groupsConfig.isActive ? 'translate-x-5' : 'translate-x-0'
                         }`}
                       />
                     </button>
                   </div>
                 </div>
 
-                {/* Group Sizes Grid */}
-                <div>
-                  <h3 className="text-xl font-extrabold text-gray-800 mb-6">सभी सक्रिय ग्रुप (Active Groups Sizes)</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {Array.from({ length: 26 }, (_, i) => String.fromCharCode(65 + i)).map((g) => {
-                      const size = getGroupSizes()[g] || 0;
-                      const maxCapacity = Math.max(...Object.values(getGroupSizes()), 10) + 5;
-                      const percentage = (size / maxCapacity) * 100;
-                      
-                      const colorsArray = [
-                        { border: 'border-t-teal-500', text: 'text-teal-600', bg: 'bg-teal-500' },
-                        { border: 'border-t-orange-500', text: 'text-orange-600', bg: 'bg-orange-500' },
-                        { border: 'border-t-indigo-500', text: 'text-indigo-600', bg: 'bg-indigo-500' },
-                        { border: 'border-t-rose-500', text: 'text-rose-600', bg: 'bg-rose-500' },
-                        { border: 'border-t-cyan-500', text: 'text-cyan-600', bg: 'bg-cyan-500' },
-                        { border: 'border-t-amber-500', text: 'text-amber-600', bg: 'bg-amber-500' },
-                        { border: 'border-t-purple-500', text: 'text-purple-600', bg: 'bg-purple-500' },
-                        { border: 'border-t-emerald-500', text: 'text-emerald-600', bg: 'bg-emerald-500' },
-                        { border: 'border-t-pink-500', text: 'text-pink-600', bg: 'bg-pink-500' },
-                        { border: 'border-t-violet-500', text: 'text-violet-600', bg: 'bg-violet-500' }
-                      ];
-                      const colorIndex = g.charCodeAt(0) % colorsArray.length;
-                      const color = colorsArray[colorIndex];
+                {/* 2. Active Groups Config & Actions */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                  {/* Active Groups List Card */}
+                  <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 lg:col-span-2 space-y-6">
+                    <div>
+                      <h3 className="text-lg font-bold text-gray-800">सक्रिय ग्रुप्स सूची (Active Groups)</h3>
+                      <p className="text-xs text-gray-500 mt-1">वर्तमान में सक्रिय ग्रुप्स की सूची। आप यहाँ नया ग्रुप जोड़ सकते हैं या हटा सकते हैं।</p>
+                    </div>
 
-                      return (
-                        <div 
-                          key={g} 
-                          className={`bg-white rounded-2xl p-6 shadow-sm border border-gray-200 border-t-4 ${color.border} flex flex-col justify-between hover:shadow-md transition-shadow`}
+                    <div className="flex flex-wrap gap-3">
+                      {groupsConfig.activeGroups.map((g) => {
+                        const count = approvedList.filter(m => m.group === g).length;
+                        return (
+                          <div key={g} className="bg-teal-50 border border-teal-100 rounded-xl p-4 flex flex-col items-center justify-center min-w-24 shadow-sm relative group">
+                            <span className="text-xs font-extrabold text-teal-800 leading-none">Group {g}</span>
+                            <span className="text-xl font-black text-[#087889] mt-2">{count} <span className="text-[10px] text-teal-600 font-bold">सदस्य</span></span>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {groupsConfig.isActive && (
+                      <div className="flex flex-wrap gap-4 pt-2 border-t border-gray-100">
+                        <button
+                          onClick={handleAddGroup}
+                          disabled={isSavingGroups}
+                          className="bg-[#087889] hover:bg-[#06616e] text-white font-bold px-5 py-2.5 rounded-lg text-sm transition-all shadow hover:shadow-md disabled:opacity-50"
                         >
-                          <div>
-                            <div className="flex justify-between items-center">
-                              <h4 className="text-lg font-black text-gray-800">ग्रुप {g}</h4>
-                              {getSmallestGroup() === g && registrationAutoAssign && (
-                                <span className="bg-emerald-50 text-emerald-700 text-[9px] font-black px-2 py-0.5 rounded-full border border-emerald-100">
-                                  ★ सबसे छोटा
-                                </span>
-                              )}
-                            </div>
-                            <h3 className={`text-4xl font-black mt-4 ${color.text}`}>{size} <span className="text-xs text-gray-400 font-bold">सदस्य</span></h3>
-                          </div>
-                          
-                          <div className="mt-6 space-y-1.5">
-                            <div className="flex justify-between text-[10px] text-gray-400 font-bold">
-                              <span>ग्रुप डेंसिटी</span>
-                              <span>{Math.round(percentage)}%</span>
-                            </div>
-                            <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
-                              <div className={`h-full rounded-full ${color.bg}`} style={{ width: `${percentage}%` }}></div>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
+                          ➕ नया ग्रुप जोड़ें (Add Group)
+                        </button>
+                        <button
+                          onClick={handleRemoveGroup}
+                          disabled={isSavingGroups}
+                          className="bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-100 font-bold px-5 py-2.5 rounded-lg text-sm transition-all disabled:opacity-50"
+                        >
+                          🗑️ ग्रुप हटाएं (Remove Last Group)
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Distribution Card */}
+                  <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 flex flex-col justify-between">
+                    <div>
+                      <h3 className="text-lg font-bold text-gray-800">ग्रुप समान वितरण (Auto-Distribution)</h3>
+                      <p className="text-xs text-gray-500 mt-1">
+                        सभी अप्रूव्ड सदस्यों को वर्तमान में सक्रिय ग्रुप्स में बराबर-बराबर बांटने के लिए नीचे दिए गए बटन का उपयोग करें।
+                      </p>
+                    </div>
+
+                    <div className="space-y-4 mt-6">
+                      <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 text-center">
+                        <span className="text-xs text-gray-400 font-bold block">कुल अप्रूव्ड सदस्य</span>
+                        <span className="text-3xl font-black text-gray-800 mt-1 block">{approvedList.length}</span>
+                      </div>
+
+                      {groupsConfig.isActive && (
+                        <button
+                          onClick={handleAutoDistribute}
+                          disabled={isSavingGroups || approvedList.length === 0}
+                          className="w-full bg-[#f08519] hover:bg-orange-600 text-white font-bold py-3 px-4 rounded-lg text-sm shadow hover:shadow-md transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                        >
+                          🔄 सदस्यों को बराबर बांटें (Auto-Distribute)
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* 3. Approved Members Group Transfer list */}
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                  <div className="p-6 bg-gradient-to-r from-teal-600 to-[#087889] text-white flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                      <h3 className="text-lg font-bold">सदस्य ग्रुप आवंटन एवं स्थानांतरण (Group Allocations & Manual Transfer)</h3>
+                      <p className="text-xs text-teal-100 mt-1">यहाँ से आप किसी भी सदस्य को किसी भी ग्रुप में मैन्युअल रूप से ट्रांसफर कर सकते हैं।</p>
+                    </div>
+                    <span className="bg-white/20 px-3 py-1 rounded-full text-xs font-bold border border-white/10 shrink-0">
+                      Approved List ({approvedList.length})
+                    </span>
+                  </div>
+
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="bg-gray-50 border-b border-gray-100 text-gray-600 text-xs font-extrabold uppercase tracking-wider">
+                          <th className="py-4 px-6">सदस्य का नाम (Name)</th>
+                          <th className="py-4 px-6">यूनिक आईडी (ID)</th>
+                          <th className="py-4 px-6">मोबाइल (Mobile)</th>
+                          <th className="py-4 px-6">वर्तमान ग्रुप (Group)</th>
+                          <th className="py-4 px-6 text-right">मैन्युअल ट्रांसफर (Transfer)</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100 text-sm font-semibold text-gray-700">
+                        {approvedList.length === 0 ? (
+                          <tr>
+                            <td colSpan="5" className="py-8 text-center text-gray-400 font-bold">
+                              कोई अप्रूव्ड सदस्य उपलब्ध नहीं है।
+                            </td>
+                          </tr>
+                        ) : (
+                          approvedList.map((member) => (
+                            <tr key={member.id} className="hover:bg-gray-50/50 transition-colors">
+                              <td className="py-4 px-6">
+                                <div className="font-extrabold text-gray-800">{member.name}</div>
+                                <div className="text-[10px] text-gray-400 font-medium">{member.fatherName || 'पिता का नाम अनुपलब्ध'}</div>
+                              </td>
+                              <td className="py-4 px-6 font-mono text-xs text-[#087889] font-bold">{member.uniqueId}</td>
+                              <td className="py-4 px-6 text-gray-500 font-mono">{member.mobile}</td>
+                              <td className="py-4 px-6">
+                                {member.group ? (
+                                  <span className="bg-teal-50 text-teal-700 text-xs font-extrabold px-2.5 py-1 rounded-full border border-teal-100 uppercase">
+                                    Group {member.group}
+                                  </span>
+                                ) : (
+                                  <span className="bg-gray-100 text-gray-500 text-xs font-extrabold px-2.5 py-1 rounded-full border border-gray-200">
+                                    None (असाइन नहीं)
+                                  </span>
+                                )}
+                              </td>
+                              <td className="py-4 px-6 text-right">
+                                {groupsConfig.isActive ? (
+                                  <select
+                                    value={member.group || ''}
+                                    onChange={(e) => handleManualTransfer(member.id, e.target.value)}
+                                    disabled={isSavingGroups}
+                                    className="px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#087889] transition-all cursor-pointer inline-block"
+                                  >
+                                    <option value="">None (असाइन नहीं करें)</option>
+                                    {groupsConfig.activeGroups.map(g => (
+                                      <option key={g} value={g}>Group {g}</option>
+                                    ))}
+                                  </select>
+                                ) : (
+                                  <span className="text-xs text-gray-400 italic">ग्रुप प्रबंधन बंद है</span>
+                                )}
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
                   </div>
                 </div>
 
                 {/* Instructions card */}
                 <div className="bg-gray-100 rounded-2xl p-6 border border-gray-200 text-sm text-gray-600 leading-relaxed font-semibold">
-                  <h4 className="text-gray-800 font-bold mb-2 flex items-center gap-1.5">💡 ग्रुप ऑटो-असाइनमेंट कैसे काम करता है?</h4>
-                  <ul className="list-disc pl-5 space-y-1">
-                    <li>जब कोई नया सदस्य रजिस्ट्रेशन फॉर्म भरता है, तो वे पेंडिंग लिस्ट में आते हैं।</li>
-                    <li>अगर ऑटो-असाइनमेंट चालू है, तो अप्रूव बटन दबाने पर सिस्टम ऑटोमैटिकली यह देखेगा कि ग्रुप A, B, C, D में से किस ग्रुप में सबसे कम सदस्य हैं।</li>
-                    <li>सिस्टम उस सदस्य को सीधे उसी सबसे कम सदस्य वाले ग्रुप में असाइन कर देगा, जिससे सभी ग्रुप्स का साइज़ (Size) हमेशा संतुलित (Balanced) बना रहेगा।</li>
+                  <h4 className="text-gray-800 font-bold mb-2 flex items-center gap-1.5">💡 ग्रुप प्रबंधन कैसे काम करता है?</h4>
+                  <ul className="list-disc pl-5 space-y-1.5">
+                    <li><strong>ग्रुप प्रबंधन बंद (OFF)</strong> करने पर सभी सदस्यों के ग्रुप्स हट जाते हैं और उनके डैशबोर्ड से सहयोग अलर्ट (Cooperation Alerts) बंद हो जाता है।</li>
+                    <li><strong>ग्रुप प्रबंधन चालू (ON)</strong> करने पर आप जितने चाहें उतने ग्रुप्स (जैसे A, B, C...) बना सकते हैं।</li>
+                    <li><strong>"ऑटो-वितरण (Auto-Distribute)"</strong> करने पर सिस्टम वर्णमाला क्रम (alphabetical order) में सभी सदस्यों को एक्टिव ग्रुप्स में बराबर बांट देता है (उदाहरण: 100 सदस्यों को A और B में 50-50 बांट देगा)।</li>
+                    <li>आप तालिका में से किसी भी विशिष्ट सदस्य का ग्रुप मैन्युअल रूप से बदल भी सकते हैं।</li>
                   </ul>
                 </div>
               </div>
@@ -1256,24 +1521,9 @@ const AdminDashboard = () => {
                               </td>
                               <td className="py-4 px-5 text-center">
                                 {(item.status === 'PENDING' || !item.status) ? (
-                                  <select 
-                                    className="border border-gray-300 rounded-lg p-1.5 text-xs font-bold text-gray-700 bg-gray-50 focus:ring-2 focus:ring-[#087889]"
-                                    value={selectedGroups[item.id] || 'A'}
-                                    onChange={(e) => setSelectedGroups({...selectedGroups, [item.id]: e.target.value})}
-                                  >
-                                    {Array.from({length: 26}, (_, i) => String.fromCharCode(65 + i)).map(char => (
-                                      <option key={char} value={char}>Group {char}</option>
-                                    ))}
-                                  </select>
-                                ) : (
-                                  <span className="text-gray-400 font-bold">Group {item.group || 'A'}</span>
-                                )}
-                              </td>
-                              <td className="py-4 px-5">
-                                {(item.status === 'PENDING' || !item.status) ? (
                                   <div className="flex items-center justify-center space-x-2">
                                     <button 
-                                      onClick={() => handleApprove(item.id, item.name, selectedGroups[item.id] || 'A')}
+                                      onClick={() => handleApprove(item.id, item.name)}
                                       className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs shadow-sm transition-transform hover:-translate-y-0.5"
                                     >
                                       ✓ Approve
@@ -1635,13 +1885,28 @@ const AdminDashboard = () => {
                     <div><label className="block text-gray-700 font-bold mb-1">Minimum Support</label><input type="text" required value={newHomeAlert.minSupport} onChange={(e) => setNewHomeAlert({...newHomeAlert, minSupport: e.target.value})} className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#087889]"/></div>
                     <div className="md:col-span-2">
                       <label className="block text-gray-700 font-bold mb-1">QR Code Image</label>
-                      <input type="file" accept="image/*" onChange={handleQrUpload} className="w-full px-3 py-1.5 border rounded-lg text-sm bg-gray-50"/>
+                      <input id="qr-code-file-input" type="file" accept="image/*" onChange={handleQrUpload} className="w-full px-3 py-1.5 border rounded-lg text-sm bg-gray-50"/>
                       {newHomeAlert.qrCodeBase64 && <span className="text-xs text-green-600 mt-1 block">✅ Image Attached</span>}
                     </div>
 
                     <div className="md:col-span-3 mt-4 text-right border-t border-gray-100 pt-4">
-                      <button type="submit" className="px-6 py-2.5 bg-[#087889] text-white font-bold rounded-lg shadow hover:bg-[#06616e] transition-colors">
-                        अलर्ट सेव करें
+                      <button 
+                        type="submit" 
+                        disabled={isSavingAlert}
+                        className={`px-6 py-2.5 text-white font-bold rounded-lg shadow transition-colors flex items-center gap-2 ml-auto ${
+                          isSavingAlert 
+                            ? 'bg-gray-400 cursor-not-allowed' 
+                            : 'bg-[#087889] hover:bg-[#06616e]'
+                        }`}
+                      >
+                        {isSavingAlert ? (
+                          <>
+                            <span className="animate-spin inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full"></span>
+                            अपलोड हो रहा है...
+                          </>
+                        ) : (
+                          'अलर्ट सेव करें'
+                        )}
                       </button>
                     </div>
                   </form>
@@ -2199,6 +2464,116 @@ const AdminDashboard = () => {
                       className="px-8 py-3 bg-[#087889] text-white font-extrabold rounded-xl shadow-md hover:bg-[#06616e] transition-all transform hover:-translate-y-0.5"
                     >
                       💾 सेटिंग्स सहेजें (Save Settings)
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
+
+            {/* TAB: SCHEMES SETTINGS */}
+            {activeTab === 'schemes_settings' && (
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                <div className="flex justify-between items-center border-b border-gray-100 pb-4 mb-6">
+                  <div>
+                    <h3 className="text-xl font-extrabold text-gray-800">प्रमुख योजनाएं प्रबंधन (Manage Schemes Settings)</h3>
+                    <p className="text-xs text-gray-500 mt-1">यहाँ से आप मुख्य वेबसाइट के होम पेज पर प्रदर्शित दोनों योजनाओं की जानकारी बदल सकते हैं।</p>
+                  </div>
+                </div>
+
+                <form onSubmit={handleSaveHomeSettings} className="space-y-6 text-sm">
+                  {/* Schemes Box Config */}
+                  <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                    <div className="space-y-6">
+                      
+                      {/* Scheme 1: Accidental Death Relief */}
+                      <div className="border-b border-gray-200 pb-4">
+                        <h5 className="font-bold text-gray-700 mb-2 text-sm">योजना 1 (Scheme 1: आकस्मिक निधन सहायता)</h5>
+                        <div className="grid grid-cols-1 gap-3">
+                          <div>
+                            <label className="block text-gray-600 font-bold mb-1">योजना शीर्षक (Scheme Title)</label>
+                            <input 
+                              type="text" 
+                              required 
+                              value={homeSettings.scheme1Title || ''} 
+                              onChange={(e) => setHomeSettings({...homeSettings, scheme1Title: e.target.value})} 
+                              className="w-full px-3 py-2 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#087889]"
+                              placeholder="जैसे: आकस्मिक निधन सहायता योजना"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-gray-600 font-bold mb-1">योजना का विवरण (Scheme Description)</label>
+                            <textarea 
+                              required 
+                              rows={4}
+                              value={homeSettings.scheme1Text || ''} 
+                              onChange={(e) => setHomeSettings({...homeSettings, scheme1Text: e.target.value})} 
+                              className="w-full px-3 py-2 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#087889] font-medium"
+                              placeholder="योजना के बारे में विस्तार से लिखें..."
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-gray-600 font-bold mb-1">बटन का नाम (Button Text)</label>
+                            <input 
+                              type="text" 
+                              required 
+                              value={homeSettings.scheme1BtnText || ''} 
+                              onChange={(e) => setHomeSettings({...homeSettings, scheme1BtnText: e.target.value})} 
+                              className="w-full px-3 py-2 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#087889]"
+                              placeholder="जैसे: दिवंगत सहायता विवरण"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Scheme 2: Beti Vivah Sahyog */}
+                      <div>
+                        <h5 className="font-bold text-gray-700 mb-2 text-sm">योजना 2 (Scheme 2: बेटी विवाह सहायता)</h5>
+                        <div className="grid grid-cols-1 gap-3">
+                          <div>
+                            <label className="block text-gray-600 font-bold mb-1">योजना शीर्षक (Scheme Title)</label>
+                            <input 
+                              type="text" 
+                              required 
+                              value={homeSettings.scheme2Title || ''} 
+                              onChange={(e) => setHomeSettings({...homeSettings, scheme2Title: e.target.value})} 
+                              className="w-full px-3 py-2 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#087889]"
+                              placeholder="जैसे: बेटी विवाह सहायता योजना"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-gray-600 font-bold mb-1">योजना का विवरण (Scheme Description)</label>
+                            <textarea 
+                              required 
+                              rows={4}
+                              value={homeSettings.scheme2Text || ''} 
+                              onChange={(e) => setHomeSettings({...homeSettings, scheme2Text: e.target.value})} 
+                              className="w-full px-3 py-2 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#087889] font-medium"
+                              placeholder="योजना के बारे में विस्तार से लिखें..."
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-gray-600 font-bold mb-1">बटन का नाम (Button Text)</label>
+                            <input 
+                              type="text" 
+                              required 
+                              value={homeSettings.scheme2BtnText || ''} 
+                              onChange={(e) => setHomeSettings({...homeSettings, scheme2BtnText: e.target.value})} 
+                              className="w-full px-3 py-2 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#087889]"
+                              placeholder="जैसे: बेटी विवाह सहायता विवरण"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                    </div>
+                  </div>
+
+                  <div className="text-right border-t border-gray-100 pt-4">
+                    <button 
+                      type="submit" 
+                      className="px-8 py-3 bg-[#087889] text-white font-extrabold rounded-xl shadow-md hover:bg-[#06616e] transition-all transform hover:-translate-y-0.5"
+                    >
+                      💾 योजनाएं सेटिंग्स सहेजें (Save Schemes Settings)
                     </button>
                   </div>
                 </form>

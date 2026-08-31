@@ -81,7 +81,7 @@ const AboutSHCT = () => {
 
               {/* Text Area */}
               <div className="text-center sm:text-left flex-1">
-                <span className="text-[10px] font-black uppercase tracking-widest text-[#f08519] bg-orange-50 px-3 py-1 rounded-full">LEADERSHIP</span>
+
                 <h3 className="text-2xl font-black text-gray-800 tracking-tight mt-2 mb-1">आरिफ ब्रॉडवे</h3>
                 <p className="text-sm font-extrabold text-[#f08519] flex items-center gap-1.5 justify-center sm:justify-start">
                   संस्थापक/अध्यक्ष
@@ -104,7 +104,7 @@ const AboutSHCT = () => {
 
               {/* Text Area */}
               <div className="text-center sm:text-left flex-1">
-                <span className="text-[10px] font-black uppercase tracking-widest text-[#087889] bg-teal-50 px-3 py-1 rounded-full">LEADERSHIP</span>
+
                 <h3 className="text-2xl font-black text-gray-800 tracking-tight mt-2 mb-1">तसद्दुक हुसैन</h3>
                 <p className="text-sm font-extrabold text-[#087889] flex items-center gap-1.5 justify-center sm:justify-start">
                   सह संस्थापक/सचिव
@@ -127,7 +127,7 @@ const AboutSHCT = () => {
 
               {/* Text Area */}
               <div className="text-center sm:text-left flex-1">
-                <span className="text-[10px] font-black uppercase tracking-widest text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full">FINANCE</span>
+
                 <h3 className="text-2xl font-black text-gray-800 tracking-tight mt-2 mb-1">अख़्तर खान</h3>
                 <p className="text-sm font-extrabold text-indigo-600 flex items-center gap-1.5 justify-center sm:justify-start">
                   सह संस्थापक/कोषाध्यक्ष
@@ -150,7 +150,7 @@ const AboutSHCT = () => {
 
               {/* Text Area */}
               <div className="text-center sm:text-left flex-1">
-                <span className="text-[10px] font-black uppercase tracking-widest text-rose-600 bg-rose-50 px-3 py-1 rounded-full">MEDIA</span>
+
                 <h3 className="text-2xl font-black text-gray-800 tracking-tight mt-2 mb-1">साहिल अंसारी</h3>
                 <p className="text-sm font-extrabold text-rose-600 flex items-center gap-1.5 justify-center sm:justify-start">
                   प्रवक्ता
@@ -159,26 +159,28 @@ const AboutSHCT = () => {
               </div>
             </div>
 
-            {/* Profile 5: City President - Maghar Unit */}
+
+
+            {/* Profile 6: Basit Ansari */}
             <div className="bg-white rounded-3xl p-8 shadow-md border border-gray-100 hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 flex flex-col sm:flex-row items-center gap-6 relative overflow-hidden group">
               {/* Background gradient hint */}
-              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-orange-100/30 to-amber-100/30 rounded-bl-full -z-10 transition-all duration-500 group-hover:scale-110"></div>
+              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-teal-100/30 to-emerald-100/30 rounded-bl-full -z-10 transition-all duration-500 group-hover:scale-110"></div>
               
               {/* Image Box Wrapper */}
               <div className="relative shrink-0">
-                <div className="w-44 h-56 rounded-2xl bg-gradient-to-tr from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden relative shadow-inner ring-4 ring-orange-500/20 ring-offset-4 ring-offset-white group-hover:ring-orange-500/50 transition-all duration-500">
-                  <img src={alamgirAnsariImg} className="w-full h-full object-cover rounded-2xl group-hover:scale-105 transition-transform duration-500" alt="आलमगीर अंसारी" />
+                <div className="w-44 h-56 rounded-2xl bg-gradient-to-tr from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden relative shadow-inner ring-4 ring-teal-500/20 ring-offset-4 ring-offset-white group-hover:ring-teal-500/50 transition-all duration-500">
+                  <img src={basitAnsariImg} className="w-full h-full object-cover rounded-2xl group-hover:scale-105 transition-transform duration-500" alt="बासित अंसारी" />
                 </div>
               </div>
 
               {/* Text Area */}
               <div className="text-center sm:text-left flex-1">
-                <span className="text-[10px] font-black uppercase tracking-widest text-[#f08519] bg-orange-50 px-3 py-1 rounded-full">LEADERSHIP</span>
-                <h3 className="text-2xl font-black text-gray-800 tracking-tight mt-2 mb-1">आलमगीर अंसारी</h3>
-                <p className="text-sm font-extrabold text-[#f08519] flex items-center gap-1.5 justify-center sm:justify-start">
-                  नगर अध्यक्ष - SHCT मगहर इकाई
+
+                <h3 className="text-2xl font-black text-gray-800 tracking-tight mt-2 mb-1">बासित अंसारी</h3>
+                <p className="text-sm font-extrabold text-[#087889] flex items-center gap-1.5 justify-center sm:justify-start">
+                  पदाधिकारी/सदस्य
                 </p>
-                <p className="text-xs text-gray-400 mt-2 font-medium leading-relaxed">Silent Help Charitable Trust के मगहर इकाई के नगर अध्यक्ष के रूप में नेतृत्वकर्ता।</p>
+                <p className="text-xs text-gray-400 mt-2 font-medium leading-relaxed">Silent Help Charitable Trust के समर्पित पदाधिकारी एवं सदस्य के रूप में सक्रिय।</p>
               </div>
             </div>
 
@@ -189,7 +191,7 @@ const AboutSHCT = () => {
         <div className="mb-20">
           <div className="text-center mb-12">
             <h3 className="text-2xl md:text-3xl font-extrabold text-gray-800 tracking-tight relative inline-block">
-              हमारे समर्पित सदस्य
+              सदस्यगण
               <div className="w-16 h-1 bg-gradient-to-r from-teal-500 to-emerald-500 mx-auto mt-2 rounded-full"></div>
             </h3>
             <p className="text-gray-500 text-sm mt-2 font-medium">Silent Help Charitable Trust के समर्पित सदस्य</p>
@@ -197,24 +199,7 @@ const AboutSHCT = () => {
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl mx-auto px-4">
             
-            {/* Member 1: बासित अंसारी */}
-            <div className="bg-white rounded-3xl p-6 shadow-md border border-gray-100 hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 flex flex-col items-center text-center relative overflow-hidden group">
-              {/* Background gradient hint */}
-              <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-teal-100/20 to-emerald-100/20 rounded-bl-full -z-10"></div>
-              
-              {/* Photo Box on Top */}
-              <div className="w-36 h-44 rounded-2xl bg-gradient-to-tr from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden relative shadow-inner ring-4 ring-teal-500/20 group-hover:ring-teal-500/50 transition-all duration-500 mb-4 shrink-0 mx-auto">
-                <img src={basitAnsariImg} className="w-full h-full object-cover rounded-2xl group-hover:scale-105 transition-transform duration-500" alt="बासित अंसारी" />
-              </div>
-
-              {/* Text Underneath */}
-              <span className="text-[9px] font-black uppercase tracking-widest text-[#087889] bg-teal-50 px-3 py-0.5 rounded-full">TRUST MEMBER</span>
-              <h4 className="text-xl font-black text-gray-800 tracking-tight mt-2 mb-1">बासित अंसारी</h4>
-              <p className="text-xs text-gray-400 mt-1 font-semibold uppercase tracking-wider text-[#087889]">सदस्य</p>
-              <p className="text-xs text-gray-500 mt-2 font-medium leading-relaxed">ट्रस्ट के समर्पित सदस्य के रूप में समाज सेवा गतिविधियों में सक्रिय भागीदार।</p>
-            </div>
-
-            {/* Member 2: राजेश */}
+            {/* Member 1: राजेश */}
             <div className="bg-white rounded-3xl p-6 shadow-md border border-gray-100 hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 flex flex-col items-center text-center relative overflow-hidden group">
               {/* Background gradient hint */}
               <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-teal-100/20 to-emerald-100/20 rounded-bl-full -z-10"></div>
@@ -225,10 +210,27 @@ const AboutSHCT = () => {
               </div>
 
               {/* Text Underneath */}
-              <span className="text-[9px] font-black uppercase tracking-widest text-[#087889] bg-teal-50 px-3 py-0.5 rounded-full">TRUST MEMBER</span>
+
               <h4 className="text-xl font-black text-gray-800 tracking-tight mt-2 mb-1">राजेश</h4>
               <p className="text-xs text-gray-400 mt-1 font-semibold uppercase tracking-wider text-[#087889]">सदस्य</p>
               <p className="text-xs text-gray-500 mt-2 font-medium leading-relaxed">ट्रस्ट के समर्पित सदस्य के रूप में समाज सेवा गतिविधियों में सक्रिय भागीदार।</p>
+            </div>
+
+            {/* Member 2: आलमगीर अंसारी */}
+            <div className="bg-white rounded-3xl p-6 shadow-md border border-gray-100 hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 flex flex-col items-center text-center relative overflow-hidden group">
+              {/* Background gradient hint */}
+              <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-teal-100/20 to-emerald-100/20 rounded-bl-full -z-10"></div>
+              
+              {/* Photo Box on Top */}
+              <div className="w-36 h-44 rounded-2xl bg-gradient-to-tr from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden relative shadow-inner ring-4 ring-teal-500/20 group-hover:ring-teal-500/50 transition-all duration-500 mb-4 shrink-0 mx-auto">
+                <img src={alamgirAnsariImg} className="w-full h-full object-cover rounded-2xl group-hover:scale-105 transition-transform duration-500" alt="आलमगीर अंसारी" />
+              </div>
+
+              {/* Text Underneath */}
+
+              <h4 className="text-xl font-black text-gray-800 tracking-tight mt-2 mb-1">आलमगीर अंसारी</h4>
+              <p className="text-xs text-gray-400 mt-1 font-semibold uppercase tracking-wider text-[#087889]">नगर अध्यक्ष - SHCT मगहर इकाई</p>
+              <p className="text-xs text-gray-500 mt-2 font-medium leading-relaxed">Silent Help Charitable Trust के मगहर इकाई के नगर अध्यक्ष।</p>
             </div>
 
           </div>

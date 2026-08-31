@@ -6,6 +6,7 @@ const RegistrationBanner = () => {
   const qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=upi://pay?pa=fastrelief@sbi%26pn=FAST%2520RELIEF%2520CHARITABLE%2520TRUST%26cu=INR";
 
   const [memberCount, setMemberCount] = useState(0);
+  const [displayCount, setDisplayCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -21,6 +22,25 @@ const RegistrationBanner = () => {
     };
     fetchCount();
   }, []);
+
+  useEffect(() => {
+    if (loading || memberCount === 0) return;
+
+    let startTimestamp = null;
+    const duration = 1500; // 1.5 seconds animation duration
+
+    const step = (timestamp) => {
+      if (!startTimestamp) startTimestamp = timestamp;
+      const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+      setDisplayCount(Math.floor(progress * memberCount));
+      
+      if (progress < 1) {
+        window.requestAnimationFrame(step);
+      }
+    };
+
+    window.requestAnimationFrame(step);
+  }, [loading, memberCount]);
 
   return (
     <>
@@ -90,17 +110,23 @@ const RegistrationBanner = () => {
           </div>
 
           {/* Dynamic Registered Members Counter Section */}
-          <div className="mt-12 pt-10 border-t border-slate-800 flex flex-col items-center justify-center">
-            <h3 className="text-2xl md:text-3xl font-extrabold text-white mb-4 tracking-tight">
-              Member Register Till now
-            </h3>
-            <div className="flex items-center gap-4 mb-8 bg-slate-800/40 px-6 py-3 rounded-full border border-slate-700/50 group hover:border-[#087889]/50 transition-all duration-300">
-              <div className="w-10 h-10 rounded-full bg-[#087889] text-white flex items-center justify-center text-lg shadow-md group-hover:scale-110 transition-transform duration-300">
-                ✋
+          <div className="mt-12 pt-10 border-t border-slate-800/60 flex flex-col items-center justify-center">
+            
+            {/* Custom Banner UI - Full Width (max-w-4xl) Matching User's Design Image Exactly */}
+            <div className="flex items-center justify-between w-full max-w-4xl bg-[#080c16] rounded-3xl p-8 sm:p-12 px-8 sm:px-16 shadow-2xl border border-slate-800/80 mb-10 transition-all duration-300 hover:scale-[1.01] hover:border-[#f08519]/30 mx-auto select-none">
+              <div className="text-left">
+                <span className="block text-3xl sm:text-5xl lg:text-6xl font-black text-[#f08519] tracking-wide uppercase leading-none font-sans">
+                  MEMBER
+                </span>
+                <span className="block text-2xl sm:text-4xl lg:text-5xl font-semibold text-white mt-4 sm:mt-6 leading-none font-sans">
+                  Register Till now
+                </span>
               </div>
-              <span className="text-3xl md:text-4xl font-black text-amber-400 tracking-wider font-mono">
-                {loading ? "..." : memberCount}
-              </span>
+              <div className="w-20 h-20 sm:w-32 sm:h-32 lg:w-40 lg:h-40 rounded-full bg-[#f08519] flex items-center justify-center shrink-0 shadow-2xl shadow-[#f08519]/10">
+                <span className="text-2xl sm:text-5xl lg:text-6xl font-black text-[#080c16] tracking-tighter font-sans">
+                  {loading ? "..." : displayCount}
+                </span>
+              </div>
             </div>
 
             {/* Register Now Button */}
@@ -131,7 +157,7 @@ const RegistrationBanner = () => {
 
           {/* Points List */}
           <div className="space-y-6">
-            
+
             {/* Point 1 */}
             <div className="flex gap-4 p-5 rounded-2xl bg-gray-50 border border-gray-100 hover:border-[#087889]/30 hover:shadow-md transition-all duration-300">
               <div className="w-10 h-10 rounded-full bg-teal-50 text-[#087889] font-black flex items-center justify-center shrink-0 border border-teal-100">
@@ -215,7 +241,7 @@ const RegistrationBanner = () => {
 
           {/* Points List */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            
+
             {/* Point 1 */}
             <div className="flex gap-4 p-5 rounded-2xl bg-white border border-gray-100 hover:border-[#f08519]/30 hover:shadow-md transition-all duration-300">
               <div className="w-10 h-10 rounded-full bg-orange-50 text-[#f08519] font-black flex items-center justify-center shrink-0 border border-orange-100">
