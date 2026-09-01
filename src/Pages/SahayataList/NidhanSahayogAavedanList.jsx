@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getNidhanSahayogList } from '../../services/dataService';
 import bannerImg from '../../assets/ngo1.jpg';
+import { EyeIcon, FileTextIcon, CloseIcon } from '../../components/common/Icons';
 
 const NidhanSahayogAavedanList = () => {
   const [dataList, setDataList] = useState([]);
@@ -204,9 +205,9 @@ const NidhanSahayogAavedanList = () => {
                           {item.documentImage ? (
                             <button 
                               onClick={() => setSelectedImage(item.documentImage)}
-                              className="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-lg text-xs font-bold transition-colors shadow-sm whitespace-nowrap"
+                              className="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-lg text-xs font-bold transition-colors shadow-sm whitespace-nowrap inline-flex items-center gap-1"
                             >
-                              👁️ कार्ड देखें
+                              <EyeIcon className="w-3.5 h-3.5" /> कार्ड देखें
                             </button>
                           ) : (
                             <span className="text-gray-400 text-xs font-medium">उपलब्ध नहीं</span>
@@ -277,13 +278,13 @@ const NidhanSahayogAavedanList = () => {
           <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl relative border border-gray-100">
             <div className="flex justify-between items-center border-b border-gray-100 pb-4 mb-5">
               <h4 className="text-lg font-extrabold text-gray-900 flex items-center gap-2">
-                <span className="text-2xl">📄</span> दस्तावेज / कार्ड
+                <FileTextIcon className="w-5 h-5 text-red-600" /> दस्तावेज / कार्ड
               </h4>
               <button 
                 onClick={() => setSelectedImage(null)}
-                className="text-gray-400 hover:text-gray-900 text-2xl font-bold transition-colors w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100"
+                className="text-gray-400 hover:text-gray-900 transition-colors w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100"
               >
-                ✕
+                <CloseIcon className="w-5 h-5" />
               </button>
             </div>
             <div className="h-[400px] w-full bg-gray-50 rounded-2xl overflow-hidden flex items-center justify-center border border-gray-100 p-2">

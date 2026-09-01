@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getGreenParyavaranList } from '../../services/dataService';
+import { LeafIcon, EyeIcon, CheckIcon, CloseIcon, ClockIcon, FileTextIcon } from '../../components/common/Icons';
 
 const GreenParyavaranList = () => {
   const [dataList, setDataList] = useState([]);
@@ -182,8 +183,8 @@ const GreenParyavaranList = () => {
                           <p className="font-bold text-gray-900 text-base">{item.applicantName}</p>
                           <p className="text-xs font-mono text-gray-500 mt-1">ID: {item.uniqueId}</p>
                         </td>
-                        <td className="py-4 px-6 font-bold text-gray-800 text-lg">
-                          {item.treesPlanted} 🌳
+                        <td className="py-4 px-6 font-bold text-gray-800 text-lg flex items-center gap-1">
+                          {item.treesPlanted} <LeafIcon className="w-4 h-4 text-emerald-600 inline" />
                         </td>
                         <td className="py-4 px-6 font-bold text-gray-700 font-mono">
                           {item.plantationDate}
@@ -196,9 +197,9 @@ const GreenParyavaranList = () => {
                           {item.documentImage ? (
                             <button 
                               onClick={() => setSelectedImage(item.documentImage)}
-                              className="px-3 py-1.5 bg-green-50 hover:bg-green-100 text-green-700 border border-green-200 rounded-lg text-xs font-bold transition-colors shadow-sm whitespace-nowrap"
+                              className="px-3 py-1.5 bg-green-50 hover:bg-green-100 text-green-700 border border-green-200 rounded-lg text-xs font-bold transition-colors shadow-sm whitespace-nowrap inline-flex items-center gap-1"
                             >
-                              👁️ फोटो देखें
+                              <EyeIcon className="w-3.5 h-3.5" /> फोटो देखें
                             </button>
                           ) : (
                             <span className="text-gray-400 text-xs font-medium">उपलब्ध नहीं</span>
@@ -207,17 +208,17 @@ const GreenParyavaranList = () => {
                         <td className="py-4 px-6 text-center">
                           {item.status === 'APPROVED' && (
                             <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-black bg-green-100 text-green-700 shadow-sm border border-green-200">
-                              ✅ स्वीकृत
+                              <CheckIcon className="w-3.5 h-3.5 text-green-700" /> स्वीकृत
                             </span>
                           )}
                           {item.status === 'REJECTED' && (
                             <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-black bg-red-100 text-red-700 shadow-sm border border-red-200">
-                              ❌ अस्वीकृत
+                              <CloseIcon className="w-3.5 h-3.5 text-red-700" /> अस्वीकृत
                             </span>
                           )}
                           {(item.status === 'PENDING' || !item.status) && (
                             <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-black bg-amber-100 text-amber-700 shadow-sm border border-amber-200">
-                              ⏳ पेंडिंग
+                              <ClockIcon className="w-3.5 h-3.5 text-amber-700" /> पेंडिंग
                             </span>
                           )}
                         </td>
@@ -226,7 +227,9 @@ const GreenParyavaranList = () => {
                   ) : (
                     <tr>
                       <td colSpan="7" className="py-12 text-center text-gray-500">
-                        <div className="text-4xl mb-3">📭</div>
+                        <div className="flex justify-center mb-3">
+                          <FileTextIcon className="w-10 h-10 text-gray-300" />
+                        </div>
                         <p className="text-lg font-semibold">इस सूची में अभी कोई आवेदन नहीं है।</p>
                       </td>
                     </tr>
@@ -277,13 +280,13 @@ const GreenParyavaranList = () => {
           <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl relative border border-gray-100">
             <div className="flex justify-between items-center border-b border-gray-100 pb-4 mb-5">
               <h4 className="text-lg font-extrabold text-gray-900 flex items-center gap-2">
-                <span className="text-2xl">📄</span> दस्तावेज / फोटो
+                <FileTextIcon className="w-5 h-5 text-green-700" /> दस्तावेज / फोटो
               </h4>
               <button 
                 onClick={() => setSelectedImage(null)}
-                className="text-gray-400 hover:text-gray-900 text-2xl font-bold transition-colors w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100"
+                className="text-gray-400 hover:text-gray-900 transition-colors w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100"
               >
-                ✕
+                <CloseIcon className="w-5 h-5" />
               </button>
             </div>
             <div className="h-[400px] w-full bg-gray-50 rounded-2xl overflow-hidden flex items-center justify-center border border-gray-100 p-2">

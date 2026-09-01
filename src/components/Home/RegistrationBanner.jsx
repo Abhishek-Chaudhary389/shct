@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { getApprovedMembers } from '../../services/dataService';
+import { CreditCardIcon, AlertTriangleIcon, ArrowRightIcon, CheckIcon } from '../common/Icons';
 
 const RegistrationBanner = () => {
   const qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=upi://pay?pa=fastrelief@sbi%26pn=FAST%2520RELIEF%2520CHARITABLE%2520TRUST%26cu=INR";
@@ -63,7 +64,7 @@ const RegistrationBanner = () => {
             <div className="bg-slate-800/80 backdrop-blur-sm border border-slate-700 p-6 md:p-8 rounded-3xl flex flex-col justify-between shadow-xl">
               <div>
                 <div className="flex items-center gap-2 mb-6">
-                  <span className="text-2xl">🏦</span>
+                  <CreditCardIcon className="w-6 h-6 text-orange-400" />
                   <h3 className="text-xl font-bold text-gray-200">बैंक खाता विवरण (Bank Details)</h3>
                 </div>
                 <div className="space-y-3.5 text-left text-sm md:text-base font-semibold">
@@ -73,22 +74,25 @@ const RegistrationBanner = () => {
                   </div>
                   <div className="flex justify-between border-b border-slate-700/50 pb-2">
                     <span className="text-gray-400">ACCOUNT No:</span>
-                    <span className="text-white font-mono tracking-wider">5++++++++++</span>
+                    <span className="text-white font-mono tracking-wider">45431328562</span>
                   </div>
                   <div className="flex justify-between border-b border-slate-700/50 pb-2">
                     <span className="text-gray-400">IFSC:</span>
-                    <span className="text-white font-mono tracking-wider">SBI+++++++++</span>
+                    <span className="text-white font-mono tracking-wider">SBIN0011827</span>
                   </div>
                   <div className="flex justify-between pb-1">
                     <span className="text-gray-400">BRANCH:</span>
-                    <span className="text-white">Khalilabad</span>
+                    <span className="text-white">State Bank of India</span>
                   </div>
                 </div>
               </div>
 
               {/* Note Area */}
-              <div className="mt-6 pt-4 border-t border-slate-700/50 text-left text-xs md:text-sm text-orange-300/90 font-medium leading-relaxed">
-                ⚠️ <span className="font-bold">निर्देश नोट:</span> सदस्य बनने के एक वर्ष बाद पुनः: ट्रस्ट को ₹200 रुपये वार्षिक दान करें एवं प्रोफाइल लॉगिन करके <span className="font-bold text-white underline">VARSHIK DAN</span> में रसीद अपलोड अवश्य करें।
+              <div className="mt-6 pt-4 border-t border-slate-700/50 text-left text-xs md:text-sm text-orange-300/90 font-medium leading-relaxed flex items-start gap-1.5">
+                <AlertTriangleIcon className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                <div>
+                  <span className="font-bold">निर्देश नोट:</span> सदस्य बनने के एक वर्ष बाद पुनः: ट्रस्ट को ₹200 रुपये वार्षिक दान करें एवं प्रोफाइल लॉगिन करके <span className="font-bold text-white underline">VARSHIK DAN</span> में रसीद अपलोड अवश्य करें।
+                </div>
               </div>
             </div>
 
@@ -113,7 +117,7 @@ const RegistrationBanner = () => {
           {/* Dynamic Registered Members Counter Section */}
           <div className="mt-12 pt-10 border-t border-slate-800/60 flex flex-col items-center justify-center">
             
-            {/* Custom Banner UI - Full Width (max-w-4xl) Matching User's Design Image Exactly */}
+            {/* Custom Banner UI */}
             <div className="flex items-center justify-between w-full max-w-4xl bg-[#080c16] rounded-3xl p-8 sm:p-12 px-8 sm:px-16 shadow-2xl border border-slate-800/80 mb-10 transition-all duration-300 hover:scale-[1.01] hover:border-[#f08519]/30 mx-auto select-none">
               <div className="text-left">
                 <span className="block text-3xl sm:text-5xl lg:text-6xl font-black text-[#f08519] tracking-wide uppercase leading-none font-sans">
@@ -136,7 +140,8 @@ const RegistrationBanner = () => {
                 to="/register"
                 className="inline-flex items-center gap-3 px-10 py-4 bg-gradient-to-r from-amber-400 via-amber-500 to-yellow-500 hover:from-amber-500 hover:to-yellow-600 text-slate-900 font-extrabold text-lg rounded-full shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 uppercase tracking-wider"
               >
-                Register Now (अभी रजिस्टर करें) ➔
+                <span>Register Now (अभी रजिस्टर करें)</span>
+                <ArrowRightIcon className="w-5 h-5" />
               </Link>
             </div>
           </div>
@@ -246,7 +251,7 @@ const RegistrationBanner = () => {
             {/* Point 1 */}
             <div className="flex gap-4 p-5 rounded-2xl bg-white border border-gray-100 hover:border-[#f08519]/30 hover:shadow-md transition-all duration-300">
               <div className="w-10 h-10 rounded-full bg-orange-50 text-[#f08519] font-black flex items-center justify-center shrink-0 border border-orange-100">
-                ✓
+                <CheckIcon className="w-5 h-5" />
               </div>
               <div>
                 <h4 className="text-lg font-bold text-gray-800">भारत के नागरिक</h4>
@@ -259,7 +264,7 @@ const RegistrationBanner = () => {
             {/* Point 2 */}
             <div className="flex gap-4 p-5 rounded-2xl bg-white border border-gray-100 hover:border-[#f08519]/30 hover:shadow-md transition-all duration-300">
               <div className="w-10 h-10 rounded-full bg-orange-50 text-[#f08519] font-black flex items-center justify-center shrink-0 border border-orange-100">
-                ✓
+                <CheckIcon className="w-5 h-5" />
               </div>
               <div>
                 <h4 className="text-lg font-bold text-gray-800">भारत में कार्यरत</h4>
@@ -272,7 +277,7 @@ const RegistrationBanner = () => {
             {/* Point 3 */}
             <div className="flex gap-4 p-5 rounded-2xl bg-white border border-gray-100 hover:border-[#f08519]/30 hover:shadow-md transition-all duration-300">
               <div className="w-10 h-10 rounded-full bg-orange-50 text-[#f08519] font-black flex items-center justify-center shrink-0 border border-orange-100">
-                ✓
+                <CheckIcon className="w-5 h-5" />
               </div>
               <div>
                 <h4 className="text-lg font-bold text-gray-800">सरकारी एवं प्राइवेट कर्मचारी</h4>
@@ -285,7 +290,7 @@ const RegistrationBanner = () => {
             {/* Point 4 */}
             <div className="flex gap-4 p-5 rounded-2xl bg-white border border-gray-100 hover:border-[#f08519]/30 hover:shadow-md transition-all duration-300">
               <div className="w-10 h-10 rounded-full bg-orange-50 text-[#f08519] font-black flex items-center justify-center shrink-0 border border-orange-100">
-                ✓
+                <CheckIcon className="w-5 h-5" />
               </div>
               <div>
                 <h4 className="text-lg font-bold text-gray-800">विद्यार्थी/छात्र पात्रता</h4>
@@ -298,7 +303,7 @@ const RegistrationBanner = () => {
             {/* Point 5 */}
             <div className="flex gap-4 p-5 rounded-2xl bg-white border border-gray-100 hover:border-[#f08519]/30 hover:shadow-md transition-all duration-300">
               <div className="w-10 h-10 rounded-full bg-orange-50 text-[#f08519] font-black flex items-center justify-center shrink-0 border border-orange-100">
-                ✓
+                <CheckIcon className="w-5 h-5" />
               </div>
               <div>
                 <h4 className="text-lg font-bold text-gray-800">किसान और मजदूर</h4>
@@ -311,7 +316,7 @@ const RegistrationBanner = () => {
             {/* Point 6 */}
             <div className="flex gap-4 p-5 rounded-2xl bg-white border border-gray-100 hover:border-[#f08519]/30 hover:shadow-md transition-all duration-300">
               <div className="w-10 h-10 rounded-full bg-orange-50 text-[#f08519] font-black flex items-center justify-center shrink-0 border border-orange-100">
-                ✓
+                <CheckIcon className="w-5 h-5" />
               </div>
               <div>
                 <h4 className="text-lg font-bold text-gray-800">न्यूनतम 18 वर्ष आयु</h4>

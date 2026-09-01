@@ -29,7 +29,11 @@ import BetiSahayogAavedanList from './Pages/SahayataList/BetiSahayogAavedanList'
 import NidhanSahayogAavedanList from './Pages/SahayataList/NidhanSahayogAavedanList';
 import GreenParyavaranList from './Pages/SahayataList/GreenParyavaranList';
 import AllSahayogList from './Pages/VivahSahayogList/AllSahayogList';
+import BetiAccountHolderWiseList from './Pages/VivahSahayogList/BetiAccountHolderWiseList';
+import BetiAlertWiseList from './Pages/VivahSahayogList/BetiAlertWiseList';
 import AllNidhanSahyogList from './Pages/NidhanSahayog/AllNidhanSahyogList';
+import NidhanAccountHolderWiseList from './Pages/NidhanSahayog/NidhanAccountHolderWiseList';
+import NidhanAlertWiseList from './Pages/NidhanSahayog/NidhanAlertWiseList';
 import ProtectedRoute from './components/ProtectedRoute'; 
 
 
@@ -218,7 +222,7 @@ const App = () => {
           } 
         />
 
-        {/* ================= ALL VIVAH SAHAYOG LIST PAGE ================= */}
+        {/* ================= VIVAH SAHAYOG LIST PAGES (3-TIER) ================= */}
         <Route 
           path="/vivah-sahayog-list" 
           element={
@@ -231,8 +235,32 @@ const App = () => {
             </div>
           } 
         />
+        <Route 
+          path="/beti-vivah-sahyog/account-holder" 
+          element={
+            <div className="flex flex-col min-h-screen">
+              <Navbar />
+              <div className="flex-grow">
+                <BetiAccountHolderWiseList />
+              </div>
+              <Footer />
+            </div>
+          } 
+        />
+        <Route 
+          path="/beti-vivah-sahyog/alert-wise" 
+          element={
+            <div className="flex flex-col min-h-screen">
+              <Navbar />
+              <div className="flex-grow">
+                <BetiAlertWiseList />
+              </div>
+              <Footer />
+            </div>
+          } 
+        />
 
-        {/* ================= ALL NIDHAN SAHAYOG LIST PAGE ================= */}
+        {/* ================= NIDHAN SAHAYOG LIST PAGES (3-TIER) ================= */}
         <Route 
           path="/nidhan-sahayog-list" 
           element={
@@ -240,6 +268,30 @@ const App = () => {
               <Navbar />
               <div className="flex-grow">
                 <AllNidhanSahyogList />
+              </div>
+              <Footer />
+            </div>
+          } 
+        />
+        <Route 
+          path="/nidhan-sahayog/account-holder" 
+          element={
+            <div className="flex flex-col min-h-screen">
+              <Navbar />
+              <div className="flex-grow">
+                <NidhanAccountHolderWiseList />
+              </div>
+              <Footer />
+            </div>
+          } 
+        />
+        <Route 
+          path="/nidhan-sahayog/alert-wise" 
+          element={
+            <div className="flex flex-col min-h-screen">
+              <Navbar />
+              <div className="flex-grow">
+                <NidhanAlertWiseList />
               </div>
               <Footer />
             </div>

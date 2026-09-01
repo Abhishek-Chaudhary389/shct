@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { addPendingRegistration } from '../../services/dataService';
 import { compressImage } from '../../utils/imageCompressor';
 import { uploadToImageKit } from '../../utils/imageKitUploader';
+import { UserIcon, MapPinIcon, ShieldIcon, CreditCardIcon, EyeIcon, EyeOffIcon, CheckIcon } from '../../components/common/Icons';
 
 const indianStates = [
   "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", 
@@ -24,6 +25,7 @@ const Register = () => {
     nomineeName: '', nomineeRelation: '', nomineeMobile: '', transactionId: '',
     referralCode: '', receiptUrl: ''
   });
+  const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (e) => {
@@ -69,9 +71,6 @@ const Register = () => {
       console.error(error);
     }
   };
-  // Theme Colors
-  const themeTeal = "#087889";
-  const themeOrange = "#f08519";
 
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 font-sans">
@@ -112,9 +111,9 @@ const Register = () => {
               </h3>
               <div className="space-y-2 text-sm md:text-base font-medium text-gray-200">
                 <p><span className="text-gray-400">A/C HOLDER NAME-</span> SHCT</p>
-                <p className="text-lg text-[#087889] font-bold bg-white inline-block px-3 py-1 rounded mt-1">ACCOUNT No - 44404849629</p>
-                <p className="mt-2"><span className="text-gray-400">IFSC -</span> SBIN0001147</p>
-                <p><span className="text-gray-400">BRANCH -</span> MAHARAJGANJ</p>
+                <p className="text-lg text-[#087889] font-bold bg-white inline-block px-3 py-1 rounded mt-1">ACCOUNT No - 45431328562</p>
+                <p className="mt-2"><span className="text-gray-400">IFSC -</span> SBIN0011827</p>
+                <p><span className="text-gray-400">BRANCH -</span> State Bank of India</p>
               </div>
             </div>
           </div>
@@ -124,8 +123,8 @@ const Register = () => {
             
             {/* --- SECTION 1: व्यक्तिगत जानकारी --- */}
             <div>
-              <h3 className="text-xl font-bold text-[#f08519] border-b-2 border-gray-100 pb-2 mb-6 flex items-center">
-                <span className="mr-2">👤</span> व्यक्तिगत जानकारी
+              <h3 className="text-xl font-bold text-[#f08519] border-b-2 border-gray-100 pb-2 mb-6 flex items-center gap-2">
+                <UserIcon className="w-6 h-6" /> व्यक्तिगत जानकारी
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
@@ -146,7 +145,29 @@ const Register = () => {
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1">पासवर्ड बनाएं <span className="text-red-500">*</span></label>
-                  <input type="password" name="password" value={formData.password} onChange={handleChange} required className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#087889] focus:border-[#087889] transition-colors" placeholder="सुरक्षित पासवर्ड बनाएं" />
+                  <div className="relative rounded-lg shadow-sm">
+                    <input 
+                      type={showPassword ? "text" : "password"} 
+                      name="password" 
+                      value={formData.password} 
+                      onChange={handleChange} 
+                      required 
+                      className="w-full pl-4 pr-10 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#087889] focus:border-[#087889] transition-colors" 
+                      placeholder="सुरक्षित पासवर्ड बनाएं" 
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-[#087889] transition-colors focus:outline-none"
+                      title={showPassword ? "पासवर्ड छुपाएं" : "पासवर्ड देखें"}
+                    >
+                      {showPassword ? (
+                        <EyeOffIcon className="w-5 h-5" />
+                      ) : (
+                        <EyeIcon className="w-5 h-5" />
+                      )}
+                    </button>
+                  </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
@@ -168,8 +189,8 @@ const Register = () => {
 
             {/* --- SECTION 2: व्यवसाय एवं पता --- */}
             <div>
-              <h3 className="text-xl font-bold text-[#f08519] border-b-2 border-gray-100 pb-2 mb-6 flex items-center">
-                <span className="mr-2">🏢</span> व्यवसाय एवं पता
+              <h3 className="text-xl font-bold text-[#f08519] border-b-2 border-gray-100 pb-2 mb-6 flex items-center gap-2">
+                <MapPinIcon className="w-6 h-6" /> व्यवसाय एवं पता
               </h3>
               
               <div className="mb-6">
@@ -195,15 +216,7 @@ const Register = () => {
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1">स्थाई निवासी जिला <span className="text-red-500">*</span></label>
-                  <input 
-                    type="text" 
-                    name="district" 
-                    value={formData.district} 
-                    onChange={handleChange} 
-                    required 
-                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#087889] focus:border-[#087889] transition-colors" 
-                    placeholder="अपना जिला दर्ज करें" 
-                  />
+                  <input type="text" name="district" value={formData.district} onChange={handleChange} required className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#087889] focus:border-[#087889] transition-colors" placeholder="अपना जिला दर्ज करें" />
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1">स्थाई निवासी ब्लॉक <span className="text-red-500">*</span></label>
@@ -222,8 +235,8 @@ const Register = () => {
 
             {/* --- SECTION 3: नॉमिनी विवरण --- */}
             <div>
-              <h3 className="text-xl font-bold text-[#f08519] border-b-2 border-gray-100 pb-2 mb-6 flex items-center">
-                <span className="mr-2">🛡️</span> नॉमिनी विवरण
+              <h3 className="text-xl font-bold text-[#f08519] border-b-2 border-gray-100 pb-2 mb-6 flex items-center gap-2">
+                <ShieldIcon className="w-6 h-6" /> नॉमिनी विवरण
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
@@ -243,8 +256,8 @@ const Register = () => {
 
             {/* --- SECTION 4: भुगतान विवरण --- */}
             <div>
-              <h3 className="text-xl font-bold text-[#f08519] border-b-2 border-gray-100 pb-2 mb-6 flex items-center">
-                <span className="mr-2">💳</span> भुगतान विवरण
+              <h3 className="text-xl font-bold text-[#f08519] border-b-2 border-gray-100 pb-2 mb-6 flex items-center gap-2">
+                <CreditCardIcon className="w-6 h-6" /> भुगतान विवरण
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
@@ -253,8 +266,8 @@ const Register = () => {
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1">ट्रस्ट को 200 रुपए दान (Payment Receipt) <span className="text-red-500">*</span></label>
-                  <input type="file" onChange={handleFileChange} required accept="image/*" className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#087889] file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-[#087889] hover:file:bg-teal-100 transition-colors" />
-                  {formData.receiptUrl && <p className="text-xs text-green-600 mt-1 font-bold">Image Selected</p>}
+                  <input type="file" onChange={handleFileChange} required accept="image/*" className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#087889] file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-[#087889] hover:file:bg-teal-100 transition-colors cursor-pointer text-sm text-gray-600" />
+                  {formData.receiptUrl && <p className="text-xs text-green-600 mt-1 font-bold flex items-center gap-1"><CheckIcon className="w-3.5 h-3.5" /> Image Selected</p>}
                 </div>
               </div>
             </div>

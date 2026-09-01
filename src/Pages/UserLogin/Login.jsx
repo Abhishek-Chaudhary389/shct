@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import logoImg from '../../assets/shct.png'; // अपना लोगो इम्पोर्ट करें (पाथ चेक कर लें)
+import { CreditCardIcon, LockIcon, EyeIcon, EyeOffIcon } from '../../components/common/Icons';
 
 const Login = () => {
   const location = useLocation();
@@ -10,6 +11,15 @@ const Login = () => {
   const alertMessage = location.state?.message;
 
   const [aadhaar, setAadhaar] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+
+  // यदि यूज़र पहले से लॉग इन है, तो सीधे डैशबोर्ड पर भेजें
+  useEffect(() => {
+    if (localStorage.getItem('isLoggedIn') === 'true') {
+      navigate('/user-dashboard', { replace: true });
+    }
+  }, [navigate]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -41,7 +51,7 @@ const Login = () => {
           {/* Alert message when redirected */}
           {alertMessage && (
             <div className="mb-6 p-3.5 bg-amber-50 border-l-4 border-amber-500 text-amber-800 rounded-lg text-sm font-semibold flex items-center gap-2 shadow-sm">
-              <span className="text-lg">🔒</span>
+              <LockIcon className="w-5 h-5 text-amber-700" />
               <span>{alertMessage}</span>
             </div>
           )}
@@ -59,7 +69,7 @@ const Login = () => {
               </label>
               <div className="mt-1 relative rounded-md shadow-sm">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <span className="text-gray-400 sm:text-sm">💳</span>
+                  <CreditCardIcon className="w-5 h-5 text-gray-400" />
                 </div>
                 <input 
                   type="text" 
@@ -72,47 +82,40 @@ const Login = () => {
               </div>
             </div>
 
-            {/* Password Input */}
+            {/* Password Input with Eye Visibility Toggle */}
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-1">
                 पासवर्ड (Password) <span className="text-red-500">*</span>
               </label>
               <div className="mt-1 relative rounded-md shadow-sm">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <span className="text-gray-400 sm:text-sm">🔒</span>
+                  <LockIcon className="w-5 h-5 text-gray-400" />
                 </div>
                 <input 
-                  type="password" 
-                  className="w-full pl-10 px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#087889] focus:border-[#087889] transition-colors" 
+                  type={showPassword ? "text" : "password"} 
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full pl-10 pr-10 px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#087889] focus:border-[#087889] transition-colors" 
                   placeholder="अपना पासवर्ड दर्ज करें" 
                   required
                 />
-              </div>
-            </div>
-
-            {/* Remember Me & Forgot Password */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <input 
-                  id="remember-me" 
-                  name="remember-me" 
-                  type="checkbox" 
-                  className="h-4 w-4 text-[#087889] focus:ring-[#087889] border-gray-300 rounded cursor-pointer" 
-                />
-                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700 font-medium cursor-pointer">
-                  Remember me
-                </label>
-              </div>
-
-              <div className="text-sm">
-                <a href="#" className="font-bold text-[#f08519] hover:text-orange-600 transition-colors">
-                  पासवर्ड भूल गए?
-                </a>
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-[#087889] transition-colors focus:outline-none"
+                  title={showPassword ? "पासवर्ड छुपाएं" : "पासवर्ड देखें"}
+                >
+                  {showPassword ? (
+                    <EyeOffIcon className="w-5 h-5" />
+                  ) : (
+                    <EyeIcon className="w-5 h-5" />
+                  )}
+                </button>
               </div>
             </div>
 
             {/* Submit Button */}
-            <div>
+            <div className="pt-2">
               <button 
                 type="submit" 
                 className="w-full flex justify-center py-3.5 px-4 border border-transparent rounded-xl shadow-md text-lg font-bold text-white bg-[#087889] hover:bg-[#06616e] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#087889] transition-all transform hover:-translate-y-0.5"

@@ -277,7 +277,7 @@ const AllSahayogList = () => {
                         {item.donorBlock}
                       </td>
                       <td className="py-3.5 px-5 font-medium text-gray-500">
-                        {item.date}
+                        {item.sahyogDate || item.date || (item.submittedAt ? item.submittedAt.slice(0, 10) : '2025-04-10')}
                       </td>
                     </tr>
                   ))}

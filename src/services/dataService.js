@@ -173,6 +173,29 @@ export const rejectRegistration = async (id) => {
   }
 };
 
+export const updateApprovedMember = async (id, updatedData) => {
+  try {
+    const memberRef = doc(db, APPROVED_COL, id);
+    await updateDoc(memberRef, updatedData);
+    return true;
+  } catch (error) {
+    console.error("Error updating approved member:", error);
+    throw error;
+  }
+};
+
+export const updatePendingRegistration = async (id, updatedData) => {
+  try {
+    const pendingRef = doc(db, PENDING_COL, id);
+    await updateDoc(pendingRef, updatedData);
+    return true;
+  } catch (error) {
+    console.error("Error updating pending registration:", error);
+    throw error;
+  }
+};
+
+
 // --- SAHAYOG FORM APIS ---
 
 export const getBetiSahayogList = async () => {
@@ -302,12 +325,65 @@ export const updateHomeAlertStatus = async (id, isActive) => {
   }
 };
 
+export const updateHomeAlert = async (id, alertData) => {
+  try {
+    const alertRef = doc(db, HOME_ALERTS_COL, id);
+    await updateDoc(alertRef, alertData);
+    return true;
+  } catch (error) {
+    console.error("Error updating home alert:", error);
+    throw error;
+  }
+};
+
 export const deleteHomeAlert = async (id) => {
   try {
     await deleteDoc(doc(db, HOME_ALERTS_COL, id));
     return true;
   } catch (error) {
     console.error("Error deleting home alert:", error);
+    throw error;
+  }
+};
+
+export const updateBetiSahayog = async (id, updatedData) => {
+  try {
+    const docRef = doc(db, BETI_COL, id);
+    await updateDoc(docRef, updatedData);
+    return true;
+  } catch (error) {
+    console.error("Error updating Beti Sahayog:", error);
+    throw error;
+  }
+};
+
+export const deleteBetiSahayog = async (id) => {
+  try {
+    await deleteDoc(doc(db, BETI_COL, id));
+    return true;
+  } catch (error) {
+    console.error("Error deleting Beti Sahayog:", error);
+    throw error;
+  }
+};
+
+export const updateNidhanSahayog = async (id, updatedData) => {
+  try {
+    const docRef = doc(db, NIDHAN_COL, id);
+    await updateDoc(docRef, updatedData);
+    return true;
+  } catch (error) {
+    console.error("Error updating Nidhan Sahayog:", error);
+    throw error;
+  }
+};
+
+export const deleteNidhanSahayog = async (id) => {
+  try {
+    await deleteDoc(doc(db, NIDHAN_COL, id));
+    return true;
+  } catch (error) {
+    console.error("Error deleting Nidhan Sahayog:", error);
     throw error;
   }
 };

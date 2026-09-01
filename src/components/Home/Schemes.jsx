@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { getHomePageSettings } from '../../services/dataService';
+import { ArrowRightIcon } from '../common/Icons';
 
 const Schemes = () => {
   // Logo colors
@@ -69,7 +70,9 @@ const Schemes = () => {
               className="w-full py-3.5 rounded-xl font-bold text-white shadow-md transition-transform hover:scale-[1.02] active:scale-95 text-lg block text-center"
               style={{ backgroundColor: logoOrange }}
             >
-              👉 {settings.scheme1BtnText}
+              <span className="flex items-center justify-center gap-2">
+                <ArrowRightIcon className="w-5 h-5" /> {settings.scheme1BtnText}
+              </span>
             </Link>
           </div>
 
@@ -95,7 +98,9 @@ const Schemes = () => {
               className="w-full py-3.5 rounded-xl font-bold text-white shadow-md transition-transform hover:scale-[1.02] active:scale-95 text-lg block text-center"
               style={{ backgroundColor: logoTeal }}
             >
-              👉 {settings.scheme2BtnText}
+              <span className="flex items-center justify-center gap-2">
+                <ArrowRightIcon className="w-5 h-5" /> {settings.scheme2BtnText}
+              </span>
             </Link>
           </div>
 

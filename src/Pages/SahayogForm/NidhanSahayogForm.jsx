@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { addNidhanSahayog } from '../../services/dataService';
 import { compressImage } from '../../utils/imageCompressor';
 import { uploadToImageKit } from '../../utils/imageKitUploader';
+import { CheckCircleIcon } from '../../components/common/Icons';
 
 const NidhanSahayogForm = () => {
   const logoTeal = "#087889";
@@ -98,7 +99,9 @@ const NidhanSahayogForm = () => {
           
           {submitSuccess ? (
             <div className="bg-green-50 border-l-4 border-green-500 p-6 rounded-md text-center py-16">
-              <div className="text-green-500 text-6xl mb-4">✅</div>
+              <div className="flex justify-center mb-4">
+                <CheckCircleIcon className="w-16 h-16 text-green-500" />
+              </div>
               <h2 className="text-2xl font-bold text-gray-800 mb-2">आवेदन सफलतापूर्वक जमा हो गया!</h2>
               <p className="text-gray-600 font-medium">आपका डेटा एडमिन पैनल में सुरक्षित रूप से भेज दिया गया है।</p>
             </div>

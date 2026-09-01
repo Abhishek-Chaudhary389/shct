@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import logoImg from '../assets/shct.png';
+import { LockIcon, MapPinIcon, PhoneIcon, MailIcon, HeartIcon } from './common/Icons';
 
 const Footer = () => {
   // क्लिक करते ही पेज ऊपर से खुलेगा
@@ -87,7 +88,7 @@ const Footer = () => {
               </li>
               <li>
                 <Link to="/admin-login" onClick={handleScrollTop} className="hover:text-[#f08519] transition-colors flex items-center group font-bold text-amber-400">
-                  <span className="text-[#f08519] group-hover:text-[#f08519] mr-2">🔒</span> Admin Panel (एडमिन पैनल)
+                  <LockIcon className="w-4 h-4 text-[#f08519] mr-2" /> Admin Panel (एडमिन पैनल)
                 </Link>
               </li>
             </ul>
@@ -101,15 +102,15 @@ const Footer = () => {
             </h3>
             <div className="space-y-4 text-sm font-medium text-gray-300">
               <div className="flex items-start space-x-3">
-                <span className="text-[#f08519] text-lg mt-1">📍</span>
+                <MapPinIcon className="w-5 h-5 text-[#f08519] shrink-0 mt-0.5" />
                 <p className="leading-relaxed">Head office:- Khalilabad,<br />District- Sant Kabir Nagar (UP) - 272175</p>
               </div>
               <div className="flex items-center space-x-3">
-                <span className="text-[#f08519] text-lg">📞</span>
+                <PhoneIcon className="w-5 h-5 text-[#f08519] shrink-0" />
                 <p>+9838385566</p>
               </div>
               <div className="flex items-center space-x-3">
-                <span className="text-[#f08519] text-lg">✉️</span>
+                <MailIcon className="w-5 h-5 text-[#f08519] shrink-0" />
                 <p>silenthelpct@gmail.com</p>
               </div>
             </div>
@@ -120,8 +121,8 @@ const Footer = () => {
         {/* Bottom Copyright Section */}
         <div className="pt-6 border-t border-gray-800 flex flex-col md:flex-row items-start md:items-center justify-between text-xs text-gray-500 font-medium gap-3">
           <p className="text-left">&copy; {new Date().getFullYear()} Silent Help Charitable Trust. All Rights Reserved.</p>
-          <p className="text-left md:text-right">
-            Designed and Developed by <a href="https://www.snstudio.in/" target="_blank" rel="noopener noreferrer" className="text-amber-400 hover:text-[#f08519] font-bold transition-colors">SN Studio</a> <span className="text-red-500">♥</span>
+          <p className="text-left md:text-right flex items-center gap-1">
+            Designed and Developed by <a href="https://www.snstudio.in/" target="_blank" rel="noopener noreferrer" className="text-amber-400 hover:text-[#f08519] font-bold transition-colors">SN Studio</a> <HeartIcon className="w-3.5 h-3.5 text-red-500 fill-red-500 inline-block" />
           </p>
         </div>
 

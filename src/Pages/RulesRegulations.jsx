@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { ShieldCheckIcon, RupeeIcon, SparklesIcon, ShieldIcon, WeddingIcon, FileTextIcon, ClockIcon } from '../components/common/Icons';
 
 const RulesRegulations = () => {
   // पेज खुलते ही स्क्रीन ऊपर से शुरू हो
@@ -38,7 +39,7 @@ const RulesRegulations = () => {
             <div className="flex items-start gap-3 bg-orange-50 p-4 rounded-xl border-l-4 border-[#f08519]">
               <span className="text-[#f08519] font-bold mt-0.5">▪</span>
               <p className="text-sm sm:text-base font-medium leading-relaxed">
-                SHCT से जुड़े सदस्यों की कम से कम दो बेटियों की शादी के लिए सभी SHCT सदस्य सीधे संबंधित सदस्य के खाते में धनराशि भेजकर बेटी की शादी के लिए आर्थिक सहायता करते हैं।
+                SHCT से जुड़े हुए वैधानिक सदस्यों को बेटियों की शादी में भी आर्थिक मदद की जाती है।
               </p>
             </div>
 
@@ -53,7 +54,7 @@ const RulesRegulations = () => {
           {/* Section: यह काम कैसे करता है? */}
           <div>
             <h3 className="text-xl font-bold text-[#087889] mb-4 flex items-center gap-2 border-b-2 border-[#087889] pb-2 inline-block">
-              <span>🎯</span> यह काम कैसे करता है? (एक के लिए सब, सबके लिए एक):
+              <ShieldCheckIcon className="w-5 h-5 text-[#087889]" /> यह काम कैसे करता है? (एक के लिए सब, सबके लिए एक):
             </h3>
             <div className="space-y-3 text-sm sm:text-base text-gray-700">
               <div className="flex items-start gap-3">
@@ -82,7 +83,7 @@ const RulesRegulations = () => {
           {/* Section: इससे जुड़ने का खर्च क्या है? */}
           <div className="bg-gray-50 p-6 rounded-xl border border-gray-200">
             <h3 className="text-xl font-bold text-[#087889] mb-3 flex items-center gap-2">
-              <span>💰</span> इससे जुड़ने का खर्च क्या है?
+              <RupeeIcon className="w-5 h-5 text-[#087889]" /> इससे जुड़ने का खर्च क्या है?
             </h3>
             <p className="text-sm sm:text-base text-gray-700 leading-relaxed">
               इसमें जुड़ने के लिए कोई बड़ा प्रीमियम या हजारों रुपये नहीं देने होते हैं। कोई भी आम व्यक्ति (प्राइवेट टीचर, किसान, मजदूर, दुकानदार, गृहणी, छात्राएं, प्राइवेट सेक्टर से जुड़े कर्मचारी) मात्र <strong className="text-[#f08519] text-lg">₹200 का वार्षिक दान (Yearly Donation)</strong> देकर SHCT का सदस्य बन सकते हैं।
@@ -92,19 +93,19 @@ const RulesRegulations = () => {
           {/* Section: इससे क्या-क्या फायदे मिलते हैं? */}
           <div>
             <h3 className="text-xl font-bold text-[#087889] mb-4 flex items-center gap-2 border-b-2 border-[#087889] pb-2 inline-block">
-              <span>🌟</span> इससे क्या-क्या फायदे मिलते हैं?
+              <SparklesIcon className="w-5 h-5 text-[#087889]" /> इससे क्या-क्या फायदे मिलते हैं?
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="bg-teal-50/50 p-5 rounded-xl border border-teal-100 shadow-sm">
-                <h4 className="font-bold text-[#087889] mb-2 flex items-center gap-2">🛡️ परिवार की सुरक्षा</h4>
+                <h4 className="font-bold text-[#087889] mb-2 flex items-center gap-2"><ShieldIcon className="w-4 h-4 text-[#087889]" /> परिवार की सुरक्षा</h4>
                 <p className="text-xs sm:text-sm text-gray-600">सदस्य के न रहने पर उसके परिवार या बच्चों को लाखों रुपये की सीधी मदद मिलती है ताकि वे बेसहारा न हों।</p>
               </div>
               <div className="bg-orange-50/50 p-5 rounded-xl border border-orange-100 shadow-sm">
-                <h4 className="font-bold text-[#f08519] mb-2 flex items-center gap-2">💒 बेटी की शादी</h4>
+                <h4 className="font-bold text-[#f08519] mb-2 flex items-center gap-2"><WeddingIcon className="w-4 h-4 text-[#f08519]" /> बेटी की शादी</h4>
                 <p className="text-xs sm:text-sm text-gray-600">सदस्य की बेटी के विवाह के समय सभी लोग मिलकर आर्थिक सहयोग (शगुन) भेजते हैं।</p>
               </div>
               <div className="bg-teal-50/50 p-5 rounded-xl border border-teal-100 shadow-sm">
-                <h4 className="font-bold text-[#087889] mb-2 flex items-center gap-2">📚 गरीब बच्चों की पढ़ाई</h4>
+                <h4 className="font-bold text-[#087889] mb-2 flex items-center gap-2"><FileTextIcon className="w-4 h-4 text-[#087889]" /> गरीब बच्चों की पढ़ाई</h4>
                 <p className="text-xs sm:text-sm text-gray-600">संस्था के मुख्य फंड से अनाथ और गरीब बच्चों को किताबें और मुफ्त शिक्षा दी जाती है।</p>
               </div>
             </div>

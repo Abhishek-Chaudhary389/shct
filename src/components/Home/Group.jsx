@@ -1,5 +1,6 @@
  import React, { useState, useEffect } from 'react';
 import { getHomeAlerts, getHomePageSettings } from '../../services/dataService';
+import { AlertCircleIcon, LightbulbIcon, FileTextIcon, CreditCardIcon, ArrowRightIcon } from '../common/Icons';
 
 const Group = () => {
   // Theme Colors
@@ -59,7 +60,9 @@ const Group = () => {
           {/* Alert Box */}
           <div className="bg-white border-l-[6px] border-[#f08519] rounded-xl shadow-md p-6 lg:p-8 hover:shadow-lg transition-shadow">
             <div className="flex items-center mb-4">
-              <span className="bg-orange-100 text-[#f08519] p-3 rounded-full mr-4 text-xl">🔔</span>
+              <span className="bg-orange-100 text-[#f08519] p-2.5 rounded-full mr-4 flex items-center justify-center">
+                <AlertCircleIcon className="w-6 h-6" />
+              </span>
               <h2 className="text-2xl font-bold text-gray-800">{settings.alertTitle}</h2>
             </div>
             <ul className="space-y-3 text-gray-700 font-medium text-base">
@@ -75,7 +78,9 @@ const Group = () => {
           {/* Instructions Box */}
           <div className="bg-white border-l-[6px] border-[#087889] rounded-xl shadow-md p-6 lg:p-8 hover:shadow-lg transition-shadow">
             <div className="flex items-center mb-4">
-              <span className="bg-teal-100 text-[#087889] p-3 rounded-full mr-4 text-xl">💡</span>
+              <span className="bg-teal-100 text-[#087889] p-2.5 rounded-full mr-4 flex items-center justify-center">
+                <LightbulbIcon className="w-6 h-6" />
+              </span>
               <h2 className="text-2xl font-bold text-gray-800">{settings.instructionTitle}</h2>
             </div>
             <p className="text-gray-600 font-medium text-sm leading-relaxed text-justify mb-3 whitespace-pre-line">
@@ -92,7 +97,7 @@ const Group = () => {
         {/* ================= GROUP DIRECTORY ================= */}
         <div className="mb-14">
           <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center border-b-2 border-gray-200 pb-2">
-            <span className="text-[#f08519] mr-3">📋</span> ग्रुप सूची (Group Directory)
+            <FileTextIcon className="w-6 h-6 text-[#f08519] mr-3" /> ग्रुप सूची (Group Directory)
           </h2>
           
           {loading ? (
@@ -120,7 +125,7 @@ const Group = () => {
                     <div className="text-white px-3 md:px-4 py-1.5 md:py-2 rounded-md font-bold text-xs md:text-sm whitespace-nowrap shadow-sm shrink-0" style={{ backgroundColor: logoTeal }}>
                       GROUP - {item.group}
                     </div>
-                    <span className="text-base md:text-xl mx-2 md:mx-3 shrink-0" style={{ color: logoOrange }}>👉</span>
+                    <ArrowRightIcon className="w-4 h-4 mx-2 md:mx-3 shrink-0 text-[#f08519]" />
                     <div className="font-bold text-gray-700 text-xs md:text-base truncate">
                       {item.member} {item.address ? `(${item.address.split(',')[0].replace('जिला-','').trim()})` : ''}
                     </div>
@@ -131,10 +136,10 @@ const Group = () => {
           )}
         </div>
 
-        {/* ================= GROUP DETAILS CARDS (NEW PHOTO DESIGN) ================= */}
+        {/* ================= GROUP DETAILS CARDS ================= */}
         <div className="space-y-10">
           <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center border-b-2 border-gray-200 pb-2">
-            <span className="text-[#087889] mr-3">💳</span> ग्रुप अनुसार खाता विवरण
+            <CreditCardIcon className="w-6 h-6 text-[#087889] mr-3" /> ग्रुप अनुसार खाता विवरण
           </h2>
           
           {groupDetails.map((detail, index) => (

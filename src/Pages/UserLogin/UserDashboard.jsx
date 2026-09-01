@@ -18,6 +18,27 @@ import html2canvas from 'html2canvas-pro';
 import { logoBase64 } from '../../utils/logoBase64';
 import { compressImage } from '../../utils/imageCompressor';
 import { uploadToImageKit } from '../../utils/imageKitUploader';
+import {
+  UserIcon,
+  HomeIcon,
+  LogoutIcon,
+  AlertCircleIcon,
+  AlertTriangleIcon,
+  SparklesIcon,
+  LockIcon,
+  CreditCardIcon,
+  HandshakeIcon,
+  DownloadIcon,
+  CheckIcon,
+  CheckCircleIcon,
+  ReceiptIcon,
+  ChartBarIcon,
+  FileTextIcon,
+  WeddingIcon,
+  DoveIcon,
+  KeyIcon,
+  ShieldCheckIcon
+} from '../../components/common/Icons';
 
 const normalizeGroup = (groupStr) => {
   if (!groupStr) return '';
@@ -151,7 +172,7 @@ const UserDashboard = () => {
             name: foundUser.name || '',
             group: displayGroup,
             aadhaar: foundUser.aadhaar || '',
-            fatherName: foundUser.fatherName || '',
+            fatherName: foundUser.fatherName || foundUser.fatherOrHusbandName || '',
             dob: foundUser.dob || '',
             mobile: foundUser.mobile || '',
             email: foundUser.email || '',
@@ -228,17 +249,17 @@ const UserDashboard = () => {
   };
 
   const menuItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: '⊞' },
-    { id: 'profile', label: 'Profile', icon: '👤' },
-    { id: 'idcard', label: 'ID Card', icon: '🪪' },
-    { id: 'upload_death', label: 'Upload Nidhan Receipt', icon: '☁️' },
-    { id: 'view_sahyog', label: 'View All Nidhan / Sahyog List', icon: '📚' },
-    { id: 'upload_beti', label: 'Upload Beti Vivah Sahyog Receipt', icon: '☁️' },
-    { id: 'view_beti', label: 'View All Beti Vivah Sahyog List', icon: '📚' },
-    { id: 'upload_varshik', label: 'Upload Varshik Dan', icon: '☁️' },
-    { id: 'view_varshik', label: 'View All Varshik Dan Suchi', icon: '📑' },
-    { id: 'referral', label: 'Referral Points', icon: '👥' },
-    { id: 'password', label: 'Update Password', icon: '👁️' },
+    { id: 'dashboard', label: 'Dashboard' },
+    { id: 'profile', label: 'Profile' },
+    { id: 'idcard', label: 'ID Card' },
+    { id: 'upload_death', label: 'Upload Nidhan Receipt' },
+    { id: 'view_sahyog', label: 'View All Nidhan / Sahyog List' },
+    { id: 'upload_beti', label: 'Upload Beti Vivah Sahyog Receipt' },
+    { id: 'view_beti', label: 'View All Beti Vivah Sahyog List' },
+    { id: 'upload_varshik', label: 'Upload Varshik Dan' },
+    { id: 'view_varshik', label: 'View All Varshik Dan Suchi' },
+    { id: 'referral', label: 'Referral Points' },
+    { id: 'password', label: 'Update Password' },
   ];
 
   // ================= VIEWS =================
@@ -247,9 +268,9 @@ const UserDashboard = () => {
     <div className="p-6 space-y-8">
       {/* Welcome Banner */}
       <div className="bg-[#7c69c9] rounded-lg p-8 flex items-center justify-between text-white shadow-sm relative overflow-hidden">
-        <h2 className="text-xl font-bold tracking-wide relative z-10">WELCOME TO FAST RELIEF CHARITABLE TRUST</h2>
+        <h2 className="text-xl font-bold tracking-wide relative z-10">WELCOME TO SILENT HELP CHARITABLE TRUST</h2>
         <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center relative z-10">
-          <span className="text-3xl text-white">📦</span>
+          <ShieldCheckIcon className="w-8 h-8 text-white" />
         </div>
         <div className="absolute right-0 top-0 w-64 h-full bg-gradient-to-l from-white/10 to-transparent transform -skew-x-12 translate-x-8"></div>
       </div>
@@ -257,20 +278,20 @@ const UserDashboard = () => {
       {/* Group Cooperation Alerts Section */}
       <div>
         <h3 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-          <span>🔔</span> आपके ग्रुप के सक्रिय सहयोग अलर्ट (Active Alerts for {user.group})
+          <AlertCircleIcon className="w-5 h-5 text-amber-500 shrink-0" /> आपके ग्रुप के सक्रिय सहयोग अलर्ट (Active Alerts for {user.group})
         </h3>
 
         {activeAlerts.length === 0 ? (
           <div className="bg-white rounded-xl p-8 border border-gray-200 shadow-sm text-center">
             {isGroupsActive ? (
               <>
-                <span className="text-4xl mb-3 block">🎉</span>
+                <SparklesIcon className="w-10 h-10 text-emerald-500 mx-auto mb-3" />
                 <p className="text-gray-600 font-bold text-lg">आपके ग्रुप ({user.group}) में वर्तमान में कोई सक्रिय सहयोग अलर्ट नहीं है।</p>
                 <p className="text-gray-400 text-sm mt-1">जब एडमिन आपके ग्रुप के लिए नया सहयोग अलर्ट लाइव करेगा, तो उसका विवरण यहाँ दिखाई देगा।</p>
               </>
             ) : (
               <>
-                <span className="text-4xl mb-3 block">🔒</span>
+                <LockIcon className="w-10 h-10 text-gray-400 mx-auto mb-3" />
                 <p className="text-gray-600 font-bold text-lg">ग्रुप प्रबंधन वर्तमान में बंद है।</p>
                 <p className="text-gray-400 text-sm mt-1">जब एडमिन द्वारा ग्रुप प्रबंधन सक्रिय किया जाएगा, तब आपके ग्रुप के अलर्ट यहाँ प्रदर्शित होंगे।</p>
               </>
@@ -298,7 +319,7 @@ const UserDashboard = () => {
                   {/* Beneficiary Details */}
                   <div className="space-y-3 bg-white p-5 rounded-xl border border-blue-50/60 shadow-sm">
                     <h5 className="font-extrabold text-gray-800 border-b border-gray-100 pb-2 text-base flex items-center gap-2">
-                      <span>👤</span> लाभार्थी का विवरण (Beneficiary Info)
+                      <UserIcon className="w-4 h-4 text-gray-500" /> लाभार्थी का विवरण (Beneficiary Info)
                     </h5>
                     <div className="space-y-2 text-gray-700 text-sm font-semibold">
                       <p><span className="text-gray-400 font-bold">नाम:</span> {alert.member}</p>
@@ -322,7 +343,7 @@ const UserDashboard = () => {
                   {/* Bank Details */}
                   <div className="space-y-3 bg-white p-5 rounded-xl border border-blue-50/60 shadow-sm">
                     <h5 className="font-extrabold text-[#f08519] border-b border-gray-100 pb-2 text-base flex items-center gap-2">
-                      <span>💳</span> सहयोग बैंक खाता विवरण (Bank Details)
+                      <CreditCardIcon className="w-4 h-4 text-[#f08519]" /> सहयोग बैंक खाता विवरण (Bank Details)
                     </h5>
                     <div className="space-y-2 text-gray-700 text-sm font-semibold uppercase">
                       <p><span className="text-gray-400 font-bold normal-case">Account Name:</span> {alert.accName}</p>
@@ -353,9 +374,10 @@ const UserDashboard = () => {
                 <div className="mt-8 text-center border-t border-blue-100 pt-6">
                   <button 
                     onClick={() => handleHelpClick(alert)}
-                    className="bg-[#f08519] hover:bg-orange-600 text-white font-extrabold px-8 py-3 rounded-xl shadow-md transition-all transform hover:-translate-y-0.5 w-full sm:w-auto"
+                    className="bg-[#f08519] hover:bg-orange-600 text-white font-extrabold px-8 py-3 rounded-xl shadow-md transition-all transform hover:-translate-y-0.5 w-full sm:w-auto flex items-center justify-center gap-2 mx-auto"
                   >
-                    🤝 सहयोग रसीद अपलोड करें (Upload Help Receipt)
+                    <HandshakeIcon className="w-5 h-5" />
+                    <span>सहयोग रसीद अपलोड करें (Upload Help Receipt)</span>
                   </button>
                 </div>
               </div>
@@ -495,7 +517,7 @@ const UserDashboard = () => {
           onClick={downloadIDCard}
           className="bg-[#087889] hover:bg-[#06616e] text-white px-6 py-2.5 rounded-lg font-bold shadow-md transition-colors flex items-center gap-2"
         >
-          <span>📥</span> Download ID Card
+          <DownloadIcon className="w-5 h-5" /> Download ID Card
         </button>
       </div>
 
@@ -611,7 +633,7 @@ const UserDashboard = () => {
         
         {myDonations.length === 0 ? (
           <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 text-center max-w-md mx-auto py-12">
-            <div className="text-5xl mb-4">📄</div>
+            <ReceiptIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
             <p className="text-lg text-gray-800 font-bold mb-1">No Records Found</p>
             <p className="text-sm text-gray-500 font-medium">You have not submitted annual/renewal fee yet.</p>
           </div>
@@ -642,7 +664,7 @@ const UserDashboard = () => {
                       {/* Premium Badge */}
                       <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border ${
                         isRenewal 
-                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200/50' 
+                           ? 'bg-emerald-50 text-emerald-700 border-emerald-200/50' 
                           : 'bg-blue-50 text-blue-700 border-blue-200/50'
                       }`}>
                         {isRenewal ? "RENEWAL (नवीनीकरण)" : "REGISTRATION (पंजीकरण)"}
@@ -676,14 +698,12 @@ const UserDashboard = () => {
 
                   {/* Action Section */}
                   <div className="p-4 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
-                    <span className="text-[10px] text-gray-400 font-medium">Receipt verified ✅</span>
+                    <span className="text-[10px] text-gray-400 font-medium flex items-center gap-1">Receipt verified <CheckIcon className="w-3.5 h-3.5 text-emerald-500 inline" /></span>
                     <button
                       onClick={() => triggerDownload(d, 'varshik')}
                       className="flex items-center gap-1.5 bg-[#8a3324] hover:bg-[#a6402f] text-white px-3.5 py-1.5 rounded-lg text-xs font-bold shadow-sm transition-all duration-200 cursor-pointer active:scale-95"
                     >
-                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
-                      </svg>
+                      <DownloadIcon className="w-3.5 h-3.5" />
                       Download Receipt
                     </button>
                   </div>
@@ -773,7 +793,7 @@ const UserDashboard = () => {
         <div className="bg-white rounded-xl shadow-md border border-gray-100 p-6">
           {uploadSuccess ? (
             <div className="bg-green-50 border-l-4 border-green-500 p-6 rounded-md text-center py-16">
-              <div className="text-green-500 text-6xl mb-4">✅</div>
+              <CheckCircleIcon className="w-16 h-16 text-green-500 mx-auto mb-4" />
               <h2 className="text-2xl font-bold text-gray-800 mb-2">नवीनीकरण रसीद सफलतापूर्वक अपलोड की गई!</h2>
               <p className="text-gray-600 font-medium">आपकी रसीद एडमिन के पास सत्यापन (Verification) के लिए भेज दी गई है।</p>
             </div>
@@ -837,9 +857,9 @@ const UserDashboard = () => {
                   accept="image/*" 
                   required 
                   onChange={handleFileChange} 
-                  className="w-full px-3 py-2 border rounded-lg text-sm bg-gray-50 focus:outline-none"
+                  className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#087889] file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-[#087889] hover:file:bg-teal-100 transition-colors cursor-pointer text-sm text-gray-600"
                 />
-                {receiptImg && <span className="text-xs text-green-600 font-bold block mt-1">✅ रसीद संलग्न कर दी गई है</span>}
+                {receiptImg && <span className="text-xs text-green-600 font-bold block mt-1 flex items-center gap-1"><CheckIcon className="w-3.5 h-3.5" /> रसीद संलग्न कर दी गई है</span>}
               </div>
 
               {/* Submit Button */}
@@ -966,7 +986,7 @@ const UserDashboard = () => {
         <div className="p-6">
           <h3 className="text-xl font-bold text-gray-800 mb-6">Running Sahyog</h3>
           <div className="bg-white p-12 text-center rounded-lg shadow-sm border border-gray-200 border-dashed">
-            <span className="text-4xl mb-4 block">📭</span>
+            <ReceiptIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
             <p className="text-gray-500 font-extrabold text-lg">Not Any Sahyog Receipt</p>
             <p className="text-gray-400 text-sm mt-1">वर्तमान में आपके ग्रुप ({user.group}) के लिए कोई सहयोग अलर्ट सक्रिय नहीं है।</p>
             <button 
@@ -987,7 +1007,7 @@ const UserDashboard = () => {
         <div className="bg-white rounded-xl shadow-md border border-gray-100 p-6">
           {uploadSuccess ? (
             <div className="bg-green-50 border-l-4 border-green-500 p-6 rounded-md text-center py-16">
-              <div className="text-green-500 text-6xl mb-4">✅</div>
+              <CheckCircleIcon className="w-16 h-16 text-green-500 mx-auto mb-4" />
               <h2 className="text-2xl font-bold text-gray-800 mb-2">रसीद सफलतापूर्वक अपलोड की गई!</h2>
               <p className="text-gray-600 font-medium">आपकी सहयोग रसीद एडमिन के पास सत्यापन (Verification) के लिए भेज दी गई है।</p>
             </div>
@@ -1084,9 +1104,9 @@ const UserDashboard = () => {
                   accept="image/*" 
                   required 
                   onChange={handleFileChange} 
-                  className="w-full px-3 py-2 border rounded-lg text-sm bg-gray-50 focus:outline-none"
+                  className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#087889] file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-[#087889] hover:file:bg-teal-100 transition-colors cursor-pointer text-sm text-gray-600"
                 />
-                {receiptImg && <span className="text-xs text-green-600 font-bold block mt-1">✅ रसीद संलग्न कर दी गई है</span>}
+                {receiptImg && <span className="text-xs text-green-600 font-bold block mt-1 flex items-center gap-1"><CheckIcon className="w-3.5 h-3.5" /> रसीद संलग्न कर दी गई है</span>}
               </div>
 
               {/* Submit Button */}
@@ -1119,7 +1139,7 @@ const UserDashboard = () => {
         
         {approvedReceipts.length === 0 ? (
           <div className="bg-white rounded-xl p-8 border border-gray-200 shadow-sm text-center">
-            <span className="text-4xl mb-3 block">📑</span>
+            <ReceiptIcon className="w-10 h-10 text-gray-400 mx-auto mb-3" />
             <p className="text-gray-500 font-extrabold text-lg">वर्तमान में कोई स्वीकृत सहयोग रसीद उपलब्ध नहीं है।</p>
           </div>
         ) : (
@@ -1305,7 +1325,7 @@ const UserDashboard = () => {
         <div className="p-6">
           <h3 className="text-xl font-bold text-gray-800 mb-6">Running Sahyog</h3>
           <div className="bg-white p-12 text-center rounded-lg shadow-sm border border-gray-200 border-dashed">
-            <span className="text-4xl mb-4 block">📭</span>
+            <ReceiptIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
             <p className="text-gray-500 font-extrabold text-lg">Not Any Sahyog Receipt</p>
             <p className="text-gray-400 text-sm mt-1">वर्तमान में आपके ग्रुप ({user.group}) के लिए कोई सहयोग अलर्ट सक्रिय नहीं है।</p>
             <button 
@@ -1326,7 +1346,7 @@ const UserDashboard = () => {
         <div className="bg-white rounded-xl shadow-md border border-gray-100 p-6">
           {uploadSuccess ? (
             <div className="bg-green-50 border-l-4 border-green-500 p-6 rounded-md text-center py-16">
-              <div className="text-green-500 text-6xl mb-4">✅</div>
+              <CheckCircleIcon className="w-16 h-16 text-green-500 mx-auto mb-4" />
               <h2 className="text-2xl font-bold text-gray-800 mb-2">रसीद सफलतापूर्वक अपलोड की गई!</h2>
               <p className="text-gray-600 font-medium">आपकी सहयोग रसीद एडमिन के पास सत्यापन (Verification) के लिए भेज दी गई है।</p>
             </div>
@@ -1423,9 +1443,9 @@ const UserDashboard = () => {
                   accept="image/*" 
                   required 
                   onChange={handleFileChange} 
-                  className="w-full px-3 py-2 border rounded-lg text-sm bg-gray-50 focus:outline-none"
+                  className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#087889] file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-[#087889] hover:file:bg-teal-100 transition-colors cursor-pointer text-sm text-gray-600"
                 />
-                {receiptImg && <span className="text-xs text-green-600 font-bold block mt-1">✅ रसीद संलग्न कर दी गई है</span>}
+                {receiptImg && <span className="text-xs text-green-600 font-bold block mt-1 flex items-center gap-1"><CheckIcon className="w-3.5 h-3.5" /> रसीद संलग्न कर दी गई है</span>}
               </div>
 
               {/* Submit Button */}
@@ -1458,7 +1478,7 @@ const UserDashboard = () => {
         
         {approvedReceipts.length === 0 ? (
           <div className="bg-white rounded-xl p-8 border border-gray-200 shadow-sm text-center">
-            <span className="text-4xl mb-3 block">📑</span>
+            <ReceiptIcon className="w-10 h-10 text-gray-400 mx-auto mb-3" />
             <p className="text-gray-500 font-extrabold text-lg">वर्तमान में कोई स्वीकृत सहयोग रसीद उपलब्ध नहीं है।</p>
           </div>
         ) : (
@@ -1586,19 +1606,19 @@ const UserDashboard = () => {
           <div className="absolute top-0 right-0 w-24 h-24 bg-[#087889] opacity-5 rounded-bl-full -z-10"></div>
           
           <h3 className="text-xl font-bold text-gray-800 mb-2 flex items-center gap-2">
-            <span>🔒</span> पासवर्ड बदलें (Change Password)
+            <LockIcon className="w-5 h-5 text-gray-700" /> पासवर्ड बदलें (Change Password)
           </h3>
           <p className="text-xs text-gray-400 font-medium mb-6">अपने लॉगिन अकाउंट की सुरक्षा के लिए एक मजबूत पासवर्ड बनाएं।</p>
 
           {successMessage && (
             <div className="mb-4 p-3 bg-green-50 border-l-4 border-green-500 text-green-700 text-sm font-semibold rounded-r-lg flex items-center gap-2">
-              <span>✅</span> {successMessage}
+              <CheckCircleIcon className="w-4 h-4 text-green-500" /> {successMessage}
             </div>
           )}
 
           {errorMessage && (
             <div className="mb-4 p-3 bg-red-50 border-l-4 border-red-500 text-red-700 text-sm font-semibold rounded-r-lg flex items-center gap-2">
-              <span>⚠️</span> {errorMessage}
+              <AlertTriangleIcon className="w-4 h-4 text-red-500" /> {errorMessage}
             </div>
           )}
 
@@ -1659,7 +1679,7 @@ const UserDashboard = () => {
     <div className="p-6">
       <h3 className="text-xl font-bold text-gray-800 mb-6">{title}</h3>
       <div className="bg-white p-12 text-center rounded-lg shadow-sm border border-gray-200 border-dashed">
-        <span className="text-4xl mb-4 block">🚧</span>
+        <AlertCircleIcon className="w-12 h-12 text-amber-500 mx-auto mb-4" />
         <p className="text-gray-500 font-medium">This section is currently under development.</p>
         <button 
           onClick={() => setActiveTab('dashboard')}
@@ -1721,7 +1741,7 @@ const UserDashboard = () => {
                     : 'hover:bg-[#384857] hover:text-white border-l-4 border-transparent'
                 }`}
               >
-                <span className="text-lg opacity-85">⊞</span>
+                <ChartBarIcon className="w-5 h-5 opacity-85 shrink-0" />
                 <span className="text-left flex-1">Dashboard</span>
               </button>
             </li>
@@ -1736,7 +1756,7 @@ const UserDashboard = () => {
                     : 'hover:bg-[#384857] hover:text-white border-l-4 border-transparent'
                 }`}
               >
-                <span className="text-lg opacity-85">👤</span>
+                <UserIcon className="w-5 h-5 opacity-85 shrink-0" />
                 <span className="text-left flex-1">Profile</span>
               </button>
             </li>
@@ -1751,7 +1771,7 @@ const UserDashboard = () => {
                     : 'hover:bg-[#384857] hover:text-white border-l-4 border-transparent'
                 }`}
               >
-                <span className="text-lg opacity-85">🪪</span>
+                <CreditCardIcon className="w-5 h-5 opacity-85 shrink-0" />
                 <span className="text-left flex-1">ID Card</span>
               </button>
             </li>
@@ -1764,7 +1784,7 @@ const UserDashboard = () => {
                   className="w-full flex items-center justify-between px-5 py-3 text-sm font-medium transition-colors hover:bg-[#384857] hover:text-white border-l-4 border-transparent"
                 >
                   <div className="flex items-center gap-3">
-                    <span className="text-lg opacity-85">📋</span>
+                    <FileTextIcon className="w-5 h-5 opacity-85 shrink-0" />
                     <span>Aavedan Form</span>
                   </div>
                   <svg className={`w-4 h-4 transition-transform ${isAavedanMenuOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
@@ -1776,13 +1796,13 @@ const UserDashboard = () => {
                       to="/beti-sahayog-form"
                       className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-xs font-medium text-gray-400 hover:bg-[#1e2730] hover:text-white transition-all"
                     >
-                      <span>👩</span> <span className="text-left flex-1">Beti Aavedan Form</span>
+                      <WeddingIcon className="w-4 h-4 text-pink-400 shrink-0" /> <span className="text-left flex-1">Beti Aavedan Form</span>
                     </Link>
                     <Link 
                       to="/nidhan-sahayog-form"
                       className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-xs font-medium text-gray-400 hover:bg-[#1e2730] hover:text-white transition-all"
                     >
-                      <span>🕊️</span> <span className="text-left flex-1">Nidhan Aavedan Form</span>
+                      <DoveIcon className="w-4 h-4 text-teal-300 shrink-0" /> <span className="text-left flex-1">Nidhan Aavedan Form</span>
                     </Link>
                   </div>
                 )}
@@ -1799,7 +1819,7 @@ const UserDashboard = () => {
                     : 'hover:bg-[#384857] hover:text-white border-l-4 border-transparent'
                 }`}
               >
-                <span className="text-lg opacity-85">☁️</span>
+                <DownloadIcon className="w-5 h-5 opacity-85 shrink-0 rotate-180" />
                 <span className="text-left flex-1">Upload Nidhan Receipt</span>
               </button>
             </li>
@@ -1814,7 +1834,7 @@ const UserDashboard = () => {
                     : 'hover:bg-[#384857] hover:text-white border-l-4 border-transparent'
                 }`}
               >
-                <span className="text-lg opacity-85">📚</span>
+                <ReceiptIcon className="w-5 h-5 opacity-85 shrink-0" />
                 <span className="text-left flex-1">View All Nidhan / Sahyog List</span>
               </button>
             </li>
@@ -1829,7 +1849,7 @@ const UserDashboard = () => {
                     : 'hover:bg-[#384857] hover:text-white border-l-4 border-transparent'
                 }`}
               >
-                <span className="text-lg opacity-85">☁️</span>
+                <DownloadIcon className="w-5 h-5 opacity-85 shrink-0 rotate-180" />
                 <span className="text-left flex-1">Upload Beti Vivah Sahyog Receipt</span>
               </button>
             </li>
@@ -1844,7 +1864,7 @@ const UserDashboard = () => {
                     : 'hover:bg-[#384857] hover:text-white border-l-4 border-transparent'
                 }`}
               >
-                <span className="text-lg opacity-85">📚</span>
+                <ReceiptIcon className="w-5 h-5 opacity-85 shrink-0" />
                 <span className="text-left flex-1">View All Beti Vivah Sahyog List</span>
               </button>
             </li>
@@ -1859,7 +1879,7 @@ const UserDashboard = () => {
                     : 'hover:bg-[#384857] hover:text-white border-l-4 border-transparent'
                 }`}
               >
-                <span className="text-lg opacity-85">☁️</span>
+                <DownloadIcon className="w-5 h-5 opacity-85 shrink-0 rotate-180" />
                 <span className="text-left flex-1">Upload Varshik Dan</span>
               </button>
             </li>
@@ -1874,7 +1894,7 @@ const UserDashboard = () => {
                     : 'hover:bg-[#384857] hover:text-white border-l-4 border-transparent'
                 }`}
               >
-                <span className="text-lg opacity-85">📑</span>
+                <ReceiptIcon className="w-5 h-5 opacity-85 shrink-0" />
                 <span className="text-left flex-1">View All Varshik Dan Suchi</span>
               </button>
             </li>
@@ -1889,7 +1909,7 @@ const UserDashboard = () => {
                     : 'hover:bg-[#384857] hover:text-white border-l-4 border-transparent'
                 }`}
               >
-                <span className="text-lg opacity-85">👥</span>
+                <HandshakeIcon className="w-5 h-5 opacity-85 shrink-0" />
                 <span className="text-left flex-1">Referral Points</span>
               </button>
             </li>
@@ -1904,7 +1924,7 @@ const UserDashboard = () => {
                     : 'hover:bg-[#384857] hover:text-white border-l-4 border-transparent'
                 }`}
               >
-                <span className="text-lg opacity-85">👁️</span>
+                <KeyIcon className="w-5 h-5 opacity-85 shrink-0" />
                 <span className="text-left flex-1">Update Password</span>
               </button>
             </li>
@@ -1927,12 +1947,20 @@ const UserDashboard = () => {
               </span>
             )}
           </div>
-          <button 
-            onClick={handleLogout}
-            className="flex items-center gap-1.5 text-sm text-red-500 hover:text-red-700 font-medium transition-colors"
-          >
-            <span>⏻</span> Logout
-          </button>
+          <div className="flex items-center gap-3">
+            <Link 
+              to="/" 
+              className="flex items-center gap-1.5 text-sm font-semibold text-[#087889] hover:text-[#06616e] bg-teal-50 hover:bg-teal-100 px-3 py-1.5 rounded-lg border border-teal-200 transition-all"
+            >
+              <HomeIcon className="w-4 h-4" /> <span className="hidden sm:inline">Home Website</span>
+            </Link>
+            <button 
+              onClick={handleLogout}
+              className="flex items-center gap-1.5 text-sm text-red-500 hover:text-red-700 font-medium transition-colors"
+            >
+              <LogoutIcon className="w-4 h-4" /> Logout
+            </button>
+          </div>
         </header>
 
         {/* DYNAMIC VIEW CONTENT */}

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { addGreenParyavaran } from '../../services/dataService';
 import { compressImage } from '../../utils/imageCompressor';
+import { LeafIcon, CheckCircleIcon } from '../../components/common/Icons';
 
 const GreenParyavaranForm = () => {
   const logoTeal = "#087889";
@@ -83,8 +84,8 @@ const GreenParyavaranForm = () => {
           <h1 className="text-3xl md:text-4xl font-extrabold text-white tracking-wide relative z-10">
             ग्रीन पर्यावरण अभियान
           </h1>
-          <p className="text-green-100 mt-2 font-medium relative z-10">
-            प्रकृति को बचाने की आपकी पहल का हम स्वागत करते हैं। 🌿
+          <p className="text-green-100 mt-2 font-medium relative z-10 flex items-center justify-center gap-1.5">
+            प्रकृति को बचाने की आपकी पहल का हम स्वागत करते हैं। <LeafIcon className="w-4 h-4 text-green-200 inline" />
           </p>
         </div>
 
@@ -93,7 +94,9 @@ const GreenParyavaranForm = () => {
           
           {submitSuccess ? (
             <div className="bg-green-50 border-l-4 border-green-500 p-6 rounded-md text-center py-16">
-              <div className="text-green-500 text-6xl mb-4">✅</div>
+              <div className="flex justify-center mb-4">
+                <CheckCircleIcon className="w-16 h-16 text-green-500" />
+              </div>
               <h2 className="text-2xl font-bold text-gray-800 mb-2">आवेदन सफलतापूर्वक जमा हो गया!</h2>
               <p className="text-gray-600 font-medium">आपका डेटा एडमिन पैनल में सुरक्षित रूप से भेज दिया गया है।</p>
             </div>

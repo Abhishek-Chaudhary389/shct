@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import logoImg from '../../assets/shct.png';
+import { ArrowRightIcon } from '../common/Icons';
 import arifBroadwayImg from '../../assets/ARIF BROADWAY.jpeg';
 import tasadduqHusainImg from '../../assets/तसद्दुक हुसैन.jpeg';
 import akhtarKhanImg from '../../assets/अख़्तर खान.jpeg';
@@ -221,7 +222,7 @@ const AboutPreview = () => {
             to="/about-shct" 
             className="inline-flex items-center gap-2.5 px-8 py-3.5 bg-gradient-to-r from-[#087889] to-[#0b90a4] text-white font-extrabold rounded-full shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300"
           >
-            और जानें (More View) ➔
+            और जानें (More View) <ArrowRightIcon className="w-4 h-4" />
           </Link>
         </div>
 

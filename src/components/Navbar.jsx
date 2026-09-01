@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import logoImg from '../assets/shct.png';
+import { UserIcon } from './common/Icons';
 
 const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -23,7 +24,11 @@ const Navbar = () => {
   const navigate = useNavigate();
   const isActive = (path) => location.pathname === path;
 
-  const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+  const [isLoggedIn, setIsLoggedIn] = useState(localStorage.getItem('isLoggedIn') === 'true');
+
+  useEffect(() => {
+    setIsLoggedIn(localStorage.getItem('isLoggedIn') === 'true');
+  }, [location]);
 
   const handleSahayogFormClick = (e) => {
     if (!isLoggedIn) {
@@ -41,6 +46,8 @@ const Navbar = () => {
 
   const handleLogout = () => {
     localStorage.removeItem('isLoggedIn');
+    localStorage.removeItem('userAadhaar');
+    setIsLoggedIn(false);
     navigate('/login');
   };
 
@@ -168,45 +175,50 @@ const Navbar = () => {
 
               {/* VIVAH SAHYOG LIST DROPDOWN */}
               <div 
-                className={`relative flex items-center h-full px-2 cursor-pointer whitespace-nowrap transition-colors ${isActive('/vivah-sahayog-list') ? 'bg-[#06616e] text-orange-200 border-b-2 border-orange-400' : 'hover:bg-[#06616e]'}`}
+                className={`relative flex items-center h-full px-2 cursor-pointer whitespace-nowrap transition-colors ${(isActive('/vivah-sahayog-list') || isActive('/beti-vivah-sahyog/account-holder') || isActive('/beti-vivah-sahyog/alert-wise')) ? 'bg-[#06616e] text-orange-200 border-b-2 border-orange-400' : 'hover:bg-[#06616e]'}`}
                 onMouseEnter={() => setIsDesktopVivahOpen(true)}
                 onMouseLeave={() => setIsDesktopVivahOpen(false)}
                 onClick={() => setIsDesktopVivahOpen(!isDesktopVivahOpen)}
               >
                 <span className="flex items-center gap-0.5">
-                  Vivah Sahyog List
+                  Beti Vivah Sahyog List
                   <svg className={`w-3.5 h-3.5 transition-transform duration-300 ${isDesktopVivahOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
                 </span>
                 
                 {isDesktopVivahOpen && (
                   <div 
-                    className="absolute top-[50px] left-0 w-52 bg-white text-gray-800 shadow-2xl rounded-md flex flex-col overflow-hidden border-t-4 z-[9999]" 
+                    className="absolute top-[50px] left-0 w-56 bg-white text-gray-800 shadow-2xl rounded-md flex flex-col overflow-hidden border-t-4 z-[9999]" 
                     style={{ borderColor: logoOrange }}
                   >
                     <Link to="/vivah-sahayog-list" className="px-4 py-3 hover:bg-gray-50 hover:text-[#f08519] border-b border-gray-100 transition-colors font-medium text-[13px]">All Sahyog List</Link>
+                    <Link to="/beti-vivah-sahyog/account-holder" className="px-4 py-3 hover:bg-gray-50 hover:text-[#f08519] border-b border-gray-100 transition-colors font-medium text-[13px]">Account Holder Wise</Link>
+                    <Link to="/beti-vivah-sahyog/alert-wise" className="px-4 py-3 hover:bg-gray-50 hover:text-[#f08519] border-b border-gray-100 transition-colors font-medium text-[13px]">Alert Wise</Link>
                   </div>
                 )}
               </div>
 
               <Link to="/annual-donation-list" className={`h-full px-2 flex items-center transition-colors whitespace-nowrap ${isActive('/annual-donation-list') ? 'bg-[#06616e] text-orange-200 border-b-2 border-orange-400' : 'hover:bg-[#06616e]'}`}>Annual Donation List</Link>
+              
               {/* NIDHAN SAHYOG LIST DROPDOWN */}
               <div 
-                className={`relative flex items-center h-full px-2 cursor-pointer whitespace-nowrap transition-colors ${isActive('/nidhan-sahayog-list') ? 'bg-[#06616e] text-orange-200 border-b-2 border-orange-400' : 'hover:bg-[#06616e]'}`}
+                className={`relative flex items-center h-full px-2 cursor-pointer whitespace-nowrap transition-colors ${(isActive('/nidhan-sahayog-list') || isActive('/nidhan-sahayog/account-holder') || isActive('/nidhan-sahayog/alert-wise')) ? 'bg-[#06616e] text-orange-200 border-b-2 border-orange-400' : 'hover:bg-[#06616e]'}`}
                 onMouseEnter={() => setIsDesktopNidhanOpen(true)}
                 onMouseLeave={() => setIsDesktopNidhanOpen(false)}
                 onClick={() => setIsDesktopNidhanOpen(!isDesktopNidhanOpen)}
               >
                 <span className="flex items-center gap-0.5">
-                  Nidhan Sahyog List
+                  Death Sahyog List
                   <svg className={`w-3.5 h-3.5 transition-transform duration-300 ${isDesktopNidhanOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
                 </span>
                 
                 {isDesktopNidhanOpen && (
                   <div 
-                    className="absolute top-[50px] left-0 w-52 bg-white text-gray-800 shadow-2xl rounded-md flex flex-col overflow-hidden border-t-4 z-[9999]" 
+                    className="absolute top-[50px] left-0 w-56 bg-white text-gray-800 shadow-2xl rounded-md flex flex-col overflow-hidden border-t-4 z-[9999]" 
                     style={{ borderColor: logoOrange }}
                   >
-                    <Link to="/nidhan-sahayog-list" className="px-4 py-3 hover:bg-gray-50 hover:text-[#f08519] border-b border-gray-100 transition-colors font-medium text-[13px]">All Nidhan Sahyog List</Link>
+                    <Link to="/nidhan-sahayog-list" className="px-4 py-3 hover:bg-gray-50 hover:text-[#f08519] border-b border-gray-100 transition-colors font-medium text-[13px]">All Sahyog List</Link>
+                    <Link to="/nidhan-sahayog/account-holder" className="px-4 py-3 hover:bg-gray-50 hover:text-[#f08519] border-b border-gray-100 transition-colors font-medium text-[13px]">Account Holder Wise</Link>
+                    <Link to="/nidhan-sahayog/alert-wise" className="px-4 py-3 hover:bg-gray-50 hover:text-[#f08519] border-b border-gray-100 transition-colors font-medium text-[13px]">Alert Wise</Link>
                   </div>
                 )}
               </div>
@@ -274,12 +286,25 @@ const Navbar = () => {
 
             {/* ACTION BUTTONS */}
             <div className="flex h-full shrink-0 items-center">
-              <Link to="/register" className={`h-full px-3 xl:px-4 flex items-center justify-center font-bold text-white text-[11px] xl:text-[12px] transition-colors whitespace-nowrap border-r border-[#d97314] ${isActive('/register') ? 'bg-orange-700 shadow-inner' : 'hover:bg-orange-600'}`} style={{ backgroundColor: logoOrange }}>
-                REGISTRATION
-              </Link>
-              <Link to="/login" className={`h-full px-3 xl:px-5 flex items-center justify-center font-bold text-white text-[11px] xl:text-[12px] transition-colors whitespace-nowrap ${isActive('/login') ? 'bg-orange-700 shadow-inner' : 'hover:bg-orange-600'}`} style={{ backgroundColor: logoOrange }}>
-                LOGIN
-              </Link>
+              {isLoggedIn ? (
+                <Link 
+                  to="/user-dashboard" 
+                  className={`h-full px-5 xl:px-8 flex items-center justify-center gap-2 font-bold text-white text-[12px] xl:text-[13px] transition-all whitespace-nowrap shadow-inner ${isActive('/user-dashboard') ? 'bg-orange-700' : 'hover:bg-orange-600'}`} 
+                  style={{ backgroundColor: logoOrange }}
+                >
+                  <UserIcon className="w-4 h-4" />
+                  <span>MY PROFILE</span>
+                </Link>
+              ) : (
+                <>
+                  <Link to="/register" className={`h-full px-3 xl:px-4 flex items-center justify-center font-bold text-white text-[11px] xl:text-[12px] transition-colors whitespace-nowrap border-r border-[#d97314] ${isActive('/register') ? 'bg-orange-700 shadow-inner' : 'hover:bg-orange-600'}`} style={{ backgroundColor: logoOrange }}>
+                    REGISTRATION
+                  </Link>
+                  <Link to="/login" className={`h-full px-3 xl:px-5 flex items-center justify-center font-bold text-white text-[11px] xl:text-[12px] transition-colors whitespace-nowrap ${isActive('/login') ? 'bg-orange-700 shadow-inner' : 'hover:bg-orange-600'}`} style={{ backgroundColor: logoOrange }}>
+                    LOGIN
+                  </Link>
+                </>
+              )}
             </div>
           </div>
 
@@ -328,31 +353,36 @@ const Navbar = () => {
                 onClick={() => setIsMobileVivahOpen(!isMobileVivahOpen)} 
                 className="w-full text-left py-3 px-6 border-b border-white/20 flex justify-between items-center focus:outline-none"
               >
-                Vivah Sahyog List
+                Beti Vivah Sahyog List
                 <svg className={`w-5 h-5 transition-transform duration-300 ${isMobileVivahOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
               </button>
               
               {isMobileVivahOpen && (
                 <div className="bg-[#06616e] flex flex-col text-sm border-b border-white/20">
-                  <Link to="/vivah-sahayog-list" onClick={() => { setIsMobileMenuOpen(false); setIsMobileVivahOpen(false); }} className="py-3 px-10 border-b border-white/10 hover:bg-white/10 transition-colors font-medium">All Sahyog List</Link>
+                  <Link to="/vivah-sahayog-list" onClick={() => { setIsMobileMenuOpen(false); setIsMobileVivahOpen(false); }} className={`py-3 px-10 border-b border-white/10 transition-colors font-medium ${isActive('/vivah-sahayog-list') ? 'bg-black/30 text-orange-200 font-bold' : 'hover:bg-white/10'}`}>All Sahyog List</Link>
+                  <Link to="/beti-vivah-sahyog/account-holder" onClick={() => { setIsMobileMenuOpen(false); setIsMobileVivahOpen(false); }} className={`py-3 px-10 border-b border-white/10 transition-colors font-medium ${isActive('/beti-vivah-sahyog/account-holder') ? 'bg-black/30 text-orange-200 font-bold' : 'hover:bg-white/10'}`}>Account Holder Wise</Link>
+                  <Link to="/beti-vivah-sahyog/alert-wise" onClick={() => { setIsMobileMenuOpen(false); setIsMobileVivahOpen(false); }} className={`py-3 px-10 transition-colors font-medium ${isActive('/beti-vivah-sahyog/alert-wise') ? 'bg-black/30 text-orange-200 font-bold' : 'hover:bg-white/10'}`}>Alert Wise</Link>
                 </div>
               )}
             </div>
 
             <Link to="/annual-donation-list" onClick={() => setIsMobileMenuOpen(false)} className={`py-3 px-6 border-b border-white/20 transition-colors ${isActive('/annual-donation-list') ? 'bg-[#06616e] text-orange-200 font-bold border-l-4 border-orange-400' : 'hover:bg-[#06616e]'}`}>Annual Donation List</Link>
+            
             {/* NIDHAN SAHYOG LIST ACCORDION */}
             <div>
               <button 
                 onClick={() => setIsMobileNidhanOpen(!isMobileNidhanOpen)} 
                 className="w-full text-left py-3 px-6 border-b border-white/20 flex justify-between items-center focus:outline-none text-white font-semibold"
               >
-                Nidhan Sahyog List
+                Death Sahyog List
                 <svg className={`w-5 h-5 transition-transform duration-300 ${isMobileNidhanOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
               </button>
               
               {isMobileNidhanOpen && (
                 <div className="bg-[#06616e] flex flex-col text-sm border-b border-white/20">
-                  <Link to="/nidhan-sahayog-list" onClick={() => { setIsMobileMenuOpen(false); setIsMobileNidhanOpen(false); }} className="py-3 px-10 border-b border-white/10 hover:bg-white/10 transition-colors font-medium">All Nidhan Sahyog List</Link>
+                  <Link to="/nidhan-sahayog-list" onClick={() => { setIsMobileMenuOpen(false); setIsMobileNidhanOpen(false); }} className={`py-3 px-10 border-b border-white/10 transition-colors font-medium ${isActive('/nidhan-sahayog-list') ? 'bg-black/30 text-orange-200 font-bold' : 'hover:bg-white/10'}`}>All Sahyog List</Link>
+                  <Link to="/nidhan-sahayog/account-holder" onClick={() => { setIsMobileMenuOpen(false); setIsMobileNidhanOpen(false); }} className={`py-3 px-10 border-b border-white/10 transition-colors font-medium ${isActive('/nidhan-sahayog/account-holder') ? 'bg-black/30 text-orange-200 font-bold' : 'hover:bg-white/10'}`}>Account Holder Wise</Link>
+                  <Link to="/nidhan-sahayog/alert-wise" onClick={() => { setIsMobileMenuOpen(false); setIsMobileNidhanOpen(false); }} className={`py-3 px-10 transition-colors font-medium ${isActive('/nidhan-sahayog/alert-wise') ? 'bg-black/30 text-orange-200 font-bold' : 'hover:bg-white/10'}`}>Alert Wise</Link>
                 </div>
               )}
             </div>
@@ -410,12 +440,26 @@ const Navbar = () => {
               <p><strong>Email:</strong> silenthelpct@gmail.com</p>
               
               <div className="flex space-x-3 mt-4">
-                <Link to="/register" onClick={() => setIsMobileMenuOpen(false)} className={`w-1/2 py-3 text-white font-bold rounded shadow-md text-center text-sm ${isActive('/register') ? 'bg-orange-700' : ''}`} style={{ backgroundColor: logoOrange }}>
-                  REGISTRATION
-                </Link>
-                <Link to="/login" onClick={() => setIsMobileMenuOpen(false)} className={`w-1/2 py-3 text-white font-bold rounded shadow-md text-center text-sm ${isActive('/login') ? 'bg-orange-700' : ''}`} style={{ backgroundColor: logoOrange }}>
-                  LOGIN
-                </Link>
+                {isLoggedIn ? (
+                  <Link 
+                    to="/user-dashboard" 
+                    onClick={() => setIsMobileMenuOpen(false)} 
+                    className={`w-full py-3 text-white font-bold rounded-lg shadow-md text-center text-sm flex items-center justify-center gap-2 transition-all ${isActive('/user-dashboard') ? 'bg-orange-700' : ''}`} 
+                    style={{ backgroundColor: logoOrange }}
+                  >
+                    <UserIcon className="w-4 h-4" />
+                    <span>MY PROFILE</span>
+                  </Link>
+                ) : (
+                  <>
+                    <Link to="/register" onClick={() => setIsMobileMenuOpen(false)} className={`w-1/2 py-3 text-white font-bold rounded shadow-md text-center text-sm ${isActive('/register') ? 'bg-orange-700' : ''}`} style={{ backgroundColor: logoOrange }}>
+                      REGISTRATION
+                    </Link>
+                    <Link to="/login" onClick={() => setIsMobileMenuOpen(false)} className={`w-1/2 py-3 text-white font-bold rounded shadow-md text-center text-sm ${isActive('/login') ? 'bg-orange-700' : ''}`} style={{ backgroundColor: logoOrange }}>
+                      LOGIN
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
           </div>
