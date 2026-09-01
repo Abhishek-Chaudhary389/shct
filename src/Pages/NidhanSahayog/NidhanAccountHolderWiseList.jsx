@@ -61,12 +61,18 @@ const NidhanAccountHolderWiseList = () => {
 
         // 2. Group by Account Holder (Deceased Member Family)
         const holderMap = {};
+        let deletedHolders = [];
+        try {
+          deletedHolders = JSON.parse(localStorage.getItem('shct_deleted_account_holders') || '[]');
+        } catch {}
 
-        // Populate from applications
+        // Populate from active applications
         applications.forEach(app => {
           const name = (app.deceasedName || app.applicantName || app.name || '').trim();
-          if (name) {
+          const key = `nidhan_${name.toLowerCase()}`;
+          if (name && !deletedHolders.includes(key)) {
             holderMap[name] = {
+              id: app.id,
               name: name,
               district: app.district || 'संत कबीर नगर',
               block: app.block || 'खलीलाबाद',
@@ -78,22 +84,26 @@ const NidhanAccountHolderWiseList = () => {
           }
         });
 
-        // Add from receipts
+        // Add collection from receipts only for non-deleted holders
         approvedReceipts.forEach(r => {
-          const bName = r.beneficiaryName;
-          if (!holderMap[bName]) {
-            holderMap[bName] = {
-              name: bName,
-              district: r.beneficiaryDistrict || r.donorDistrict || 'संत कबीर नगर',
-              block: r.beneficiaryBlock || r.donorBlock || 'खलीलाबाद',
-              nidhanDate: r.nidhanDate || r.deathDate || '2025-04-10',
-              perMemberAmount: r.amount || 50,
-              totalCollection: 0,
-              donorsCount: 0
-            };
+          const bName = (r.beneficiaryName || r.donationToMember || r.deceasedName || '').trim();
+          const key = `nidhan_${bName.toLowerCase()}`;
+          if (bName && !deletedHolders.includes(key)) {
+            if (!holderMap[bName]) {
+              // Only create if not explicitly deleted
+              holderMap[bName] = {
+                name: bName,
+                district: r.beneficiaryDistrict || r.donorDistrict || 'संत कबीर नगर',
+                block: r.beneficiaryBlock || r.donorBlock || 'खलीलाबाद',
+                nidhanDate: r.nidhanDate || r.deathDate || '2025-04-10',
+                perMemberAmount: Number(r.amount) || 50,
+                totalCollection: 0,
+                donorsCount: 0
+              };
+            }
+            holderMap[bName].totalCollection += (Number(r.amount) || 0);
+            holderMap[bName].donorsCount += 1;
           }
-          holderMap[bName].totalCollection += r.amount;
-          holderMap[bName].donorsCount += 1;
         });
 
         const list = Object.values(holderMap);

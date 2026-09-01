@@ -61,12 +61,18 @@ const BetiAccountHolderWiseList = () => {
 
         // 2. Group by Account Holder (Beneficiary)
         const holderMap = {};
+        let deletedHolders = [];
+        try {
+          deletedHolders = JSON.parse(localStorage.getItem('shct_deleted_account_holders') || '[]');
+        } catch {}
 
         // First populate from applications if any
         applications.forEach(app => {
           const name = (app.applicantName || app.name || '').trim();
-          if (name) {
+          const key = `beti_${name.toLowerCase()}`;
+          if (name && !deletedHolders.includes(key)) {
             holderMap[name] = {
+              id: app.id,
               name: name,
               district: app.district || 'संत कबीर नगर',
               block: app.block || 'खलीलाबाद',
@@ -78,22 +84,25 @@ const BetiAccountHolderWiseList = () => {
           }
         });
 
-        // Add from receipts
+        // Add from receipts only if not deleted
         approvedReceipts.forEach(r => {
-          const bName = r.beneficiaryName;
-          if (!holderMap[bName]) {
-            holderMap[bName] = {
-              name: bName,
-              district: r.beneficiaryDistrict || r.donorDistrict || 'संत कबीर नगर',
-              block: r.beneficiaryBlock || r.donorBlock || 'खलीलाबाद',
-              vivahDate: r.vivahDate || r.marriageDate || '2025-04-15',
-              perMemberAmount: r.amount || 50,
-              totalCollection: 0,
-              donorsCount: 0
-            };
+          const bName = (r.beneficiaryName || r.donationToMember || '').trim();
+          const key = `beti_${bName.toLowerCase()}`;
+          if (bName && !deletedHolders.includes(key)) {
+            if (!holderMap[bName]) {
+              holderMap[bName] = {
+                name: bName,
+                district: r.beneficiaryDistrict || r.donorDistrict || 'संत कबीर नगर',
+                block: r.beneficiaryBlock || r.donorBlock || 'खलीलाबाद',
+                vivahDate: r.vivahDate || r.marriageDate || '2025-04-15',
+                perMemberAmount: Number(r.amount) || 50,
+                totalCollection: 0,
+                donorsCount: 0
+              };
+            }
+            holderMap[bName].totalCollection += (Number(r.amount) || 0);
+            holderMap[bName].donorsCount += 1;
           }
-          holderMap[bName].totalCollection += r.amount;
-          holderMap[bName].donorsCount += 1;
         });
 
         const list = Object.values(holderMap);
