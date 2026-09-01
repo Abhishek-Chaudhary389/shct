@@ -140,6 +140,20 @@ const AdminDashboard = () => {
   const [alertModal, setAlertModal] = useState({ isOpen: false, type: 'beti', isNew: false, data: {} });
   const [deleteConfirmModal, setDeleteConfirmModal] = useState({ isOpen: false, title: '', message: '', onConfirm: null });
   const [isSavingCrud, setIsSavingCrud] = useState(false);
+  const [deletedAlertKeys, setDeletedAlertKeys] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('shct_deleted_alert_keys') || '[]');
+    } catch {
+      return [];
+    }
+  });
+  const [deletedAccountHolders, setDeletedAccountHolders] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('shct_deleted_account_holders') || '[]');
+    } catch {
+      return [];
+    }
+  });
 
   const [notification, setNotification] = useState('');
   const [successModal, setSuccessModal] = useState({ isOpen: false, title: '', message: '' });
@@ -612,6 +626,12 @@ const AdminDashboard = () => {
     setIsSavingCrud(true);
     const { type, isNew, docId, data } = accountHolderModal;
     try {
+      const nameKey = `${type}_${(data.applicantName || data.deceasedName || '').trim().toLowerCase()}`;
+      // Clear from deleted list if re-added/edited
+      const updatedDeletedHolders = deletedAccountHolders.filter(k => k !== nameKey);
+      setDeletedAccountHolders(updatedDeletedHolders);
+      localStorage.setItem('shct_deleted_account_holders', JSON.stringify(updatedDeletedHolders));
+
       if (type === 'beti') {
         const payload = {
           applicantName: data.applicantName,
@@ -683,8 +703,10 @@ const AdminDashboard = () => {
   };
 
   const handleDeleteAccountHolder = (type, holder) => {
+    const holderName = (holder.name || '').trim().toLowerCase();
+    const holderKey = `${type}_${holderName}`;
     const original = (type === 'beti' ? betiList : nidhanList).find(
-      app => (app.applicantName || app.deceasedName || app.name || '').trim().toLowerCase() === holder.name.toLowerCase()
+      app => (app.applicantName || app.deceasedName || app.name || '').trim().toLowerCase() === holderName
     );
 
     setDeleteConfirmModal({
@@ -702,11 +724,17 @@ const AdminDashboard = () => {
               setNidhanList(prev => prev.filter(item => item.id !== original.id));
             }
           }
+
+          const updatedHolders = [...new Set([...deletedAccountHolders, holderKey])];
+          setDeletedAccountHolders(updatedHolders);
+          localStorage.setItem('shct_deleted_account_holders', JSON.stringify(updatedHolders));
+
           if (type === 'beti') {
-            setBetiList(prev => prev.filter(item => (item.applicantName || item.name || '').trim().toLowerCase() !== holder.name.toLowerCase()));
+            setBetiList(prev => prev.filter(item => (item.applicantName || item.name || '').trim().toLowerCase() !== holderName));
           } else {
-            setNidhanList(prev => prev.filter(item => (item.deceasedName || item.applicantName || item.name || '').trim().toLowerCase() !== holder.name.toLowerCase()));
+            setNidhanList(prev => prev.filter(item => (item.deceasedName || item.applicantName || item.name || '').trim().toLowerCase() !== holderName));
           }
+
           setDeleteConfirmModal({ isOpen: false, title: '', message: '', onConfirm: null });
           setNotification(`${holder.name} को सफलतापूर्वक हटा दिया गया!`);
           setTimeout(() => setNotification(''), 4000);
@@ -779,13 +807,22 @@ const AdminDashboard = () => {
     setIsSavingCrud(true);
     const { isNew, docId, data } = alertModal;
     try {
+      const alertNum = Number(data.alertNumber) || 1;
+      const alertType = data.type || 'beti';
+      const alertKey = `${alertType}_${alertNum}`;
+
+      // Clear from deleted alert keys
+      const updatedDeletedAlerts = deletedAlertKeys.filter(k => k !== alertKey);
+      setDeletedAlertKeys(updatedDeletedAlerts);
+      localStorage.setItem('shct_deleted_alert_keys', JSON.stringify(updatedDeletedAlerts));
+
       const payload = {
         ...data,
-        alertNumber: Number(data.alertNumber) || 1,
+        alertNumber: alertNum,
         beneficiaryName: data.beneficiaryName || data.member,
         member: data.member || data.beneficiaryName,
-        title: data.title || `Alert ${data.alertNumber}`,
-        type: data.type || 'beti',
+        title: data.title || `Alert ${alertNum}`,
+        type: alertType,
         isActive: data.isActive !== undefined ? data.isActive : true
       };
 
@@ -812,7 +849,11 @@ const AdminDashboard = () => {
   };
 
   const handleDeleteAlert = (alert) => {
-    const original = homeAlertsList.find(a => a.id === alert.id || Number(a.alertNumber || a.alertNo) === alert.alertNumber);
+    const alertType = alert.type || 'beti';
+    const alertNum = alert.alertNumber;
+    const alertKey = `${alertType}_${alertNum}`;
+    const original = homeAlertsList.find(a => a.id === alert.id || (Number(a.alertNumber || a.alertNo) === alertNum && (a.type || 'beti') === alertType));
+
     setDeleteConfirmModal({
       isOpen: true,
       title: 'अलर्ट हटाएं?',
@@ -822,9 +863,14 @@ const AdminDashboard = () => {
           if (original?.id) {
             await deleteHomeAlert(original.id);
             setHomeAlertsList(prev => prev.filter(a => a.id !== original.id));
-          } else {
-            setHomeAlertsList(prev => prev.filter(a => Number(a.alertNumber || a.alertNo) !== alert.alertNumber));
           }
+
+          const updatedDeleted = [...new Set([...deletedAlertKeys, alertKey])];
+          setDeletedAlertKeys(updatedDeleted);
+          localStorage.setItem('shct_deleted_alert_keys', JSON.stringify(updatedDeleted));
+
+          setHomeAlertsList(prev => prev.filter(a => !(Number(a.alertNumber || a.alertNo) === alertNum && (a.type || 'beti') === alertType)));
+
           setDeleteConfirmModal({ isOpen: false, title: '', message: '', onConfirm: null });
           setNotification(`${alert.title} को सफलतापूर्वक हटा दिया गया!`);
           setTimeout(() => setNotification(''), 4000);
@@ -3029,7 +3075,8 @@ const AdminDashboard = () => {
                       const holderMap = {};
                       betiList.forEach(app => {
                         const name = (app.applicantName || app.name || '').trim();
-                        if (name) {
+                        const key = `beti_${name.toLowerCase()}`;
+                        if (name && !deletedAccountHolders.includes(key)) {
                           holderMap[name] = {
                             id: app.id,
                             name: name,
@@ -3045,19 +3092,22 @@ const AdminDashboard = () => {
 
                       betiReceiptsList.filter(r => r.status === 'APPROVED').forEach(r => {
                         const bName = (r.beneficiaryName || r.donationToMember || 'सुरेश चंद्र').trim();
-                        if (!holderMap[bName]) {
-                          holderMap[bName] = {
-                            name: bName,
-                            district: r.donorDistrict || 'संत कबीर नगर',
-                            block: r.donorBlock || 'खलीलाबाद',
-                            marriageDate: r.marriageDate || '2025-04-10',
-                            perMemberAmount: r.amount || 50,
-                            totalCollection: 0,
-                            donorsCount: 0
-                          };
+                        const key = `beti_${bName.toLowerCase()}`;
+                        if (!deletedAccountHolders.includes(key)) {
+                          if (!holderMap[bName]) {
+                            holderMap[bName] = {
+                              name: bName,
+                              district: r.donorDistrict || 'संत कबीर नगर',
+                              block: r.donorBlock || 'खलीलाबाद',
+                              marriageDate: r.marriageDate || '2025-04-10',
+                              perMemberAmount: r.amount || 50,
+                              totalCollection: 0,
+                              donorsCount: 0
+                            };
+                          }
+                          holderMap[bName].totalCollection += (Number(r.amount) || 0);
+                          holderMap[bName].donorsCount += 1;
                         }
-                        holderMap[bName].totalCollection += (Number(r.amount) || 0);
-                        holderMap[bName].donorsCount += 1;
                       });
 
                       const allHolders = Object.values(holderMap);
@@ -3275,29 +3325,37 @@ const AdminDashboard = () => {
 
                     {(() => {
                       const alertMap = {};
-                      // Real alerts 1 & 2
-                      alertMap[1] = {
-                        alertNumber: 1,
-                        title: 'Alert 1',
-                        beneficiaryName: betiList[0]?.applicantName || 'सुरेश चंद्र',
-                        totalCollection: 0,
-                        donorsCount: 0
-                      };
-                      alertMap[2] = {
-                        alertNumber: 2,
-                        title: 'Alert 2',
-                        beneficiaryName: betiList[1]?.applicantName || 'संतोष कुमार',
-                        totalCollection: 0,
-                        donorsCount: 0
-                      };
+                      
+                      // Base alerts 1 & 2 if not deleted
+                      if (!deletedAlertKeys.includes('beti_1')) {
+                        alertMap[1] = {
+                          alertNumber: 1,
+                          type: 'beti',
+                          title: 'Alert 1',
+                          beneficiaryName: betiList[0]?.applicantName || 'सुरेश चंद्र',
+                          totalCollection: 0,
+                          donorsCount: 0
+                        };
+                      }
+                      if (!deletedAlertKeys.includes('beti_2')) {
+                        alertMap[2] = {
+                          alertNumber: 2,
+                          type: 'beti',
+                          title: 'Alert 2',
+                          beneficiaryName: betiList[1]?.applicantName || 'संतोष कुमार',
+                          totalCollection: 0,
+                          donorsCount: 0
+                        };
+                      }
 
                       homeAlertsList.filter(a => !a.type || a.type === 'beti').forEach((a, idx) => {
                         const num = Number(a.alertNumber || a.alertNo || idx + 1);
-                        if (num) {
+                        if (num && !deletedAlertKeys.includes(`beti_${num}`)) {
                           alertMap[num] = {
                             id: a.id,
                             alertNumber: num,
-                            title: `Alert ${num}`,
+                            type: 'beti',
+                            title: a.title || `Alert ${num}`,
                             beneficiaryName: a.beneficiaryName || a.member || `अलर्ट ${num}`,
                             totalCollection: 0,
                             donorsCount: 0
@@ -3307,17 +3365,20 @@ const AdminDashboard = () => {
 
                       betiReceiptsList.filter(r => r.status === 'APPROVED').forEach(r => {
                         const num = Number(r.alertNumber || 1);
-                        if (!alertMap[num]) {
-                          alertMap[num] = {
-                            alertNumber: num,
-                            title: `Alert ${num}`,
-                            beneficiaryName: r.beneficiaryName || `अलर्ट ${num}`,
-                            totalCollection: 0,
-                            donorsCount: 0
-                          };
+                        if (!deletedAlertKeys.includes(`beti_${num}`)) {
+                          if (!alertMap[num]) {
+                            alertMap[num] = {
+                              alertNumber: num,
+                              type: 'beti',
+                              title: `Alert ${num}`,
+                              beneficiaryName: r.beneficiaryName || `अलर्ट ${num}`,
+                              totalCollection: 0,
+                              donorsCount: 0
+                            };
+                          }
+                          alertMap[num].totalCollection += (Number(r.amount) || 0);
+                          alertMap[num].donorsCount += 1;
                         }
-                        alertMap[num].totalCollection += (Number(r.amount) || 0);
-                        alertMap[num].donorsCount += 1;
                       });
 
                       const alertsArray = Object.values(alertMap).sort((a, b) => a.alertNumber - b.alertNumber);
@@ -3698,7 +3759,8 @@ const AdminDashboard = () => {
                       const holderMap = {};
                       nidhanList.forEach(app => {
                         const name = (app.deceasedName || app.applicantName || app.name || '').trim();
-                        if (name) {
+                        const key = `nidhan_${name.toLowerCase()}`;
+                        if (name && !deletedAccountHolders.includes(key)) {
                           holderMap[name] = {
                             id: app.id,
                             name: name,
@@ -3714,19 +3776,22 @@ const AdminDashboard = () => {
 
                       nidhanReceiptsList.filter(r => r.status === 'APPROVED').forEach(r => {
                         const bName = (r.beneficiaryName || r.donationToMember || r.deceasedName || 'राम प्रसाद').trim();
-                        if (!holderMap[bName]) {
-                          holderMap[bName] = {
-                            name: bName,
-                            district: r.donorDistrict || 'संत कबीर नगर',
-                            block: r.donorBlock || 'खलीलाबाद',
-                            nidhanDate: r.nidhanDate || r.deathDate || '2025-04-10',
-                            perMemberAmount: r.amount || 50,
-                            totalCollection: 0,
-                            donorsCount: 0
-                          };
+                        const key = `nidhan_${bName.toLowerCase()}`;
+                        if (!deletedAccountHolders.includes(key)) {
+                          if (!holderMap[bName]) {
+                            holderMap[bName] = {
+                              name: bName,
+                              district: r.donorDistrict || 'संत कबीर नगर',
+                              block: r.donorBlock || 'खलीलाबाद',
+                              nidhanDate: r.nidhanDate || r.deathDate || '2025-04-10',
+                              perMemberAmount: r.amount || 50,
+                              totalCollection: 0,
+                              donorsCount: 0
+                            };
+                          }
+                          holderMap[bName].totalCollection += (Number(r.amount) || 0);
+                          holderMap[bName].donorsCount += 1;
                         }
-                        holderMap[bName].totalCollection += (Number(r.amount) || 0);
-                        holderMap[bName].donorsCount += 1;
                       });
 
                       const allHolders = Object.values(holderMap);
@@ -3944,29 +4009,37 @@ const AdminDashboard = () => {
 
                     {(() => {
                       const alertMap = {};
-                      // Real alerts 1 & 2
-                      alertMap[1] = {
-                        alertNumber: 1,
-                        title: 'Alert 1',
-                        beneficiaryName: nidhanList[0]?.deceasedName || nidhanList[0]?.applicantName || 'राम प्रसाद',
-                        totalCollection: 0,
-                        donorsCount: 0
-                      };
-                      alertMap[2] = {
-                        alertNumber: 2,
-                        title: 'Alert 2',
-                        beneficiaryName: nidhanList[1]?.deceasedName || nidhanList[1]?.applicantName || 'राजेश वर्मा',
-                        totalCollection: 0,
-                        donorsCount: 0
-                      };
+                      
+                      // Base alerts 1 & 2 if not deleted
+                      if (!deletedAlertKeys.includes('nidhan_1')) {
+                        alertMap[1] = {
+                          alertNumber: 1,
+                          type: 'nidhan',
+                          title: 'Alert 1',
+                          beneficiaryName: nidhanList[0]?.deceasedName || nidhanList[0]?.applicantName || 'राम प्रसाद',
+                          totalCollection: 0,
+                          donorsCount: 0
+                        };
+                      }
+                      if (!deletedAlertKeys.includes('nidhan_2')) {
+                        alertMap[2] = {
+                          alertNumber: 2,
+                          type: 'nidhan',
+                          title: 'Alert 2',
+                          beneficiaryName: nidhanList[1]?.deceasedName || nidhanList[1]?.applicantName || 'राजेश वर्मा',
+                          totalCollection: 0,
+                          donorsCount: 0
+                        };
+                      }
 
                       homeAlertsList.filter(a => a.type === 'nidhan').forEach((a, idx) => {
                         const num = Number(a.alertNumber || a.alertNo || idx + 1);
-                        if (num) {
+                        if (num && !deletedAlertKeys.includes(`nidhan_${num}`)) {
                           alertMap[num] = {
                             id: a.id,
                             alertNumber: num,
-                            title: `Alert ${num}`,
+                            type: 'nidhan',
+                            title: a.title || `Alert ${num}`,
                             beneficiaryName: a.beneficiaryName || a.member || `अलर्ट ${num}`,
                             totalCollection: 0,
                             donorsCount: 0
@@ -3976,17 +4049,20 @@ const AdminDashboard = () => {
 
                       nidhanReceiptsList.filter(r => r.status === 'APPROVED').forEach(r => {
                         const num = Number(r.alertNumber || 1);
-                        if (!alertMap[num]) {
-                          alertMap[num] = {
-                            alertNumber: num,
-                            title: `Alert ${num}`,
-                            beneficiaryName: r.beneficiaryName || `अलर्ट ${num}`,
-                            totalCollection: 0,
-                            donorsCount: 0
-                          };
+                        if (!deletedAlertKeys.includes(`nidhan_${num}`)) {
+                          if (!alertMap[num]) {
+                            alertMap[num] = {
+                              alertNumber: num,
+                              type: 'nidhan',
+                              title: `Alert ${num}`,
+                              beneficiaryName: r.beneficiaryName || `अलर्ट ${num}`,
+                              totalCollection: 0,
+                              donorsCount: 0
+                            };
+                          }
+                          alertMap[num].totalCollection += (Number(r.amount) || 0);
+                          alertMap[num].donorsCount += 1;
                         }
-                        alertMap[num].totalCollection += (Number(r.amount) || 0);
-                        alertMap[num].donorsCount += 1;
                       });
 
                       const alertsArray = Object.values(alertMap).sort((a, b) => a.alertNumber - b.alertNumber);

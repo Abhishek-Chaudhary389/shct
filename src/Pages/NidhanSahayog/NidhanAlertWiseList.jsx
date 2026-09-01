@@ -58,29 +58,37 @@ const NidhanAlertWiseList = () => {
 
         // 2. Build Real / Active Nidhan Alerts
         const alertMap = {};
+        let deletedKeys = [];
+        try {
+          deletedKeys = JSON.parse(localStorage.getItem('shct_deleted_alert_keys') || '[]');
+        } catch {}
 
-        // Base Alert 1 and Alert 2 (always guaranteed to exist)
-        alertMap[1] = {
-          alertNumber: 1,
-          title: 'Alert 1',
-          beneficiaryName: applications[0]?.deceasedName || applications[0]?.applicantName || 'राम प्रसाद',
-          totalCollection: 0,
-          donorsCount: 0
-        };
+        // Base Alert 1 and Alert 2 (if not deleted)
+        if (!deletedKeys.includes('nidhan_1')) {
+          alertMap[1] = {
+            alertNumber: 1,
+            title: 'Alert 1',
+            beneficiaryName: applications[0]?.deceasedName || applications[0]?.applicantName || 'राम प्रसाद',
+            totalCollection: 0,
+            donorsCount: 0
+          };
+        }
 
-        alertMap[2] = {
-          alertNumber: 2,
-          title: 'Alert 2',
-          beneficiaryName: applications[1]?.deceasedName || applications[1]?.applicantName || 'राजेश वर्मा',
-          totalCollection: 0,
-          donorsCount: 0
-        };
+        if (!deletedKeys.includes('nidhan_2')) {
+          alertMap[2] = {
+            alertNumber: 2,
+            title: 'Alert 2',
+            beneficiaryName: applications[1]?.deceasedName || applications[1]?.applicantName || 'राजेश वर्मा',
+            totalCollection: 0,
+            donorsCount: 0
+          };
+        }
 
         // Populate / override from active home alerts specifically for Nidhan
         const nidhanHomeAlerts = homeAlerts.filter(a => a.type === 'nidhan');
         nidhanHomeAlerts.forEach((a, idx) => {
           const num = Number(a.alertNumber || a.alertNo || idx + 1);
-          if (num) {
+          if (num && !deletedKeys.includes(`nidhan_${num}`)) {
             alertMap[num] = {
               id: a.id,
               alertNumber: num,
@@ -95,17 +103,19 @@ const NidhanAlertWiseList = () => {
         // Calculate accurate collections from approved receipts
         approvedReceipts.forEach(r => {
           const num = Number(r.alertNumber || 1);
-          if (!alertMap[num]) {
-            alertMap[num] = {
-              alertNumber: num,
-              title: `Alert ${num}`,
-              beneficiaryName: r.beneficiaryName || `अलर्ट ${num}`,
-              totalCollection: 0,
-              donorsCount: 0
-            };
+          if (!deletedKeys.includes(`nidhan_${num}`)) {
+            if (!alertMap[num]) {
+              alertMap[num] = {
+                alertNumber: num,
+                title: `Alert ${num}`,
+                beneficiaryName: r.beneficiaryName || `अलर्ट ${num}`,
+                totalCollection: 0,
+                donorsCount: 0
+              };
+            }
+            alertMap[num].totalCollection += (Number(r.amount) || 0);
+            alertMap[num].donorsCount += 1;
           }
-          alertMap[num].totalCollection += (Number(r.amount) || 0);
-          alertMap[num].donorsCount += 1;
         });
 
         const list = Object.values(alertMap).sort((a, b) => a.alertNumber - b.alertNumber);

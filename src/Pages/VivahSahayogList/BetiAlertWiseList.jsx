@@ -58,29 +58,37 @@ const BetiAlertWiseList = () => {
 
         // 2. Build Real / Active Beti Alerts
         const alertMap = {};
+        let deletedKeys = [];
+        try {
+          deletedKeys = JSON.parse(localStorage.getItem('shct_deleted_alert_keys') || '[]');
+        } catch {}
 
-        // Base Alert 1 and Alert 2 (always guaranteed to exist)
-        alertMap[1] = {
-          alertNumber: 1,
-          title: 'Alert 1',
-          beneficiaryName: applications[0]?.applicantName || 'सुरेश चंद्र',
-          totalCollection: 0,
-          donorsCount: 0
-        };
+        // Base Alert 1 and Alert 2 (if not deleted)
+        if (!deletedKeys.includes('beti_1')) {
+          alertMap[1] = {
+            alertNumber: 1,
+            title: 'Alert 1',
+            beneficiaryName: applications[0]?.applicantName || 'सुरेश चंद्र',
+            totalCollection: 0,
+            donorsCount: 0
+          };
+        }
 
-        alertMap[2] = {
-          alertNumber: 2,
-          title: 'Alert 2',
-          beneficiaryName: applications[1]?.applicantName || 'संतोष कुमार',
-          totalCollection: 0,
-          donorsCount: 0
-        };
+        if (!deletedKeys.includes('beti_2')) {
+          alertMap[2] = {
+            alertNumber: 2,
+            title: 'Alert 2',
+            beneficiaryName: applications[1]?.applicantName || 'संतोष कुमार',
+            totalCollection: 0,
+            donorsCount: 0
+          };
+        }
 
         // Populate / override from active home alerts specifically for Beti
         const betiHomeAlerts = homeAlerts.filter(a => !a.type || a.type === 'beti');
         betiHomeAlerts.forEach((a, idx) => {
           const num = Number(a.alertNumber || a.alertNo || idx + 1);
-          if (num) {
+          if (num && !deletedKeys.includes(`beti_${num}`)) {
             alertMap[num] = {
               id: a.id,
               alertNumber: num,
@@ -95,17 +103,19 @@ const BetiAlertWiseList = () => {
         // Add from actual receipts
         approvedReceipts.forEach(r => {
           const num = Number(r.alertNumber || 1);
-          if (!alertMap[num]) {
-            alertMap[num] = {
-              alertNumber: num,
-              title: `Alert ${num}`,
-              beneficiaryName: r.beneficiaryName || `अलर्ट ${num}`,
-              totalCollection: 0,
-              donorsCount: 0
-            };
+          if (!deletedKeys.includes(`beti_${num}`)) {
+            if (!alertMap[num]) {
+              alertMap[num] = {
+                alertNumber: num,
+                title: `Alert ${num}`,
+                beneficiaryName: r.beneficiaryName || `अलर्ट ${num}`,
+                totalCollection: 0,
+                donorsCount: 0
+              };
+            }
+            alertMap[num].totalCollection += (Number(r.amount) || 0);
+            alertMap[num].donorsCount += 1;
           }
-          alertMap[num].totalCollection += (Number(r.amount) || 0);
-          alertMap[num].donorsCount += 1;
         });
 
         // Convert to array and sort strictly by alert number
