@@ -4,6 +4,7 @@ import { addPendingRegistration } from '../../services/dataService';
 import { compressImage } from '../../utils/imageCompressor';
 import { uploadToImageKit } from '../../utils/imageKitUploader';
 import { UserIcon, MapPinIcon, ShieldIcon, CreditCardIcon, EyeIcon, EyeOffIcon, CheckIcon } from '../../components/common/Icons';
+import qrCodeImg from '../../assets/qr code.jpeg';
 
 const indianStates = [
   "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", 
@@ -96,11 +97,11 @@ const Register = () => {
             <div className="flex flex-col items-center justify-center bg-white p-4 rounded-lg shadow-sm border border-gray-100 w-full md:w-1/3">
               <h3 className="font-bold text-gray-800 mb-2 tracking-widest uppercase text-sm">SCAN & PAY</h3>
               <img 
-                src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=upi://pay?pa=shct@sbi&pn=SHCT" 
-                alt="QR Code" 
-                className="w-40 h-40 object-contain mb-2"
+                src={qrCodeImg} 
+                alt="SHCT Official QR Code" 
+                className="w-40 h-40 object-contain mb-2 rounded p-1 bg-white"
               />
-              <p className="text-xs font-bold text-gray-500">UPI ID: shct@sbi</p>
+              <p className="text-xs font-bold text-gray-500">Scan via PhonePe / GPay / Paytm</p>
             </div>
 
             {/* Bank Details Card */}

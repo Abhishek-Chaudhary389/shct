@@ -7,6 +7,7 @@ import sahilAnsariImg from '../assets/साहिल अंसारी.jpeg';
 import basitAnsariImg from '../assets/बासित अंसारी.jpeg';
 import rajeshImg from '../assets/राजेश.jpeg';
 import alamgirAnsariImg from '../assets/आलमगीर अंसारी.jpeg';
+import mohdKaifImg from '../assets/मोहम्मद कैफ.jpg';
 
 const AboutSHCT = () => {
   return (
@@ -161,7 +162,7 @@ const AboutSHCT = () => {
             <p className="text-gray-500 text-sm mt-2 font-medium">Silent Help Charitable Trust के समर्पित सदस्य</p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto px-4">
             
             {/* Member 1: आलमगीर अंसारी */}
             <div className="bg-white rounded-3xl p-6 shadow-md border border-gray-100 hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 flex flex-col items-center text-center relative overflow-hidden group">
@@ -179,7 +180,23 @@ const AboutSHCT = () => {
               <p className="text-xs text-gray-500 mt-2 font-medium leading-relaxed">Silent Help Charitable Trust के मगहर इकाई के नगर अध्यक्ष।</p>
             </div>
 
-            {/* Member 2: राजेश */}
+            {/* Member 2: मोहम्मद कैफ */}
+            <div className="bg-white rounded-3xl p-6 shadow-md border border-gray-100 hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 flex flex-col items-center text-center relative overflow-hidden group">
+              {/* Background gradient hint */}
+              <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-teal-100/20 to-emerald-100/20 rounded-bl-full -z-10"></div>
+              
+              {/* Photo Box on Top */}
+              <div className="w-36 h-44 rounded-2xl bg-gradient-to-tr from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden relative shadow-inner ring-4 ring-teal-500/20 group-hover:ring-teal-500/50 transition-all duration-500 mb-4 shrink-0 mx-auto">
+                <img src={mohdKaifImg} className="w-full h-full object-cover rounded-2xl group-hover:scale-105 transition-transform duration-500" alt="मोहम्मद कैफ" />
+              </div>
+
+              {/* Text Underneath */}
+              <h4 className="text-xl font-black text-gray-800 tracking-tight mt-2 mb-1">मोहम्मद कैफ</h4>
+              <p className="text-xs text-gray-400 mt-1 font-semibold uppercase tracking-wider text-[#087889]">नगर उपाध्यक्ष - SHCT मगहर</p>
+              <p className="text-xs text-gray-500 mt-2 font-medium leading-relaxed">Silent Help Charitable Trust मगहर इकाई के नगर उपाध्यक्ष।</p>
+            </div>
+
+            {/* Member 3: राजेश */}
             <div className="bg-white rounded-3xl p-6 shadow-md border border-gray-100 hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 flex flex-col items-center text-center relative overflow-hidden group">
               {/* Background gradient hint */}
               <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-teal-100/20 to-emerald-100/20 rounded-bl-full -z-10"></div>

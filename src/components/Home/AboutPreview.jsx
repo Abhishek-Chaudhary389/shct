@@ -9,6 +9,7 @@ import sahilAnsariImg from '../../assets/साहिल अंसारी.jpeg
 import basitAnsariImg from '../../assets/बासित अंसारी.jpeg';
 import rajeshImg from '../../assets/राजेश.jpeg';
 import alamgirAnsariImg from '../../assets/आलमगीर अंसारी.jpeg';
+import mohdKaifImg from '../../assets/मोहम्मद कैफ.jpg';
 
 const AboutPreview = () => {
   const leadersRef = useRef(null);
@@ -93,6 +94,15 @@ const AboutPreview = () => {
       role: "नगर अध्यक्ष - SHCT मगहर इकाई",
       desc: "Silent Help Charitable Trust के मगहर इकाई के नगर अध्यक्ष।",
       img: alamgirAnsariImg,
+      bgGrad: "from-teal-100/20 to-emerald-100/20",
+      ringColor: "ring-teal-500/20 group-hover:ring-teal-500/50",
+      textColor: "text-[#087889]"
+    },
+    {
+      name: "मोहम्मद कैफ",
+      role: "नगर उपाध्यक्ष - SHCT मगहर",
+      desc: "Silent Help Charitable Trust मगहर इकाई के नगर उपाध्यक्ष के रूप में समर्पित।",
+      img: mohdKaifImg,
       bgGrad: "from-teal-100/20 to-emerald-100/20",
       ringColor: "ring-teal-500/20 group-hover:ring-teal-500/50",
       textColor: "text-[#087889]"

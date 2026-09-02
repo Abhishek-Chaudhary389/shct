@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { getApprovedMembers } from '../../services/dataService';
 import { CreditCardIcon, AlertTriangleIcon, ArrowRightIcon, CheckIcon } from '../common/Icons';
+import qrCodeImg from '../../assets/qr code.jpeg';
 
 const RegistrationBanner = () => {
-  const qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=upi://pay?pa=fastrelief@sbi%26pn=FAST%2520RELIEF%2520CHARITABLE%2520TRUST%26cu=INR";
 
 
   const [memberCount, setMemberCount] = useState(0);
@@ -101,14 +101,14 @@ const RegistrationBanner = () => {
               <div className="bg-white p-4 rounded-2xl shadow-inner mb-4 flex flex-col items-center">
                 <span className="text-[10px] font-black text-indigo-900 tracking-wider mb-2">SCAN & PAY</span>
                 <img
-                  src={qrUrl}
-                  alt="UPI QR Code"
-                  className="w-40 h-40 object-contain"
+                  src={qrCodeImg}
+                  alt="SHCT Official UPI QR Code"
+                  className="w-40 h-40 object-contain rounded-lg"
                 />
               </div>
               <div className="text-center font-bold text-sm text-gray-300">
                 <p className="text-xs text-gray-400">UPI ID</p>
-                <p className="font-mono text-emerald-400">shct@sbi</p>
+                <p className="font-mono text-emerald-400">Scan via PhonePe / GPay / Paytm</p>
               </div>
             </div>
 
