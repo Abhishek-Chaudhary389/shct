@@ -197,6 +197,7 @@ const AdminDashboard = () => {
   const [isSavingGroups, setIsSavingGroups] = useState(false);
 
   const [newHomeAlert, setNewHomeAlert] = useState({
+    alertNumber: 1,
     group: '', member: '', uniqueId: '', date: '', address: '',
     daughter: '', marriageDate: '', accName: '', accNo: '',
     ifsc: '', branch: '', bank: '', minSupport: '50 रुपए', qrCodeBase64: '',
@@ -836,11 +837,12 @@ const AdminDashboard = () => {
       setDeletedAlertKeys(updatedDeletedAlerts);
       localStorage.setItem('shct_deleted_alert_keys', JSON.stringify(updatedDeletedAlerts));
 
+      const bName = (data.beneficiaryName || data.member || data.title || `Alert ${alertNum}`).trim();
       const payload = {
         ...data,
         alertNumber: alertNum,
-        beneficiaryName: data.beneficiaryName || data.member,
-        member: data.member || data.beneficiaryName,
+        beneficiaryName: bName,
+        member: bName,
         title: data.title || `Alert ${alertNum}`,
         type: alertType,
         isActive: data.isActive !== undefined ? data.isActive : true
@@ -1262,11 +1264,14 @@ const AdminDashboard = () => {
         finalQrCode = await uploadToImageKit(newHomeAlert.qrCodeBase64, `alert_qr_${newHomeAlert.uniqueId || 'member'}_${Date.now()}.jpg`);
       }
 
+      const num = Number(newHomeAlert.alertNumber) || 1;
       await addHomeAlert({
         ...newHomeAlert,
+        alertNumber: num,
+        title: `Alert ${num}`,
         qrCodeBase64: finalQrCode
       });
-      setNewHomeAlert({ group: '', member: '', uniqueId: '', date: '', address: '', daughter: '', marriageDate: '', accName: '', accNo: '', ifsc: '', branch: '', bank: '', minSupport: '50 रुपए', qrCodeBase64: '', type: 'beti' });
+      setNewHomeAlert({ alertNumber: 1, group: '', member: '', uniqueId: '', date: '', address: '', daughter: '', marriageDate: '', accName: '', accNo: '', ifsc: '', branch: '', bank: '', minSupport: '50 रुपए', qrCodeBase64: '', type: 'beti' });
 
       const fileInput = document.getElementById('qr-code-file-input');
       if (fileInput) fileInput.value = '';
@@ -2714,6 +2719,18 @@ const AdminDashboard = () => {
                   </div>
                   <form onSubmit={handleCreateHomeAlert} className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                     <div>
+                      <label className="block text-gray-700 font-bold mb-1">अलर्ट नंबर (Alert Number)</label>
+                      <input
+                        type="number"
+                        min="1"
+                        required
+                        value={newHomeAlert.alertNumber || 1}
+                        onChange={(e) => setNewHomeAlert({ ...newHomeAlert, alertNumber: e.target.value })}
+                        className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#087889] font-bold text-gray-800"
+                        placeholder="जैसे: 1, 2, 3..."
+                      />
+                    </div>
+                    <div>
                       <label className="block text-gray-700 font-bold mb-1">अलर्ट प्रकार (Alert Type)</label>
                       <select
                         required
@@ -2804,6 +2821,7 @@ const AdminDashboard = () => {
                   <table className="w-full text-left border-collapse min-w-[800px]">
                     <thead>
                       <tr className="bg-gray-50 text-gray-700 text-xs font-extrabold uppercase border-b border-gray-200">
+                        <th className="py-3 px-4">अलर्ट नं. (Alert No.)</th>
                         <th className="py-3 px-4">Group</th>
                         <th className="py-3 px-4">अलर्ट प्रकार (Type)</th>
                         <th className="py-3 px-4">सदस्य</th>
@@ -2816,6 +2834,11 @@ const AdminDashboard = () => {
                     <tbody className="divide-y divide-gray-100 text-sm font-medium">
                       {homeAlertsList.map(alert => (
                         <tr key={alert.id} className="hover:bg-gray-50/50">
+                          <td className="py-3 px-4">
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-teal-50 border border-teal-200 text-[#087889] font-extrabold text-xs rounded-lg shadow-xs">
+                              {alert.title || `Alert ${alert.alertNumber || alert.alertNo || 1}`}
+                            </span>
+                          </td>
                           <td className="py-3 px-4 font-bold text-[#087889]">Group - {alert.group}</td>
                           <td className="py-3 px-4">
                             <span className={`px-2 py-0.5 rounded text-xs font-bold ${alert.type === 'nidhan' ? 'bg-red-100 text-red-700' : 'bg-pink-100 text-pink-700'}`}>
@@ -2845,7 +2868,7 @@ const AdminDashboard = () => {
                           </td>
                         </tr>
                       ))}
-                      {homeAlertsList.length === 0 && <tr><td colSpan="7" className="text-center py-6 text-gray-500">कोई अलर्ट मौजूद नहीं है</td></tr>}
+                      {homeAlertsList.length === 0 && <tr><td colSpan="8" className="text-center py-6 text-gray-500">कोई अलर्ट मौजूद नहीं है</td></tr>}
                     </tbody>
                   </table>
                 </div>
@@ -3452,15 +3475,22 @@ const AdminDashboard = () => {
                       homeAlertsList.filter(a => !a.type || a.type === 'beti').forEach((a, idx) => {
                         const num = Number(a.alertNumber || a.alertNo || idx + 1);
                         if (num && !deletedAlertKeys.includes(`beti_${num}`)) {
-                          alertMap[num] = {
-                            id: a.id,
-                            alertNumber: num,
-                            type: 'beti',
-                            title: a.title || `Alert ${num}`,
-                            beneficiaryName: a.beneficiaryName || a.member || `अलर्ट ${num}`,
-                            totalCollection: 0,
-                            donorsCount: 0
-                          };
+                          const memberName = (a.beneficiaryName || a.member || a.name || '').trim();
+                          if (alertMap[num]) {
+                            if (memberName && !alertMap[num].beneficiaryName.includes(memberName)) {
+                              alertMap[num].beneficiaryName = alertMap[num].beneficiaryName ? `${alertMap[num].beneficiaryName}, ${memberName}` : memberName;
+                            }
+                          } else {
+                            alertMap[num] = {
+                              id: a.id,
+                              alertNumber: num,
+                              type: 'beti',
+                              title: a.title || `Alert ${num}`,
+                              beneficiaryName: memberName || `अलर्ट ${num}`,
+                              totalCollection: 0,
+                              donorsCount: 0
+                            };
+                          }
                         }
                       });
 
@@ -4136,15 +4166,22 @@ const AdminDashboard = () => {
                       homeAlertsList.filter(a => a.type === 'nidhan').forEach((a, idx) => {
                         const num = Number(a.alertNumber || a.alertNo || idx + 1);
                         if (num && !deletedAlertKeys.includes(`nidhan_${num}`)) {
-                          alertMap[num] = {
-                            id: a.id,
-                            alertNumber: num,
-                            type: 'nidhan',
-                            title: a.title || `Alert ${num}`,
-                            beneficiaryName: a.beneficiaryName || a.member || `अलर्ट ${num}`,
-                            totalCollection: 0,
-                            donorsCount: 0
-                          };
+                          const memberName = (a.beneficiaryName || a.member || a.name || '').trim();
+                          if (alertMap[num]) {
+                            if (memberName && !alertMap[num].beneficiaryName.includes(memberName)) {
+                              alertMap[num].beneficiaryName = alertMap[num].beneficiaryName ? `${alertMap[num].beneficiaryName}, ${memberName}` : memberName;
+                            }
+                          } else {
+                            alertMap[num] = {
+                              id: a.id,
+                              alertNumber: num,
+                              type: 'nidhan',
+                              title: a.title || `Alert ${num}`,
+                              beneficiaryName: memberName || `अलर्ट ${num}`,
+                              totalCollection: 0,
+                              donorsCount: 0
+                            };
+                          }
                         }
                       });
 
@@ -5934,20 +5971,25 @@ const AdminDashboard = () => {
                 </div>
 
                 <div className="sm:col-span-2">
-                  <label className="block text-xs font-bold text-gray-700 mb-1">
-                    {alertModal.type === 'beti' ? 'लाभार्थी / सदस्य का नाम *' : 'दिवंगत सदस्य / परिवार का नाम *'}
-                  </label>
+                  <div className="flex justify-between items-center mb-1">
+                    <label className="block text-xs font-bold text-gray-700">
+                      {alertModal.type === 'beti' ? 'लाभार्थी / सदस्यों के नाम (Beneficiary Names)' : 'दिवंगत सदस्य / परिवारों के नाम'}
+                    </label>
+                    <span className="text-[10px] text-gray-400 font-semibold">(एक या अधिक नाम लिख सकते हैं)</span>
+                  </div>
                   <input
                     type="text"
-                    required
                     value={alertModal.data.beneficiaryName || alertModal.data.member || ''}
                     onChange={(e) => setAlertModal({
                       ...alertModal,
                       data: { ...alertModal.data, beneficiaryName: e.target.value, member: e.target.value }
                     })}
                     className="w-full px-3 py-2 text-xs border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-[#087889] outline-none font-bold"
-                    placeholder="जैसे: सुरेश चंद्र"
+                    placeholder="उदा: अभिषेक, आदित्य (या सुरेश चंद्र)"
                   />
+                  <p className="text-[11px] text-teal-700 mt-1 font-medium">
+                    💡 यदि Alert {alertModal.data.alertNumber || 1} में कई लोग शामिल हैं, तो आप कॉमा (,) लगाकर सभी नाम एक साथ लिख सकते हैं (जैसे: अभिषेक, आदित्य)।
+                  </p>
                 </div>
 
                 <div>

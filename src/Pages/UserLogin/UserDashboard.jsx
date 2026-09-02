@@ -961,8 +961,10 @@ const UserDashboard = () => {
           donorEmail: user.email,
           donorDistrict: user.district || '',
           donorBlock: user.block || '',
-          beneficiaryName: selectedAlert.member,
-          beneficiaryUniqueId: selectedAlert.uniqueId,
+          beneficiaryName: selectedAlert.member || selectedAlert.beneficiaryName || '',
+          beneficiaryUniqueId: selectedAlert.uniqueId || selectedAlert.beneficiaryUniqueId || '',
+          alertNumber: Number(selectedAlert.alertNumber || selectedAlert.alertNo || 1),
+          alertTitle: selectedAlert.title || `Alert ${Number(selectedAlert.alertNumber || selectedAlert.alertNo || 1)}`,
           group: selectedAlert.group,
           transactionId: txnId,
           date: txnDate,
@@ -1036,17 +1038,19 @@ const UserDashboard = () => {
                     <input
                       type="text"
                       disabled
-                      value={`${selectedAlert.member} (${selectedAlert.uniqueId})`}
-                      className="w-full px-3 py-2 bg-gray-100 border rounded-lg text-gray-500 cursor-not-allowed"
+                      value={`[${selectedAlert.title || `Alert ${selectedAlert.alertNumber || 1}`}] ${selectedAlert.member || selectedAlert.beneficiaryName} (${selectedAlert.uniqueId || ''})`}
+                      className="w-full px-3 py-2 bg-gray-100 border rounded-lg text-gray-700 font-bold cursor-not-allowed"
                     />
                   ) : (
                     <select
                       value={selectedAlert ? selectedAlert.id : ''}
                       onChange={handleSelectAlert}
-                      className="w-full px-3 py-2 bg-white border rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#087889]"
+                      className="w-full px-3 py-2 bg-white border rounded-lg text-gray-700 font-bold focus:outline-none focus:ring-2 focus:ring-[#087889]"
                     >
                       {activeGroupAlerts.map(a => (
-                        <option key={a.id} value={a.id}>{a.member} ({a.uniqueId})</option>
+                        <option key={a.id} value={a.id}>
+                          [{a.title || `Alert ${a.alertNumber || 1}`}] {a.member || a.beneficiaryName} ({a.uniqueId})
+                        </option>
                       ))}
                     </select>
                   )}
@@ -1302,8 +1306,10 @@ const UserDashboard = () => {
           donorEmail: user.email,
           donorDistrict: user.district || '',
           donorBlock: user.block || '',
-          beneficiaryName: selectedAlert.member,
-          beneficiaryUniqueId: selectedAlert.uniqueId,
+          beneficiaryName: selectedAlert.member || selectedAlert.beneficiaryName || '',
+          beneficiaryUniqueId: selectedAlert.uniqueId || selectedAlert.beneficiaryUniqueId || '',
+          alertNumber: Number(selectedAlert.alertNumber || selectedAlert.alertNo || 1),
+          alertTitle: selectedAlert.title || `Alert ${Number(selectedAlert.alertNumber || selectedAlert.alertNo || 1)}`,
           group: selectedAlert.group,
           transactionId: txnId,
           date: txnDate,
@@ -1377,17 +1383,19 @@ const UserDashboard = () => {
                     <input
                       type="text"
                       disabled
-                      value={`${selectedAlert.member} (${selectedAlert.uniqueId})`}
-                      className="w-full px-3 py-2 bg-gray-100 border rounded-lg text-gray-500 cursor-not-allowed"
+                      value={`[${selectedAlert.title || `Alert ${selectedAlert.alertNumber || 1}`}] ${selectedAlert.member || selectedAlert.beneficiaryName} (${selectedAlert.uniqueId || ''})`}
+                      className="w-full px-3 py-2 bg-gray-100 border rounded-lg text-gray-700 font-bold cursor-not-allowed"
                     />
                   ) : (
                     <select
                       value={selectedAlert ? selectedAlert.id : ''}
                       onChange={handleSelectAlert}
-                      className="w-full px-3 py-2 bg-white border rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#087889]"
+                      className="w-full px-3 py-2 bg-white border rounded-lg text-gray-700 font-bold focus:outline-none focus:ring-2 focus:ring-[#087889]"
                     >
                       {activeGroupAlerts.map(a => (
-                        <option key={a.id} value={a.id}>{a.member} ({a.uniqueId})</option>
+                        <option key={a.id} value={a.id}>
+                          [{a.title || `Alert ${a.alertNumber || 1}`}] {a.member || a.beneficiaryName} ({a.uniqueId})
+                        </option>
                       ))}
                     </select>
                   )}

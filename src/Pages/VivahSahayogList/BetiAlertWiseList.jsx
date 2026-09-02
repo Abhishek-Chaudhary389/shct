@@ -89,14 +89,21 @@ const BetiAlertWiseList = () => {
         betiHomeAlerts.forEach((a, idx) => {
           const num = Number(a.alertNumber || a.alertNo || idx + 1);
           if (num && !deletedKeys.includes(`beti_${num}`)) {
-            alertMap[num] = {
-              id: a.id,
-              alertNumber: num,
-              title: a.title || `Alert ${num}`,
-              beneficiaryName: a.beneficiaryName || a.member || a.name || `अलर्ट ${num}`,
-              totalCollection: 0,
-              donorsCount: 0
-            };
+            const memberName = (a.beneficiaryName || a.member || a.name || '').trim();
+            if (alertMap[num]) {
+              if (memberName && !alertMap[num].beneficiaryName.includes(memberName)) {
+                alertMap[num].beneficiaryName = alertMap[num].beneficiaryName ? `${alertMap[num].beneficiaryName}, ${memberName}` : memberName;
+              }
+            } else {
+              alertMap[num] = {
+                id: a.id,
+                alertNumber: num,
+                title: a.title || `Alert ${num}`,
+                beneficiaryName: memberName || `अलर्ट ${num}`,
+                totalCollection: 0,
+                donorsCount: 0
+              };
+            }
           }
         });
 
