@@ -3437,10 +3437,10 @@ const AdminDashboard = () => {
                         <div className="flex flex-wrap items-center gap-3">
                           <h3 className="text-xl font-extrabold text-gray-800">बेटी विवाह - अलर्ट अनुसार सूची (Alert Wise Sahyog)</h3>
                           <button
-                            onClick={() => handleOpenAddAlert('beti')}
-                            className="px-3.5 py-1.5 bg-[#087889] hover:bg-[#06616e] text-white text-xs font-bold rounded-xl shadow transition-colors flex items-center gap-1.5 cursor-pointer"
+                            onClick={() => setActiveTab('home_alerts')}
+                            className="px-3.5 py-1.5 bg-gray-800 hover:bg-gray-700 text-teal-300 border border-teal-500/30 text-xs font-bold rounded-xl shadow transition-colors flex items-center gap-1.5 cursor-pointer"
                           >
-                            <PlusIcon className="w-4 h-4" /> नया अलर्ट बनाएं (Create Alert)
+                            <SettingsIcon className="w-4 h-4 text-amber-400" /> होम अलर्ट्स सेट करें (Manage Alerts)
                           </button>
                         </div>
                         <p className="text-xs text-gray-500 mt-1">प्रत्येक सक्रिय अलर्ट का कुल कलेक्शन और डोनर विवरण।</p>
@@ -4128,10 +4128,10 @@ const AdminDashboard = () => {
                         <div className="flex flex-wrap items-center gap-3">
                           <h3 className="text-xl font-extrabold text-gray-800">निधन सहयोग - अलर्ट अनुसार सूची (Alert Wise Sahyog)</h3>
                           <button
-                            onClick={() => handleOpenAddAlert('nidhan')}
-                            className="px-3.5 py-1.5 bg-[#087889] hover:bg-[#06616e] text-white text-xs font-bold rounded-xl shadow transition-colors flex items-center gap-1.5 cursor-pointer"
+                            onClick={() => setActiveTab('home_alerts')}
+                            className="px-3.5 py-1.5 bg-gray-800 hover:bg-gray-700 text-teal-300 border border-teal-500/30 text-xs font-bold rounded-xl shadow transition-colors flex items-center gap-1.5 cursor-pointer"
                           >
-                            <PlusIcon className="w-4 h-4" /> नया अलर्ट बनाएं (Create Alert)
+                            <SettingsIcon className="w-4 h-4 text-amber-400" /> होम अलर्ट्स सेट करें (Manage Alerts)
                           </button>
                         </div>
                         <p className="text-xs text-gray-500 mt-1">प्रत्येक सक्रिय अलर्ट का कुल कलेक्शन और डोनर विवरण।</p>
