@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import logoImg from '../assets/shct.png';
-import { LockIcon, MapPinIcon, PhoneIcon, MailIcon, HeartIcon } from './common/Icons';
+import { MapPinIcon, PhoneIcon, MailIcon, GlobeIcon } from './common/Icons';
 
 const Footer = () => {
   // क्लिक करते ही पेज ऊपर से खुलेगा
@@ -18,8 +18,13 @@ const Footer = () => {
           {/* Column 1: About NGO */}
           <div>
             <div className="flex items-center space-x-4 mb-6">
-              <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center p-[1px] shadow-md shrink-0 overflow-hidden">
-                <img src={logoImg} alt="SHCT Logo" className="w-full h-full object-contain" />
+              <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-md shrink-0 overflow-hidden p-1.5 border border-white/80">
+                <img
+                  src={logoImg}
+                  alt="SHCT Logo"
+                  className="w-full h-full object-contain"
+                  style={{ transform: 'scale(1.44)' }}
+                />
               </div>
               <div>
                 <h3 className="text-2xl font-bold text-[#f08519]">SHCT</h3>
@@ -87,8 +92,8 @@ const Footer = () => {
                 </Link>
               </li>
               <li>
-                <Link to="/admin-login" onClick={handleScrollTop} className="hover:text-[#f08519] transition-colors flex items-center group font-bold text-amber-400">
-                  <LockIcon className="w-4 h-4 text-[#f08519] mr-2" /> Admin Panel (एडमिन पैनल)
+                <Link to="/admin-login" onClick={handleScrollTop} className="hover:text-[#f08519] transition-colors flex items-center group">
+                  <span className="text-[#087889] group-hover:text-[#f08519] mr-2">▸</span> Admin Panel
                 </Link>
               </li>
             </ul>
@@ -107,11 +112,17 @@ const Footer = () => {
               </div>
               <div className="flex items-center space-x-3">
                 <PhoneIcon className="w-5 h-5 text-[#f08519] shrink-0" />
-                <p>+9838385566</p>
+                <p>+91 9838385566</p>
               </div>
               <div className="flex items-center space-x-3">
                 <MailIcon className="w-5 h-5 text-[#f08519] shrink-0" />
                 <p>silenthelpct@gmail.com</p>
+              </div>
+              <div className="flex items-center space-x-3">
+                <GlobeIcon className="w-5 h-5 text-[#f08519] shrink-0" />
+                <a href="https://www.silenthelpct.com" target="_blank" rel="noopener noreferrer" className="hover:text-[#f08519] transition-colors">
+                  www.silenthelpct.com
+                </a>
               </div>
             </div>
           </div>
@@ -121,8 +132,8 @@ const Footer = () => {
         {/* Bottom Copyright Section */}
         <div className="pt-6 border-t border-gray-800 flex flex-col md:flex-row items-start md:items-center justify-between text-xs text-gray-500 font-medium gap-3">
           <p className="text-left">&copy; {new Date().getFullYear()} Silent Help Charitable Trust. All Rights Reserved.</p>
-          <p className="text-left md:text-right flex items-center gap-1">
-            Designed and Developed by <a href="https://www.snstudio.in/" target="_blank" rel="noopener noreferrer" className="text-amber-400 hover:text-[#f08519] font-bold transition-colors">SN Studio</a> <HeartIcon className="w-3.5 h-3.5 text-red-500 fill-red-500 inline-block" />
+          <p className="text-left md:text-right">
+            Designed and Developed by <a href="https://www.snstudio.in/" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-gray-300 font-semibold transition-colors">SN Studio</a>
           </p>
         </div>
 

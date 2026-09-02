@@ -1,14 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { signOut, onAuthStateChanged } from 'firebase/auth';
+import { 
+  signOut, 
+  onAuthStateChanged, 
+  updatePassword, 
+  reauthenticateWithCredential, 
+  EmailAuthProvider 
+} from 'firebase/auth';
 import { auth } from '../../firebase';
 import logoImg from '../../assets/shct.png';
-import { 
-  getPendingRegistrations, 
+import {
+  getPendingRegistrations,
   getAllRegistrationsHistory,
-  getApprovedMembers, 
-  getAnnualDonations, 
-  approveRegistration, 
+  getApprovedMembers,
+  getAnnualDonations,
+  approveRegistration,
   rejectRegistration,
   getBetiSahayogList,
   getBetiSahyogList,
@@ -167,6 +173,19 @@ const AdminDashboard = () => {
   const [isSavingMember, setIsSavingMember] = useState(false);
   const [selectedGroups, setSelectedGroups] = useState({});
 
+  // Change Password Modal State
+  const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = useState(false);
+  const [changePasswordForm, setChangePasswordForm] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [changePasswordStatus, setChangePasswordStatus] = useState({ type: '', message: '' });
+
   const [betiFilter, setBetiFilter] = useState('PENDING'); // 'PENDING' | 'APPROVED' | 'REJECTED' | 'ALL'
   const [nidhanFilter, setNidhanFilter] = useState('PENDING'); // 'PENDING' | 'APPROVED' | 'REJECTED' | 'ALL'
   const [betiAppFilter, setBetiAppFilter] = useState('ALL');
@@ -311,11 +330,10 @@ const AdminDashboard = () => {
               <button
                 key={num}
                 onClick={() => setPageFor(tab, num)}
-                className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
-                  page === num
+                className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${page === num
                     ? 'bg-[#087889] text-white shadow-sm'
                     : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-100'
-                }`}
+                  }`}
               >
                 {num}
               </button>
@@ -517,6 +535,7 @@ const AdminDashboard = () => {
       dob: "जन्म तिथि",
       mobile: "मोबाइल नंबर",
       aadhaar: "आधार नंबर",
+      pan: "पैन नंबर",
       gender: "जेंडर",
       occupation: "व्यवसाय",
       district: "जिला",
@@ -526,6 +545,7 @@ const AdminDashboard = () => {
       nomineeName: "नॉमिनी का नाम",
       nomineeRelation: "नॉमिनी से संबंध",
       nomineeMobile: "नॉमिनी मोबाइल",
+      nomineeAadhaar: "नॉमिनी आधार नंबर",
       group: "ग्रुप",
       registeredOn: "रजिस्ट्रेशन तिथि"
     };
@@ -1339,7 +1359,66 @@ const AdminDashboard = () => {
       'Status': item.status || 'PENDING',
       'Submitted Date': item.submittedAt ? new Date(item.submittedAt).toLocaleDateString() : ''
     }));
-    exportToCSV(data, `${type}_sahayog_applications_${new Date().toISOString().slice(0,10)}.csv`);
+    exportToCSV(data, `${type}_sahayog_applications_${new Date().toISOString().slice(0, 10)}.csv`);
+  };
+
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    const { currentPassword, newPassword, confirmPassword } = changePasswordForm;
+
+    if (!currentPassword) {
+      setChangePasswordStatus({ type: 'error', message: 'कृपया वर्तमान पासवर्ड दर्ज करें।' });
+      return;
+    }
+    if (newPassword.length < 6) {
+      setChangePasswordStatus({ type: 'error', message: 'नया पासवर्ड कम से कम 6 अक्षरों का होना चाहिए।' });
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setChangePasswordStatus({ type: 'error', message: 'नया पासवर्ड और पुष्टि पासवर्ड मेल नहीं खा रहे हैं।' });
+      return;
+    }
+
+    const user = auth.currentUser;
+    if (!user || !user.email) {
+      setChangePasswordStatus({ type: 'error', message: 'सत्र समाप्त हो गया है। कृपया पुनः लॉगिन करें।' });
+      return;
+    }
+
+    setIsChangingPassword(true);
+    setChangePasswordStatus({ type: '', message: '' });
+
+    try {
+      // Re-authenticate user for security
+      const credential = EmailAuthProvider.credential(user.email, currentPassword);
+      await reauthenticateWithCredential(user, credential);
+
+      // Update password
+      await updatePassword(user, newPassword);
+
+      setChangePasswordStatus({ 
+        type: 'success', 
+        message: 'पासवर्ड सफलतापूर्वक बदल दिया गया है!' 
+      });
+      setChangePasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+      setTimeout(() => {
+        setIsChangePasswordModalOpen(false);
+        setChangePasswordStatus({ type: '', message: '' });
+      }, 2500);
+    } catch (err) {
+      console.error("Change password error:", err);
+      let msg = 'पासवर्ड बदलने में समस्या आई।';
+      if (err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
+        msg = 'वर्तमान पासवर्ड गलत है। कृपया सही पासवर्ड दर्ज करें।';
+      } else if (err.code === 'auth/weak-password') {
+        msg = 'नया पासवर्ड बहुत कमजोर है। कृपया 6 या अधिक अक्षरों का मजबूत पासवर्ड दर्ज करें।';
+      } else if (err.code === 'auth/too-many-requests') {
+        msg = 'सुरक्षा कारणों से अस्थायी रूप से ब्लॉक है। कृपया कुछ देर बाद प्रयास करें।';
+      }
+      setChangePasswordStatus({ type: 'error', message: msg });
+    } finally {
+      setIsChangingPassword(false);
+    }
   };
 
   const handleLogout = async () => {
@@ -1379,6 +1458,16 @@ const AdminDashboard = () => {
                 <span className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] font-black px-2 py-0.5 rounded-md uppercase">Super Admin</span>
               </div>
             )}
+            <button
+              onClick={() => {
+                setChangePasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+                setChangePasswordStatus({ type: '', message: '' });
+                setIsChangePasswordModalOpen(true);
+              }}
+              className="text-xs font-semibold px-4 py-2.5 bg-gray-800 hover:bg-gray-700 text-teal-300 border border-teal-500/30 rounded-xl transition-colors shadow-sm flex items-center gap-1.5 cursor-pointer"
+            >
+              <KeyIcon className="w-4 h-4 text-amber-400" /> पासवर्ड बदलें
+            </button>
             <button
               onClick={() => navigate('/')}
               className="text-xs font-semibold px-4 py-2.5 bg-gray-800 hover:bg-gray-700 text-gray-200 rounded-xl transition-colors shadow-sm flex items-center gap-1.5 cursor-pointer"
@@ -1492,11 +1581,10 @@ const AdminDashboard = () => {
               <div className="pt-2">
                 <button
                   onClick={() => setIsBetiMenuOpen(!isBetiMenuOpen)}
-                  className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-bold text-sm transition-all shadow-sm ${
-                    ['beti_receipts', 'beti_account_holder', 'beti_alert_wise'].includes(activeTab)
+                  className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-bold text-sm transition-all shadow-sm ${['beti_receipts', 'beti_account_holder', 'beti_alert_wise'].includes(activeTab)
                       ? 'bg-[#087889] text-white border border-teal-500/30'
                       : 'text-gray-300 hover:bg-gray-800 hover:text-white'
-                  }`}
+                    }`}
                 >
                   <div className="flex items-center gap-3">
                     <WeddingIcon className="w-5 h-5 opacity-90 shrink-0 text-pink-400" />
@@ -1516,7 +1604,7 @@ const AdminDashboard = () => {
                       onClick={() => setActiveTab('beti_receipts')}
                       className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl font-semibold text-xs transition-all ${activeTab === 'beti_receipts' ? 'bg-[#087889] text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
                     >
-                      <ReceiptIcon className="w-4 h-4 opacity-80 shrink-0 text-pink-400" /> 
+                      <ReceiptIcon className="w-4 h-4 opacity-80 shrink-0 text-pink-400" />
                       <span className="text-left flex-1">Beti Receipts (रसीदें)</span>
                       {betiReceiptsList.filter(r => r.status === 'PENDING').length > 0 && (
                         <span className="bg-[#f08519] text-white text-[9px] px-1.5 py-0.5 rounded-full font-black">
@@ -1528,14 +1616,14 @@ const AdminDashboard = () => {
                       onClick={() => setActiveTab('beti_account_holder')}
                       className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl font-semibold text-xs transition-all ${activeTab === 'beti_account_holder' ? 'bg-[#087889] text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
                     >
-                      <UserIcon className="w-4 h-4 opacity-80 shrink-0 text-amber-300" /> 
+                      <UserIcon className="w-4 h-4 opacity-80 shrink-0 text-amber-300" />
                       <span className="text-left flex-1">Account Holder Wise</span>
                     </button>
                     <button
                       onClick={() => setActiveTab('beti_alert_wise')}
                       className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl font-semibold text-xs transition-all ${activeTab === 'beti_alert_wise' ? 'bg-[#087889] text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
                     >
-                      <AlertCircleIcon className="w-4 h-4 opacity-80 shrink-0 text-teal-300" /> 
+                      <AlertCircleIcon className="w-4 h-4 opacity-80 shrink-0 text-teal-300" />
                       <span className="text-left flex-1">Alert Wise</span>
                     </button>
                   </div>
@@ -1546,11 +1634,10 @@ const AdminDashboard = () => {
               <div className="pt-2">
                 <button
                   onClick={() => setIsNidhanMenuOpen(!isNidhanMenuOpen)}
-                  className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-bold text-sm transition-all shadow-sm ${
-                    ['nidhan_receipts', 'nidhan_account_holder', 'nidhan_alert_wise'].includes(activeTab)
+                  className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-bold text-sm transition-all shadow-sm ${['nidhan_receipts', 'nidhan_account_holder', 'nidhan_alert_wise'].includes(activeTab)
                       ? 'bg-[#087889] text-white border border-teal-500/30'
                       : 'text-gray-300 hover:bg-gray-800 hover:text-white'
-                  }`}
+                    }`}
                 >
                   <div className="flex items-center gap-3">
                     <DoveIcon className="w-5 h-5 opacity-90 shrink-0 text-teal-300" />
@@ -1570,7 +1657,7 @@ const AdminDashboard = () => {
                       onClick={() => setActiveTab('nidhan_receipts')}
                       className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl font-semibold text-xs transition-all ${activeTab === 'nidhan_receipts' ? 'bg-[#087889] text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
                     >
-                      <ReceiptIcon className="w-4 h-4 opacity-80 shrink-0 text-teal-300" /> 
+                      <ReceiptIcon className="w-4 h-4 opacity-80 shrink-0 text-teal-300" />
                       <span className="text-left flex-1">Nidhan Receipts (रसीदें)</span>
                       {nidhanReceiptsList.filter(r => r.status === 'PENDING').length > 0 && (
                         <span className="bg-[#f08519] text-white text-[9px] px-1.5 py-0.5 rounded-full font-black">
@@ -1582,14 +1669,14 @@ const AdminDashboard = () => {
                       onClick={() => setActiveTab('nidhan_account_holder')}
                       className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl font-semibold text-xs transition-all ${activeTab === 'nidhan_account_holder' ? 'bg-[#087889] text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
                     >
-                      <UserIcon className="w-4 h-4 opacity-80 shrink-0 text-amber-300" /> 
+                      <UserIcon className="w-4 h-4 opacity-80 shrink-0 text-amber-300" />
                       <span className="text-left flex-1">Account Holder Wise</span>
                     </button>
                     <button
                       onClick={() => setActiveTab('nidhan_alert_wise')}
                       className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl font-semibold text-xs transition-all ${activeTab === 'nidhan_alert_wise' ? 'bg-[#087889] text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
                     >
-                      <AlertCircleIcon className="w-4 h-4 opacity-80 shrink-0 text-teal-300" /> 
+                      <AlertCircleIcon className="w-4 h-4 opacity-80 shrink-0 text-teal-300" />
                       <span className="text-left flex-1">Alert Wise</span>
                     </button>
                   </div>
@@ -1640,6 +1727,20 @@ const AdminDashboard = () => {
                     </button>
                   </div>
                 )}
+              </div>
+
+              <div className="pt-4 border-t border-gray-800">
+                <button
+                  onClick={() => {
+                    setChangePasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+                    setChangePasswordStatus({ type: '', message: '' });
+                    setIsChangePasswordModalOpen(true);
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-xs transition-all text-amber-300 hover:bg-gray-800 hover:text-amber-200 border border-amber-500/20 bg-amber-500/5 cursor-pointer"
+                >
+                  <KeyIcon className="w-4 h-4 opacity-90 shrink-0 text-amber-400" />
+                  <span className="text-left flex-1">पासवर्ड बदलें (Password)</span>
+                </button>
               </div>
 
             </nav>
@@ -2142,9 +2243,9 @@ const AdminDashboard = () => {
                       if (!tableSearches.groups.trim()) return true;
                       const q = tableSearches.groups.toLowerCase();
                       return (m.name || '').toLowerCase().includes(q) ||
-                             (m.uniqueId || '').toLowerCase().includes(q) ||
-                             (m.mobile || '').toLowerCase().includes(q) ||
-                             (m.group || '').toLowerCase().includes(q);
+                        (m.uniqueId || '').toLowerCase().includes(q) ||
+                        (m.mobile || '').toLowerCase().includes(q) ||
+                        (m.group || '').toLowerCase().includes(q);
                     });
                     const totalEntries = filteredGroupsList.length;
                     const page = tablePages.groups || 1;
@@ -2251,8 +2352,8 @@ const AdminDashboard = () => {
                         key={f}
                         onClick={() => setRegistrationFilter(f)}
                         className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1 ${registrationFilter === f
-                            ? 'bg-white text-amber-800 shadow-sm'
-                            : 'text-white hover:bg-white/10'
+                          ? 'bg-white text-amber-800 shadow-sm'
+                          : 'text-white hover:bg-white/10'
                           }`}
                       >
                         {f === 'PENDING' ? <><ClockIcon className="w-3.5 h-3.5" /> लंबित ({pendingList.filter(r => r.status === 'PENDING' || !r.status).length})</> :
@@ -2287,11 +2388,11 @@ const AdminDashboard = () => {
                     if (!tableSearches.pending.trim()) return true;
                     const q = tableSearches.pending.toLowerCase();
                     return (r.name || '').toLowerCase().includes(q) ||
-                           (r.mobile || '').toLowerCase().includes(q) ||
-                           (r.transactionId || '').toLowerCase().includes(q) ||
-                           (r.district || '').toLowerCase().includes(q) ||
-                           (r.fatherName || '').toLowerCase().includes(q) ||
-                           (r.id || '').toLowerCase().includes(q);
+                      (r.mobile || '').toLowerCase().includes(q) ||
+                      (r.transactionId || '').toLowerCase().includes(q) ||
+                      (r.district || '').toLowerCase().includes(q) ||
+                      (r.fatherName || '').toLowerCase().includes(q) ||
+                      (r.id || '').toLowerCase().includes(q);
                   });
 
                   const totalEntries = filteredPendingList.length;
@@ -2440,10 +2541,10 @@ const AdminDashboard = () => {
                     if (!tableSearches.approved.trim()) return true;
                     const q = tableSearches.approved.toLowerCase();
                     return (m.name || '').toLowerCase().includes(q) ||
-                           (m.uniqueId || '').toLowerCase().includes(q) ||
-                           (m.mobile || '').toLowerCase().includes(q) ||
-                           (m.district || '').toLowerCase().includes(q) ||
-                           (m.block || '').toLowerCase().includes(q);
+                      (m.uniqueId || '').toLowerCase().includes(q) ||
+                      (m.mobile || '').toLowerCase().includes(q) ||
+                      (m.district || '').toLowerCase().includes(q) ||
+                      (m.block || '').toLowerCase().includes(q);
                   });
 
                   const totalEntries = filteredApprovedList.length;
@@ -2547,10 +2648,10 @@ const AdminDashboard = () => {
                     if (!tableSearches.donations.trim()) return true;
                     const q = tableSearches.donations.toLowerCase();
                     return (d.name || '').toLowerCase().includes(q) ||
-                           (d.uniqueId || '').toLowerCase().includes(q) ||
-                           (d.transactionId || '').toLowerCase().includes(q) ||
-                           (d.district || '').toLowerCase().includes(q) ||
-                           (d.amount ? String(d.amount) : '').includes(q);
+                      (d.uniqueId || '').toLowerCase().includes(q) ||
+                      (d.transactionId || '').toLowerCase().includes(q) ||
+                      (d.district || '').toLowerCase().includes(q) ||
+                      (d.amount ? String(d.amount) : '').includes(q);
                   });
 
                   const totalEntries = filteredDonationsList.length;
@@ -2681,8 +2782,8 @@ const AdminDashboard = () => {
                         type="submit"
                         disabled={isSavingAlert}
                         className={`px-6 py-2.5 text-white font-bold rounded-lg shadow transition-colors flex items-center gap-2 ml-auto cursor-pointer ${isSavingAlert
-                            ? 'bg-gray-400 cursor-not-allowed'
-                            : 'bg-[#087889] hover:bg-[#06616e]'
+                          ? 'bg-gray-400 cursor-not-allowed'
+                          : 'bg-[#087889] hover:bg-[#06616e]'
                           }`}
                       >
                         {isSavingAlert ? (
@@ -2767,8 +2868,8 @@ const AdminDashboard = () => {
                       <button
                         onClick={handleToggleBetiAutoApprove}
                         className={`px-3 py-1 border text-[11px] font-black rounded-lg shadow-sm transition-colors flex items-center gap-1.5 cursor-pointer ${homeSettings.autoApproveBeti
-                            ? 'bg-amber-50 text-amber-700 hover:bg-amber-100 border-amber-200'
-                            : 'bg-gray-50 text-gray-500 hover:bg-gray-100 border-gray-200'
+                          ? 'bg-amber-50 text-amber-700 hover:bg-amber-100 border-amber-200'
+                          : 'bg-gray-50 text-gray-500 hover:bg-gray-100 border-gray-200'
                           }`}
                       >
                         <RefreshIcon className="w-3.5 h-3.5" /> ऑटो-वेरिफिकेशन: {homeSettings.autoApproveBeti ? 'चालू (AUTO)' : 'बंद (MANUAL)'}
@@ -2783,8 +2884,8 @@ const AdminDashboard = () => {
                         key={f}
                         onClick={() => { setBetiFilter(f); setPageFor('beti_receipts', 1); }}
                         className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1 cursor-pointer ${betiFilter === f
-                            ? 'bg-[#087889] text-white shadow-sm'
-                            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200/50'
+                          ? 'bg-[#087889] text-white shadow-sm'
+                          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200/50'
                           }`}
                       >
                         {f === 'PENDING' ? <><ClockIcon className="w-3.5 h-3.5" /> लंबित ({betiReceiptsList.filter(r => r.status === 'PENDING').length})</> :
@@ -2818,11 +2919,11 @@ const AdminDashboard = () => {
                     if (!tableSearches.beti_receipts.trim()) return true;
                     const q = tableSearches.beti_receipts.toLowerCase();
                     return (r.donorName || '').toLowerCase().includes(q) ||
-                           (r.donorUniqueId || '').toLowerCase().includes(q) ||
-                           (r.donorMobile || '').toLowerCase().includes(q) ||
-                           (r.beneficiaryName || '').toLowerCase().includes(q) ||
-                           (r.beneficiaryUniqueId || '').toLowerCase().includes(q) ||
-                           (r.transactionId || '').toLowerCase().includes(q);
+                      (r.donorUniqueId || '').toLowerCase().includes(q) ||
+                      (r.donorMobile || '').toLowerCase().includes(q) ||
+                      (r.beneficiaryName || '').toLowerCase().includes(q) ||
+                      (r.beneficiaryUniqueId || '').toLowerCase().includes(q) ||
+                      (r.transactionId || '').toLowerCase().includes(q);
                   });
 
                   const totalEntries = filteredBetiReceipts.length;
@@ -2875,8 +2976,8 @@ const AdminDashboard = () => {
                                 </td>
                                 <td className="py-3 px-4 text-center">
                                   <span className={`px-2.5 py-1 text-[11px] font-black rounded-full shadow-sm ${receipt.status === 'APPROVED' ? 'bg-green-100 text-green-700' :
-                                      receipt.status === 'REJECTED' ? 'bg-red-100 text-red-700' :
-                                        'bg-amber-100 text-amber-700'
+                                    receipt.status === 'REJECTED' ? 'bg-red-100 text-red-700' :
+                                      'bg-amber-100 text-amber-700'
                                     }`}>
                                     {receipt.status === 'APPROVED' ? 'स्वीकृत' :
                                       receipt.status === 'REJECTED' ? 'अस्वीकृत' :
@@ -2970,14 +3071,14 @@ const AdminDashboard = () => {
                     {(() => {
                       const allHolderDonors = betiReceiptsList
                         .filter(r => r.status === 'APPROVED' && (r.beneficiaryName || r.donationToMember || '').trim().toLowerCase() === selectedAdminBetiHolder.name.toLowerCase());
-                      
+
                       const filteredDonors = allHolderDonors.filter(d => {
                         if (!tableSearches.beti_account_holder.trim()) return true;
                         const q = tableSearches.beti_account_holder.toLowerCase();
                         return (d.donorName || '').toLowerCase().includes(q) ||
-                               (d.donorUniqueId || '').toLowerCase().includes(q) ||
-                               (d.donorMobile || '').toLowerCase().includes(q) ||
-                               (d.transactionId || '').toLowerCase().includes(q);
+                          (d.donorUniqueId || '').toLowerCase().includes(q) ||
+                          (d.donorMobile || '').toLowerCase().includes(q) ||
+                          (d.transactionId || '').toLowerCase().includes(q);
                       });
 
                       const totalEntries = filteredDonors.length;
@@ -3115,8 +3216,8 @@ const AdminDashboard = () => {
                         if (!tableSearches.beti_account_holder.trim()) return true;
                         const q = tableSearches.beti_account_holder.toLowerCase();
                         return h.name.toLowerCase().includes(q) ||
-                               h.district.toLowerCase().includes(q) ||
-                               h.block.toLowerCase().includes(q);
+                          h.district.toLowerCase().includes(q) ||
+                          h.block.toLowerCase().includes(q);
                       });
 
                       const totalEntries = filteredHolders.length;
@@ -3243,9 +3344,9 @@ const AdminDashboard = () => {
                         if (!tableSearches.beti_alert_wise.trim()) return true;
                         const q = tableSearches.beti_alert_wise.toLowerCase();
                         return (d.donorName || '').toLowerCase().includes(q) ||
-                               (d.donorUniqueId || '').toLowerCase().includes(q) ||
-                               (d.donorMobile || '').toLowerCase().includes(q) ||
-                               (d.transactionId || '').toLowerCase().includes(q);
+                          (d.donorUniqueId || '').toLowerCase().includes(q) ||
+                          (d.donorMobile || '').toLowerCase().includes(q) ||
+                          (d.transactionId || '').toLowerCase().includes(q);
                       });
 
                       const totalEntries = filteredDonors.length;
@@ -3325,7 +3426,7 @@ const AdminDashboard = () => {
 
                     {(() => {
                       const alertMap = {};
-                      
+
                       // Base alerts 1 & 2 if not deleted
                       if (!deletedAlertKeys.includes('beti_1')) {
                         alertMap[1] = {
@@ -3452,8 +3553,8 @@ const AdminDashboard = () => {
                       <button
                         onClick={handleToggleNidhanAutoApprove}
                         className={`px-3 py-1 border text-[11px] font-black rounded-lg shadow-sm transition-colors flex items-center gap-1.5 cursor-pointer ${homeSettings.autoApproveNidhan
-                            ? 'bg-amber-50 text-amber-700 hover:bg-amber-100 border-amber-200'
-                            : 'bg-gray-50 text-gray-500 hover:bg-gray-100 border-gray-200'
+                          ? 'bg-amber-50 text-amber-700 hover:bg-amber-100 border-amber-200'
+                          : 'bg-gray-50 text-gray-500 hover:bg-gray-100 border-gray-200'
                           }`}
                       >
                         <RefreshIcon className="w-3.5 h-3.5" /> ऑटो-वेरिफिकेशन: {homeSettings.autoApproveNidhan ? 'चालू (AUTO)' : 'बंद (MANUAL)'}
@@ -3468,8 +3569,8 @@ const AdminDashboard = () => {
                         key={f}
                         onClick={() => { setNidhanFilter(f); setPageFor('nidhan_receipts', 1); }}
                         className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1 cursor-pointer ${nidhanFilter === f
-                            ? 'bg-[#087889] text-white shadow-sm'
-                            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200/50'
+                          ? 'bg-[#087889] text-white shadow-sm'
+                          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200/50'
                           }`}
                       >
                         {f === 'PENDING' ? <><ClockIcon className="w-3.5 h-3.5" /> लंबित ({nidhanReceiptsList.filter(r => r.status === 'PENDING').length})</> :
@@ -3503,11 +3604,11 @@ const AdminDashboard = () => {
                     if (!tableSearches.nidhan_receipts.trim()) return true;
                     const q = tableSearches.nidhan_receipts.toLowerCase();
                     return (r.donorName || '').toLowerCase().includes(q) ||
-                           (r.donorUniqueId || '').toLowerCase().includes(q) ||
-                           (r.donorMobile || '').toLowerCase().includes(q) ||
-                           (r.beneficiaryName || '').toLowerCase().includes(q) ||
-                           (r.beneficiaryUniqueId || '').toLowerCase().includes(q) ||
-                           (r.transactionId || '').toLowerCase().includes(q);
+                      (r.donorUniqueId || '').toLowerCase().includes(q) ||
+                      (r.donorMobile || '').toLowerCase().includes(q) ||
+                      (r.beneficiaryName || '').toLowerCase().includes(q) ||
+                      (r.beneficiaryUniqueId || '').toLowerCase().includes(q) ||
+                      (r.transactionId || '').toLowerCase().includes(q);
                   });
 
                   const totalEntries = filteredNidhanReceipts.length;
@@ -3560,8 +3661,8 @@ const AdminDashboard = () => {
                                 </td>
                                 <td className="py-3 px-4 text-center">
                                   <span className={`px-2.5 py-1 text-[11px] font-black rounded-full shadow-sm ${receipt.status === 'APPROVED' ? 'bg-green-100 text-green-700' :
-                                      receipt.status === 'REJECTED' ? 'bg-red-100 text-red-700' :
-                                        'bg-amber-100 text-amber-700'
+                                    receipt.status === 'REJECTED' ? 'bg-red-100 text-red-700' :
+                                      'bg-amber-100 text-amber-700'
                                     }`}>
                                     {receipt.status === 'APPROVED' ? 'स्वीकृत' :
                                       receipt.status === 'REJECTED' ? 'अस्वीकृत' :
@@ -3655,14 +3756,14 @@ const AdminDashboard = () => {
                     {(() => {
                       const allHolderDonors = nidhanReceiptsList
                         .filter(r => r.status === 'APPROVED' && (r.beneficiaryName || r.donationToMember || r.deceasedName || '').trim().toLowerCase() === selectedAdminNidhanHolder.name.toLowerCase());
-                      
+
                       const filteredDonors = allHolderDonors.filter(d => {
                         if (!tableSearches.nidhan_account_holder.trim()) return true;
                         const q = tableSearches.nidhan_account_holder.toLowerCase();
                         return (d.donorName || '').toLowerCase().includes(q) ||
-                               (d.donorUniqueId || '').toLowerCase().includes(q) ||
-                               (d.donorMobile || '').toLowerCase().includes(q) ||
-                               (d.transactionId || '').toLowerCase().includes(q);
+                          (d.donorUniqueId || '').toLowerCase().includes(q) ||
+                          (d.donorMobile || '').toLowerCase().includes(q) ||
+                          (d.transactionId || '').toLowerCase().includes(q);
                       });
 
                       const totalEntries = filteredDonors.length;
@@ -3799,8 +3900,8 @@ const AdminDashboard = () => {
                         if (!tableSearches.nidhan_account_holder.trim()) return true;
                         const q = tableSearches.nidhan_account_holder.toLowerCase();
                         return h.name.toLowerCase().includes(q) ||
-                               h.district.toLowerCase().includes(q) ||
-                               h.block.toLowerCase().includes(q);
+                          h.district.toLowerCase().includes(q) ||
+                          h.block.toLowerCase().includes(q);
                       });
 
                       const totalEntries = filteredHolders.length;
@@ -3927,9 +4028,9 @@ const AdminDashboard = () => {
                         if (!tableSearches.nidhan_alert_wise.trim()) return true;
                         const q = tableSearches.nidhan_alert_wise.toLowerCase();
                         return (d.donorName || '').toLowerCase().includes(q) ||
-                               (d.donorUniqueId || '').toLowerCase().includes(q) ||
-                               (d.donorMobile || '').toLowerCase().includes(q) ||
-                               (d.transactionId || '').toLowerCase().includes(q);
+                          (d.donorUniqueId || '').toLowerCase().includes(q) ||
+                          (d.donorMobile || '').toLowerCase().includes(q) ||
+                          (d.transactionId || '').toLowerCase().includes(q);
                       });
 
                       const totalEntries = filteredDonors.length;
@@ -4009,7 +4110,7 @@ const AdminDashboard = () => {
 
                     {(() => {
                       const alertMap = {};
-                      
+
                       // Base alerts 1 & 2 if not deleted
                       if (!deletedAlertKeys.includes('nidhan_1')) {
                         alertMap[1] = {
@@ -4137,8 +4238,8 @@ const AdminDashboard = () => {
                         key={f}
                         onClick={() => { setRenewalsFilter(f); setPageFor('renewals', 1); }}
                         className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1 cursor-pointer ${renewalsFilter === f
-                            ? 'bg-[#087889] text-white shadow-sm'
-                            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200/50'
+                          ? 'bg-[#087889] text-white shadow-sm'
+                          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200/50'
                           }`}
                       >
                         {f === 'PENDING' ? <><ClockIcon className="w-3.5 h-3.5" /> लंबित ({renewalsList.filter(r => r.status === 'PENDING').length})</> :
@@ -4172,9 +4273,9 @@ const AdminDashboard = () => {
                     if (!tableSearches.renewals.trim()) return true;
                     const q = tableSearches.renewals.toLowerCase();
                     return (r.name || r.donorName || '').toLowerCase().includes(q) ||
-                           (r.uniqueId || r.donorUniqueId || '').toLowerCase().includes(q) ||
-                           (r.mobile || r.donorMobile || '').toLowerCase().includes(q) ||
-                           (r.transactionId || '').toLowerCase().includes(q);
+                      (r.uniqueId || r.donorUniqueId || '').toLowerCase().includes(q) ||
+                      (r.mobile || r.donorMobile || '').toLowerCase().includes(q) ||
+                      (r.transactionId || '').toLowerCase().includes(q);
                   });
 
                   const totalEntries = filteredRenewals.length;
@@ -4222,8 +4323,8 @@ const AdminDashboard = () => {
                                 </td>
                                 <td className="py-3 px-4 text-center">
                                   <span className={`px-2.5 py-1 text-[11px] font-black rounded-full shadow-sm ${receipt.status === 'APPROVED' ? 'bg-green-100 text-green-700' :
-                                      receipt.status === 'REJECTED' ? 'bg-red-100 text-red-700' :
-                                        'bg-amber-100 text-amber-700'
+                                    receipt.status === 'REJECTED' ? 'bg-red-100 text-red-700' :
+                                      'bg-amber-100 text-amber-700'
                                     }`}>
                                     {receipt.status === 'APPROVED' ? 'स्वीकृत' :
                                       receipt.status === 'REJECTED' ? 'अस्वीकृत' :
@@ -4537,8 +4638,8 @@ const AdminDashboard = () => {
                         key={f}
                         onClick={() => { setBetiAppFilter(f); setPageFor('beti', 1); }}
                         className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1 cursor-pointer ${betiAppFilter === f
-                            ? 'bg-[#087889] text-white shadow-sm'
-                            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200/50'
+                          ? 'bg-[#087889] text-white shadow-sm'
+                          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200/50'
                           }`}
                       >
                         {f === 'PENDING' ? <><ClockIcon className="w-3.5 h-3.5" /> लंबित ({betiList.filter(r => r.status === 'PENDING' || !r.status).length})</> :
@@ -4573,11 +4674,11 @@ const AdminDashboard = () => {
                     if (!tableSearches.beti.trim()) return true;
                     const q = tableSearches.beti.toLowerCase();
                     return (item.applicantName || '').toLowerCase().includes(q) ||
-                           (item.daughterName || '').toLowerCase().includes(q) ||
-                           (item.uniqueId || '').toLowerCase().includes(q) ||
-                           (item.district || '').toLowerCase().includes(q) ||
-                           (item.block || '').toLowerCase().includes(q) ||
-                           (item.mobile || '').toLowerCase().includes(q);
+                      (item.daughterName || '').toLowerCase().includes(q) ||
+                      (item.uniqueId || '').toLowerCase().includes(q) ||
+                      (item.district || '').toLowerCase().includes(q) ||
+                      (item.block || '').toLowerCase().includes(q) ||
+                      (item.mobile || '').toLowerCase().includes(q);
                   });
 
                   const totalEntries = filteredBetiApps.length;
@@ -4628,8 +4729,8 @@ const AdminDashboard = () => {
                                 <td className="py-3 px-4 text-xs text-gray-500">{item.submittedAt ? new Date(item.submittedAt).toLocaleDateString() : 'N/A'}</td>
                                 <td className="py-3 px-4 text-center">
                                   <span className={`px-2.5 py-1 text-[11px] font-black rounded-full shadow-sm ${item.status === 'APPROVED' ? 'bg-green-100 text-green-700' :
-                                      item.status === 'REJECTED' ? 'bg-red-100 text-red-700' :
-                                        'bg-amber-100 text-amber-700'
+                                    item.status === 'REJECTED' ? 'bg-red-100 text-red-700' :
+                                      'bg-amber-100 text-amber-700'
                                     }`}>
                                     {item.status === 'APPROVED' ? 'स्वीकृत' :
                                       item.status === 'REJECTED' ? 'अस्वीकृत' :
@@ -4700,8 +4801,8 @@ const AdminDashboard = () => {
                         key={f}
                         onClick={() => { setNidhanAppFilter(f); setPageFor('nidhan', 1); }}
                         className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1 cursor-pointer ${nidhanAppFilter === f
-                            ? 'bg-[#087889] text-white shadow-sm'
-                            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200/50'
+                          ? 'bg-[#087889] text-white shadow-sm'
+                          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200/50'
                           }`}
                       >
                         {f === 'PENDING' ? <><ClockIcon className="w-3.5 h-3.5" /> लंबित ({nidhanList.filter(r => r.status === 'PENDING' || !r.status).length})</> :
@@ -4736,11 +4837,11 @@ const AdminDashboard = () => {
                     if (!tableSearches.nidhan.trim()) return true;
                     const q = tableSearches.nidhan.toLowerCase();
                     return (item.applicantName || '').toLowerCase().includes(q) ||
-                           (item.deceasedName || '').toLowerCase().includes(q) ||
-                           (item.uniqueId || '').toLowerCase().includes(q) ||
-                           (item.district || '').toLowerCase().includes(q) ||
-                           (item.block || '').toLowerCase().includes(q) ||
-                           (item.mobile || '').toLowerCase().includes(q);
+                      (item.deceasedName || '').toLowerCase().includes(q) ||
+                      (item.uniqueId || '').toLowerCase().includes(q) ||
+                      (item.district || '').toLowerCase().includes(q) ||
+                      (item.block || '').toLowerCase().includes(q) ||
+                      (item.mobile || '').toLowerCase().includes(q);
                   });
 
                   const totalEntries = filteredNidhanApps.length;
@@ -4791,8 +4892,8 @@ const AdminDashboard = () => {
                                 <td className="py-3 px-4 text-xs text-gray-500">{item.submittedAt ? new Date(item.submittedAt).toLocaleDateString() : 'N/A'}</td>
                                 <td className="py-3 px-4 text-center">
                                   <span className={`px-2.5 py-1 text-[11px] font-black rounded-full shadow-sm ${item.status === 'APPROVED' ? 'bg-green-100 text-green-700' :
-                                      item.status === 'REJECTED' ? 'bg-red-100 text-red-700' :
-                                        'bg-amber-100 text-amber-700'
+                                    item.status === 'REJECTED' ? 'bg-red-100 text-red-700' :
+                                      'bg-amber-100 text-amber-700'
                                     }`}>
                                     {item.status === 'APPROVED' ? 'स्वीकृत' :
                                       item.status === 'REJECTED' ? 'अस्वीकृत' :
@@ -4988,6 +5089,17 @@ const AdminDashboard = () => {
                       />
                     </div>
                     <div>
+                      <label className="block text-gray-700 font-bold mb-1">पैन नंबर (PAN Number)</label>
+                      <input
+                        type="text"
+                        value={editFormData.pan || ''}
+                        onChange={(e) => setEditFormData({ ...editFormData, pan: e.target.value.toUpperCase() })}
+                        maxLength="10"
+                        className="w-full px-3 py-2 border rounded-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-[#087889] font-medium font-mono uppercase"
+                        placeholder="10 अंकों का पैन"
+                      />
+                    </div>
+                    <div>
                       <label className="block text-gray-700 font-bold mb-1">ईमेल (Email Address)</label>
                       <input
                         type="email"
@@ -5101,7 +5213,7 @@ const AdminDashboard = () => {
                   <h5 className="text-sm font-bold text-[#087889] border-b border-teal-100 pb-1.5 mb-3 flex items-center gap-1.5">
                     <HandshakeIcon className="w-4 h-4 text-[#087889]" /> नॉमिनी विवरण (Nominee Details)
                   </h5>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 text-xs">
                     <div>
                       <label className="block text-gray-700 font-bold mb-1">नॉमिनी का नाम (Nominee Name)</label>
                       <input
@@ -5126,6 +5238,16 @@ const AdminDashboard = () => {
                         type="tel"
                         value={editFormData.nomineeMobile || ''}
                         onChange={(e) => setEditFormData({ ...editFormData, nomineeMobile: e.target.value })}
+                        className="w-full px-3 py-2 border rounded-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-[#087889] font-medium font-mono"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-gray-700 font-bold mb-1">नॉमिनी आधार नंबर (Nominee Aadhaar)</label>
+                      <input
+                        type="text"
+                        value={editFormData.nomineeAadhaar || ''}
+                        onChange={(e) => setEditFormData({ ...editFormData, nomineeAadhaar: e.target.value })}
+                        maxLength="12"
                         className="w-full px-3 py-2 border rounded-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-[#087889] font-medium font-mono"
                       />
                     </div>
@@ -5230,6 +5352,10 @@ const AdminDashboard = () => {
                       <p className="font-bold text-gray-900 text-sm mt-0.5 font-mono">{selectedMemberForDetail.aadhaar || 'N/A'}</p>
                     </div>
                     <div>
+                      <p className="text-gray-500 font-medium">पैन नंबर (PAN Number)</p>
+                      <p className="font-bold text-gray-900 text-sm mt-0.5 font-mono">{selectedMemberForDetail.pan || selectedMemberForDetail.panNumber || 'N/A'}</p>
+                    </div>
+                    <div>
                       <p className="text-gray-500 font-medium">ईमेल (Email Address)</p>
                       <p className="font-bold text-gray-900 text-sm mt-0.5">{selectedMemberForDetail.email || 'N/A'}</p>
                     </div>
@@ -5278,7 +5404,7 @@ const AdminDashboard = () => {
                   <h5 className="text-sm font-bold text-[#087889] border-b border-teal-100 pb-1.5 mb-3 flex items-center gap-1.5">
                     <HandshakeIcon className="w-4 h-4 text-[#087889]" /> नॉमिनी विवरण (Nominee Details)
                   </h5>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-xs">
                     <div>
                       <p className="text-gray-500 font-medium">नॉमिनी का नाम (Nominee Name)</p>
                       <p className="font-bold text-gray-900 text-sm mt-0.5">{selectedMemberForDetail.nomineeName || 'N/A'}</p>
@@ -5290,6 +5416,10 @@ const AdminDashboard = () => {
                     <div>
                       <p className="text-gray-500 font-medium">नॉमिनी मोबाइल नंबर (Nominee Mobile)</p>
                       <p className="font-bold text-gray-900 text-sm mt-0.5">{selectedMemberForDetail.nomineeMobile || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-500 font-medium">नॉमिनी आधार नंबर (Nominee Aadhaar)</p>
+                      <p className="font-bold text-gray-900 text-sm mt-0.5 font-mono">{selectedMemberForDetail.nomineeAadhaar || 'N/A'}</p>
                     </div>
                   </div>
                 </div>
@@ -5515,15 +5645,15 @@ const AdminDashboard = () => {
             <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-5 shadow-inner ring-8 ring-emerald-50">
               <CheckCircleIcon className="w-12 h-12" />
             </div>
-            
+
             <h3 className="text-2xl font-black text-gray-800 mb-2">
               {successModal.title}
             </h3>
-            
+
             <p className="text-sm text-gray-600 font-medium leading-relaxed mb-6">
               {successModal.message}
             </p>
-            
+
             <button
               onClick={() => setSuccessModal({ isOpen: false, title: '', message: '' })}
               className="w-full py-3.5 px-6 bg-gradient-to-r from-[#087889] to-teal-600 hover:from-[#06616e] hover:to-teal-700 text-white font-extrabold rounded-2xl shadow-lg hover:shadow-xl transition-all transform active:scale-95 text-base flex items-center justify-center gap-2 cursor-pointer"
@@ -5925,6 +6055,141 @@ const AdminDashboard = () => {
                 हाँ, हटाएं (Delete)
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ================= CHANGE PASSWORD MODAL ================= */}
+      {isChangePasswordModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl border border-gray-100 relative">
+            <div className="flex justify-between items-center border-b border-gray-100 pb-3 mb-4">
+              <h4 className="text-base font-black text-gray-800 flex items-center gap-2">
+                <KeyIcon className="w-5 h-5 text-[#087889]" /> पासवर्ड बदलें (Change Password)
+              </h4>
+              <button
+                onClick={() => setIsChangePasswordModalOpen(false)}
+                className="text-gray-400 hover:text-gray-700 p-1.5 rounded-full hover:bg-gray-100 transition-colors cursor-pointer"
+              >
+                <CloseIcon className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="mb-4 p-3 bg-teal-50/70 border border-teal-100 rounded-xl text-xs text-teal-800 flex items-center gap-2">
+              <ShieldIcon className="w-4 h-4 text-[#087889] shrink-0" />
+              <span>
+                लॉगिन एडमिन: <strong className="font-bold">{auth.currentUser?.email || localStorage.getItem('adminEmail')}</strong>
+              </span>
+            </div>
+
+            {changePasswordStatus.message && (
+              <div className={`mb-4 p-3 text-xs font-bold rounded-xl border flex items-center gap-2 ${
+                changePasswordStatus.type === 'success'
+                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                  : 'bg-red-50 text-red-700 border-red-200'
+              }`}>
+                {changePasswordStatus.type === 'success' ? (
+                  <CheckCircleIcon className="w-4 h-4 shrink-0" />
+                ) : (
+                  <AlertTriangleIcon className="w-4 h-4 shrink-0" />
+                )}
+                <span>{changePasswordStatus.message}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleChangePassword} className="space-y-4">
+              {/* Current Password */}
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1">
+                  वर्तमान पासवर्ड (Current Password) <span className="text-red-500">*</span>
+                </label>
+                <div className="relative rounded-xl shadow-sm">
+                  <input
+                    type={showCurrentPassword ? "text" : "password"}
+                    required
+                    value={changePasswordForm.currentPassword}
+                    onChange={(e) => setChangePasswordForm({ ...changePasswordForm, currentPassword: e.target.value })}
+                    placeholder="वर्तमान पासवर्ड दर्ज करें"
+                    className="w-full pl-3.5 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-[#087889] focus:bg-white outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-[#087889] cursor-pointer"
+                  >
+                    {showCurrentPassword ? <EyeOffIcon className="w-4 h-4" /> : <EyeIcon className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+
+              {/* New Password */}
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1">
+                  नया पासवर्ड (New Password) <span className="text-red-500">*</span>
+                </label>
+                <div className="relative rounded-xl shadow-sm">
+                  <input
+                    type={showNewPassword ? "text" : "password"}
+                    required
+                    minLength={6}
+                    value={changePasswordForm.newPassword}
+                    onChange={(e) => setChangePasswordForm({ ...changePasswordForm, newPassword: e.target.value })}
+                    placeholder="कम से कम 6 अक्षरों का नया पासवर्ड"
+                    className="w-full pl-3.5 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-[#087889] focus:bg-white outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-[#087889] cursor-pointer"
+                  >
+                    {showNewPassword ? <EyeOffIcon className="w-4 h-4" /> : <EyeIcon className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Confirm Password */}
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1">
+                  नया पासवर्ड पुनः दर्ज करें (Confirm New Password) <span className="text-red-500">*</span>
+                </label>
+                <div className="relative rounded-xl shadow-sm">
+                  <input
+                    type={showConfirmPassword ? "text" : "password"}
+                    required
+                    minLength={6}
+                    value={changePasswordForm.confirmPassword}
+                    onChange={(e) => setChangePasswordForm({ ...changePasswordForm, confirmPassword: e.target.value })}
+                    placeholder="नया पासवर्ड दोबारा दर्ज करें"
+                    className="w-full pl-3.5 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-[#087889] focus:bg-white outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-[#087889] cursor-pointer"
+                  >
+                    {showConfirmPassword ? <EyeOffIcon className="w-4 h-4" /> : <EyeIcon className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-3 border-t border-gray-100">
+                <button
+                  type="button"
+                  onClick={() => setIsChangePasswordModalOpen(false)}
+                  className="px-4 py-2.5 text-xs font-bold text-gray-600 hover:bg-gray-100 rounded-xl transition-colors cursor-pointer"
+                >
+                  रद्द करें (Cancel)
+                </button>
+                <button
+                  type="submit"
+                  disabled={isChangingPassword}
+                  className="px-5 py-2.5 text-xs font-black text-white bg-[#087889] hover:bg-[#06616e] rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-60 shadow-md"
+                >
+                  {isChangingPassword ? <RefreshIcon className="w-3.5 h-3.5 animate-spin" /> : <SaveIcon className="w-3.5 h-3.5" />}
+                  पासवर्ड अपडेट करें
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

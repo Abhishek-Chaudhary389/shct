@@ -61,7 +61,7 @@ const BetiAlertWiseList = () => {
         let deletedKeys = [];
         try {
           deletedKeys = JSON.parse(localStorage.getItem('shct_deleted_alert_keys') || '[]');
-        } catch {}
+        } catch { }
 
         // Base Alert 1 and Alert 2 (if not deleted)
         if (!deletedKeys.includes('beti_1')) {
@@ -157,7 +157,7 @@ const BetiAlertWiseList = () => {
     }
     if (detailSearch) {
       const q = detailSearch.toLowerCase().trim();
-      result = result.filter(d => 
+      result = result.filter(d =>
         (d.donorName && d.donorName.toLowerCase().includes(q)) ||
         (d.donorUniqueId && d.donorUniqueId.toLowerCase().includes(q))
       );
@@ -180,7 +180,7 @@ const BetiAlertWiseList = () => {
     }
     if (val) {
       const q = val.toLowerCase().trim();
-      result = result.filter(d => 
+      result = result.filter(d =>
         (d.donorName && d.donorName.toLowerCase().includes(q)) ||
         (d.donorUniqueId && d.donorUniqueId.toLowerCase().includes(q))
       );
@@ -205,12 +205,12 @@ const BetiAlertWiseList = () => {
 
   return (
     <div className="w-full bg-gray-50 pb-20 font-sans min-h-screen">
-      
+
       {/* Banner Section */}
-      <div 
+      <div
         className="w-full bg-cover bg-center py-20 relative flex items-center justify-center shadow-md"
-        style={{ 
-          backgroundImage: 'linear-gradient(rgba(10, 25, 47, 0.75), rgba(10, 25, 47, 0.85)), url("https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?q=80&w=1470&auto=format&fit=crop")' 
+        style={{
+          backgroundImage: 'linear-gradient(rgba(10, 25, 47, 0.75), rgba(10, 25, 47, 0.85)), url("https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?q=80&w=1470&auto=format&fit=crop")'
         }}
       >
         <div className="text-center z-10 px-4">
@@ -375,9 +375,8 @@ const BetiAlertWiseList = () => {
                       <button
                         key={p}
                         onClick={() => setDetailCurrentPage(p)}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
-                          detailCurrentPage === p ? 'bg-[#087889] text-white' : 'border hover:bg-gray-100'
-                        }`}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer ${detailCurrentPage === p ? 'bg-[#087889] text-white' : 'border hover:bg-gray-100'
+                          }`}
                       >
                         {p}
                       </button>
@@ -406,7 +405,7 @@ const BetiAlertWiseList = () => {
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                 {alertsList.map((alert) => (
-                  <div 
+                  <div
                     key={alert.alertNumber}
                     className="bg-white rounded-3xl p-6 shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 flex flex-col items-center justify-between text-center group relative overflow-hidden"
                   >

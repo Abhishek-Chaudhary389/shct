@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { 
-  getPendingRegistrations, 
-  getApprovedMembers, 
-  getHomeAlerts, 
+import {
+  getPendingRegistrations,
+  getApprovedMembers,
+  getHomeAlerts,
   getHomePageSettings,
-  addBetiSahyogReceipt, 
+  addBetiSahyogReceipt,
   getBetiSahyogReceipts,
   addNidhanSahyogReceipt,
   getNidhanSahyogReceipts,
@@ -68,7 +68,7 @@ const UserDashboard = () => {
   const triggerDownload = async (receipt, type) => {
     setSelectedDownloadReceipt(receipt);
     setDownloadType(type);
-    
+
     // Wait for state to reflect in DOM
     setTimeout(async () => {
       let elementId = 'printable-donation-receipt';
@@ -82,10 +82,10 @@ const UserDashboard = () => {
         console.error("Receipt card element not found: ", elementId);
         return;
       }
-      
+
       try {
         const canvas = await html2canvas(receiptCard, {
-          scale: 2, 
+          scale: 2,
           useCORS: false,
           allowTaint: true,
           backgroundColor: '#ffffff'
@@ -115,6 +115,7 @@ const UserDashboard = () => {
     name: '',
     group: '',
     aadhaar: '',
+    pan: '',
     fatherName: '',
     dob: '',
     mobile: '',
@@ -129,6 +130,7 @@ const UserDashboard = () => {
     nomineeName: '',
     nomineeRelation: '',
     nomineeMobile: '',
+    nomineeAadhaar: '',
     referralCode: '',
     transactionId: '',
     uniqueId: '',
@@ -141,14 +143,14 @@ const UserDashboard = () => {
       if (savedAadhaar) {
         const pendingList = await getPendingRegistrations();
         const approvedList = await getApprovedMembers();
-        
+
         // Check in approved first, then pending
         let foundUser = approvedList.find(u => u.aadhaar === savedAadhaar);
         let isPending = false;
-        
+
         if (!foundUser) {
           foundUser = pendingList.find(u => u.aadhaar === savedAadhaar);
-          if(foundUser) isPending = true;
+          if (foundUser) isPending = true;
         }
 
         if (foundUser) {
@@ -172,6 +174,7 @@ const UserDashboard = () => {
             name: foundUser.name || '',
             group: displayGroup,
             aadhaar: foundUser.aadhaar || '',
+            pan: foundUser.pan || foundUser.panNumber || '',
             fatherName: foundUser.fatherName || foundUser.fatherOrHusbandName || '',
             dob: foundUser.dob || '',
             mobile: foundUser.mobile || '',
@@ -186,6 +189,7 @@ const UserDashboard = () => {
             nomineeName: foundUser.nomineeName || '',
             nomineeRelation: foundUser.nomineeRelation || '',
             nomineeMobile: foundUser.nomineeMobile || '',
+            nomineeAadhaar: foundUser.nomineeAadhaar || '',
             referralCode: foundUser.referralCode || '',
             transactionId: foundUser.transactionId || '',
             uniqueId: isPending ? 'Pending' : (foundUser.uniqueId || ''),
@@ -194,11 +198,11 @@ const UserDashboard = () => {
 
           // Fetch all alerts
           const allAlerts = await getHomeAlerts();
-          
+
           // Fetch page settings to determine the active yojna type
           const settings = await getHomePageSettings();
           setPageSettings(settings);
-          
+
           let activeType = 'beti';
           if (settings && settings.headerTitle === "निधन सहायता योजना") {
             activeType = 'nidhan';
@@ -208,9 +212,9 @@ const UserDashboard = () => {
           let myActiveAlerts = [];
           if (groupsActive && foundUser.group) {
             const userRawGroup = normalizeGroup(foundUser.group);
-            myActiveAlerts = allAlerts.filter(alert => 
-              alert.isActive && 
-              alert.group && 
+            myActiveAlerts = allAlerts.filter(alert =>
+              alert.isActive &&
+              alert.group &&
               normalizeGroup(alert.group) === userRawGroup &&
               (alert.type || 'beti') === activeType
             );
@@ -229,7 +233,7 @@ const UserDashboard = () => {
         }
       }
     };
-    
+
     fetchUserAndAlerts();
   }, []);
 
@@ -300,8 +304,8 @@ const UserDashboard = () => {
         ) : (
           <div className="grid grid-cols-1 gap-8">
             {activeAlerts.map((alert, idx) => (
-              <div 
-                key={idx} 
+              <div
+                key={idx}
                 className="bg-[#f2fafe] border-l-[8px] border-[#087889] rounded-r-2xl p-6 md:p-8 shadow-sm hover:shadow-md transition-shadow"
               >
                 {/* Header */}
@@ -372,7 +376,7 @@ const UserDashboard = () => {
 
                 {/* Help Button */}
                 <div className="mt-8 text-center border-t border-blue-100 pt-6">
-                  <button 
+                  <button
                     onClick={() => handleHelpClick(alert)}
                     className="bg-[#f08519] hover:bg-orange-600 text-white font-extrabold px-8 py-3 rounded-xl shadow-md transition-all transform hover:-translate-y-0.5 w-full sm:w-auto flex items-center justify-center gap-2 mx-auto"
                   >
@@ -393,7 +397,7 @@ const UserDashboard = () => {
       <div className="text-sm text-gray-500 mb-6 flex items-center gap-2">
         <span>User</span> <span>›</span> <span className="font-medium text-gray-700">Edit User</span>
       </div>
-      
+
       <div className="bg-[#fff8e6] text-[#b8860b] p-4 rounded-md text-sm font-medium mb-6">
         Restricted fields can only be edited within the first 7 days after registration. This period has expired.
       </div>
@@ -407,6 +411,10 @@ const UserDashboard = () => {
           <div>
             <label className="block text-sm font-bold text-gray-700 mb-1">Aadhar Card Number</label>
             <input type="text" value={user.aadhaar} disabled className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-md text-gray-700 cursor-not-allowed" />
+          </div>
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-1">PAN Card Number</label>
+            <input type="text" value={user.pan || 'N/A'} disabled className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-md text-gray-700 cursor-not-allowed font-mono uppercase" />
           </div>
           <div>
             <label className="block text-sm font-bold text-gray-700 mb-1">Father Name</label>
@@ -475,6 +483,10 @@ const UserDashboard = () => {
             <input type="text" value={user.nomineeMobile} disabled className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-md text-gray-700 cursor-not-allowed" />
           </div>
           <div>
+            <label className="block text-sm font-bold text-gray-700 mb-1">Nominee Aadhaar</label>
+            <input type="text" value={user.nomineeAadhaar} disabled className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-md text-gray-700 cursor-not-allowed font-mono" />
+          </div>
+          <div>
             <label className="block text-sm font-bold text-gray-700 mb-1">Referral Code</label>
             <input type="text" value={user.referralCode} disabled className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-md text-gray-700 cursor-not-allowed" />
           </div>
@@ -490,15 +502,15 @@ const UserDashboard = () => {
   const downloadIDCard = async () => {
     const cardElement = document.getElementById('printable-id-card');
     if (!cardElement) return;
-    
+
     try {
       // Temporarily remove shadow for cleaner print if desired, but scale 2 gives good quality
       const canvas = await html2canvas(cardElement, {
-        scale: 3, 
+        scale: 3,
         useCORS: true,
         backgroundColor: '#ffffff'
       });
-      
+
       const image = canvas.toDataURL('image/png');
       const link = document.createElement('a');
       link.href = image;
@@ -513,7 +525,7 @@ const UserDashboard = () => {
   const IDCardView = () => (
     <div className="p-6 flex flex-col items-center">
       <div className="w-full flex justify-end mb-6 max-w-[350px]">
-        <button 
+        <button
           onClick={downloadIDCard}
           className="bg-[#087889] hover:bg-[#06616e] text-white px-6 py-2.5 rounded-lg font-bold shadow-md transition-colors flex items-center gap-2"
         >
@@ -522,8 +534,8 @@ const UserDashboard = () => {
       </div>
 
       {/* Printable ID Card Element */}
-      <div 
-        id="printable-id-card" 
+      <div
+        id="printable-id-card"
         className="w-[350px] bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden relative"
       >
         {/* Center Watermark Logo */}
@@ -533,8 +545,8 @@ const UserDashboard = () => {
 
         {/* Header */}
         <div className="bg-[#077d8c] px-4 py-3 flex items-center gap-3 relative rounded-t-xl">
-          <div className="w-11 h-11 bg-white rounded-full flex items-center justify-center p-[2.5px] shrink-0 shadow-md">
-            <img src={logoBase64} alt="SHCT Logo" className="w-full h-full object-contain" />
+          <div className="w-11 h-11 bg-white rounded-full flex items-center justify-center p-0.5 overflow-hidden shrink-0 shadow-md border border-white/80">
+            <img src={logoBase64} alt="SHCT Logo" className="w-full h-full object-contain" style={{ transform: 'scale(1.44)' }} />
           </div>
           <h2 className="text-base font-black text-white tracking-tight uppercase leading-tight text-left">
             SILENT HELP CHARITABLE TRUST
@@ -568,18 +580,18 @@ const UserDashboard = () => {
         {/* Footer */}
         <div className="bg-gray-50 p-3 text-center border-t border-gray-100 relative z-10">
           <p className="text-[9px] font-bold text-gray-400 uppercase tracking-wide">Valid Member Identity Card</p>
-          <p className="text-[8px] text-gray-400 mt-0.5">www.silenthelp.org</p>
+          <p className="text-[8px] text-gray-400 mt-0.5">www.silenthelpct.com</p>
         </div>
       </div>
     </div>
   );
-        
+
 
 
   const ViewSahyogList = () => (
     <div className="p-6">
       <h3 className="text-xl font-bold text-[#8a3324] mb-6 border-b border-gray-200 pb-2">Running Sahyog</h3>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {/* Sample Card 1 */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-5">
@@ -630,7 +642,7 @@ const UserDashboard = () => {
             </span>
           </div>
         </div>
-        
+
         {myDonations.length === 0 ? (
           <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 text-center max-w-md mx-auto py-12">
             <ReceiptIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
@@ -642,31 +654,30 @@ const UserDashboard = () => {
             {myDonations.map((d, idx) => {
               const isRenewal = d.isRenewal;
               return (
-                <div 
-                  key={idx} 
+                <div
+                  key={idx}
                   className="bg-white rounded-2xl border border-gray-100 shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col justify-between relative group"
                 >
                   {/* Decorative Header Accent */}
                   <div className="h-2 bg-gradient-to-r from-[#8a3324] via-amber-600 to-[#8a3324]" />
-                  
+
                   <div className="p-6 flex-1">
                     {/* Top Branding Section */}
                     <div className="flex items-center justify-between gap-2 mb-4">
                       <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-red-50 p-1 flex items-center justify-center border border-red-100">
-                          <img src={logoBase64} alt="SHCT Logo" className="w-full h-full object-contain" />
+                        <div className="w-8 h-8 rounded-full bg-white p-0.5 flex items-center justify-center border border-gray-200 overflow-hidden shrink-0">
+                          <img src={logoBase64} alt="SHCT Logo" className="w-full h-full object-contain" style={{ transform: 'scale(1.44)' }} />
                         </div>
                         <span className="text-[10px] font-black text-gray-800 tracking-wider uppercase leading-none">
                           SHCT NGO
                         </span>
                       </div>
-                      
+
                       {/* Premium Badge */}
-                      <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border ${
-                        isRenewal 
-                           ? 'bg-emerald-50 text-emerald-700 border-emerald-200/50' 
-                          : 'bg-blue-50 text-blue-700 border-blue-200/50'
-                      }`}>
+                      <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border ${isRenewal
+                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200/50'
+                        : 'bg-blue-50 text-blue-700 border-blue-200/50'
+                        }`}>
                         {isRenewal ? "RENEWAL (नवीनीकरण)" : "REGISTRATION (पंजीकरण)"}
                       </span>
                     </div>
@@ -768,7 +779,7 @@ const UserDashboard = () => {
         await addAnnualRenewalReceipt(submissionData);
         setIsUploading(false);
         setUploadSuccess(true);
-        
+
         // Refresh local data list
         const donations = await getAnnualDonations();
         setDonationsList(donations);
@@ -777,7 +788,7 @@ const UserDashboard = () => {
           setUploadSuccess(false);
           setTxnId('');
           setReceiptImg('');
-          setActiveTab('view_varshik'); 
+          setActiveTab('view_varshik');
         }, 3000);
       } catch (err) {
         console.error(err);
@@ -799,7 +810,7 @@ const UserDashboard = () => {
             </div>
           ) : (
             <form onSubmit={handleSubmitRenewal} className="space-y-6 text-sm font-semibold">
-              
+
               {/* Payment Details Section */}
               <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="col-span-full font-bold text-[#087889] border-b border-blue-200 pb-1.5">
@@ -819,31 +830,31 @@ const UserDashboard = () => {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-gray-700 mb-1">ट्रांजेक्शन आईडी (Txn ID) <span className="text-red-500">*</span></label>
-                  <input 
-                    type="text" 
-                    required 
-                    value={txnId} 
-                    onChange={(e) => setTxnId(e.target.value)} 
+                  <input
+                    type="text"
+                    required
+                    value={txnId}
+                    onChange={(e) => setTxnId(e.target.value)}
                     placeholder="UPI Txn ID / Ref ID"
                     className="w-full px-3 py-2 bg-white border rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#087889]"
                   />
                 </div>
                 <div>
                   <label className="block text-gray-700 mb-1">सहयोग तिथि <span className="text-red-500">*</span></label>
-                  <input 
-                    type="date" 
-                    required 
-                    value={txnDate} 
-                    onChange={(e) => setTxnDate(e.target.value)} 
+                  <input
+                    type="date"
+                    required
+                    value={txnDate}
+                    onChange={(e) => setTxnDate(e.target.value)}
                     className="w-full px-3 py-2 bg-white border rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#087889]"
                   />
                 </div>
                 <div>
                   <label className="block text-gray-700 mb-1">नवीनीकरण राशि (₹) <span className="text-red-500">*</span></label>
-                  <input 
-                    type="number" 
-                    disabled 
-                    value="200" 
+                  <input
+                    type="number"
+                    disabled
+                    value="200"
                     className="w-full px-3 py-2 bg-gray-100 border rounded-lg text-gray-500 cursor-not-allowed font-bold"
                   />
                 </div>
@@ -852,11 +863,11 @@ const UserDashboard = () => {
               {/* Upload Screenshot */}
               <div>
                 <label className="block text-gray-700 mb-1">भुगतान रसीद / स्क्रीनशॉट अपलोड करें <span className="text-red-500">*</span></label>
-                <input 
-                  type="file" 
-                  accept="image/*" 
-                  required 
-                  onChange={handleFileChange} 
+                <input
+                  type="file"
+                  accept="image/*"
+                  required
+                  onChange={handleFileChange}
                   className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#087889] file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-[#087889] hover:file:bg-teal-100 transition-colors cursor-pointer text-sm text-gray-600"
                 />
                 {receiptImg && <span className="text-xs text-green-600 font-bold block mt-1 flex items-center gap-1"><CheckIcon className="w-3.5 h-3.5" /> रसीद संलग्न कर दी गई है</span>}
@@ -864,8 +875,8 @@ const UserDashboard = () => {
 
               {/* Submit Button */}
               <div className="text-right border-t border-gray-100 pt-4">
-                <button 
-                  type="submit" 
+                <button
+                  type="submit"
                   disabled={isUploading}
                   className="px-8 py-3 rounded-lg text-white font-bold text-base shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 w-full sm:w-auto"
                   style={{ backgroundColor: '#f08519' }}
@@ -883,12 +894,12 @@ const UserDashboard = () => {
   const UploadBetiReceiptView = () => {
     const activeGroupAlerts = activeAlerts;
     const [selectedAlert, setSelectedAlert] = useState(selectedAlertForReceipt || (activeGroupAlerts.length > 0 ? activeGroupAlerts[0] : null));
-    
+
     const [txnId, setTxnId] = useState('');
     const [txnDate, setTxnDate] = useState(new Date().toISOString().split('T')[0]);
     const [amount, setAmount] = useState('50');
     const [receiptImg, setReceiptImg] = useState('');
-    
+
     const [isUploading, setIsUploading] = useState(false);
     const [uploadSuccess, setUploadSuccess] = useState(false);
 
@@ -962,17 +973,17 @@ const UserDashboard = () => {
         await addBetiSahyogReceipt(submissionData);
         setIsUploading(false);
         setUploadSuccess(true);
-        
+
         // Refresh local data list
         const receipts = await getBetiSahyogReceipts();
         setSubmittedReceiptsList(receipts);
 
         setTimeout(() => {
           setUploadSuccess(false);
-          setSelectedAlertForReceipt(null); 
+          setSelectedAlertForReceipt(null);
           setTxnId('');
           setReceiptImg('');
-          setActiveTab('dashboard'); 
+          setActiveTab('dashboard');
         }, 3000);
       } catch (err) {
         console.error(err);
@@ -989,7 +1000,7 @@ const UserDashboard = () => {
             <ReceiptIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
             <p className="text-gray-500 font-extrabold text-lg">Not Any Sahyog Receipt</p>
             <p className="text-gray-400 text-sm mt-1">वर्तमान में आपके ग्रुप ({user.group}) के लिए कोई सहयोग अलर्ट सक्रिय नहीं है।</p>
-            <button 
+            <button
               onClick={() => setActiveTab('dashboard')}
               className="mt-6 bg-[#087889] text-white px-6 py-2 rounded shadow hover:bg-[#06616e] transition-colors font-bold"
             >
@@ -1013,7 +1024,7 @@ const UserDashboard = () => {
             </div>
           ) : (
             <form onSubmit={handleSubmitReceipt} className="space-y-6 text-sm font-semibold">
-              
+
               {/* Beneficiary Details Section */}
               <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="col-span-full font-bold text-[#087889] border-b border-blue-200 pb-1.5">
@@ -1022,15 +1033,15 @@ const UserDashboard = () => {
                 <div>
                   <label className="block text-gray-600 mb-1">सहयोग प्राप्तकर्ता</label>
                   {selectedAlertForReceipt ? (
-                    <input 
-                      type="text" 
-                      disabled 
-                      value={`${selectedAlert.member} (${selectedAlert.uniqueId})`} 
+                    <input
+                      type="text"
+                      disabled
+                      value={`${selectedAlert.member} (${selectedAlert.uniqueId})`}
                       className="w-full px-3 py-2 bg-gray-100 border rounded-lg text-gray-500 cursor-not-allowed"
                     />
                   ) : (
-                    <select 
-                      value={selectedAlert ? selectedAlert.id : ''} 
+                    <select
+                      value={selectedAlert ? selectedAlert.id : ''}
                       onChange={handleSelectAlert}
                       className="w-full px-3 py-2 bg-white border rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#087889]"
                     >
@@ -1065,32 +1076,32 @@ const UserDashboard = () => {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-gray-700 mb-1">ट्रांजेक्शन आईडी (Txn ID) <span className="text-red-500">*</span></label>
-                  <input 
-                    type="text" 
-                    required 
-                    value={txnId} 
-                    onChange={(e) => setTxnId(e.target.value)} 
+                  <input
+                    type="text"
+                    required
+                    value={txnId}
+                    onChange={(e) => setTxnId(e.target.value)}
                     placeholder="UPI Txn ID / Ref ID"
                     className="w-full px-3 py-2 bg-white border rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#087889]"
                   />
                 </div>
                 <div>
                   <label className="block text-gray-700 mb-1">सहयोग तिथि <span className="text-red-500">*</span></label>
-                  <input 
-                    type="date" 
-                    required 
-                    value={txnDate} 
-                    onChange={(e) => setTxnDate(e.target.value)} 
+                  <input
+                    type="date"
+                    required
+                    value={txnDate}
+                    onChange={(e) => setTxnDate(e.target.value)}
                     className="w-full px-3 py-2 bg-white border rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#087889]"
                   />
                 </div>
                 <div>
                   <label className="block text-gray-700 mb-1">सहयोग राशि (₹) <span className="text-red-500">*</span></label>
-                  <input 
-                    type="number" 
-                    required 
-                    value={amount} 
-                    onChange={(e) => setAmount(e.target.value)} 
+                  <input
+                    type="number"
+                    required
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
                     className="w-full px-3 py-2 bg-white border rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#087889]"
                   />
                 </div>
@@ -1099,11 +1110,11 @@ const UserDashboard = () => {
               {/* Upload Screenshot */}
               <div>
                 <label className="block text-gray-700 mb-1">भुगतान रसीद / स्क्रीनशॉट अपलोड करें <span className="text-red-500">*</span></label>
-                <input 
-                  type="file" 
-                  accept="image/*" 
-                  required 
-                  onChange={handleFileChange} 
+                <input
+                  type="file"
+                  accept="image/*"
+                  required
+                  onChange={handleFileChange}
                   className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#087889] file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-[#087889] hover:file:bg-teal-100 transition-colors cursor-pointer text-sm text-gray-600"
                 />
                 {receiptImg && <span className="text-xs text-green-600 font-bold block mt-1 flex items-center gap-1"><CheckIcon className="w-3.5 h-3.5" /> रसीद संलग्न कर दी गई है</span>}
@@ -1111,8 +1122,8 @@ const UserDashboard = () => {
 
               {/* Submit Button */}
               <div className="text-right border-t border-gray-100 pt-4">
-                <button 
-                  type="submit" 
+                <button
+                  type="submit"
                   disabled={isUploading}
                   className="px-8 py-3 rounded-lg text-white font-bold text-base shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 w-full sm:w-auto"
                   style={{ backgroundColor: '#f08519' }}
@@ -1128,15 +1139,15 @@ const UserDashboard = () => {
   };
 
   const ViewAllBetiSahyogList = () => {
-    const approvedReceipts = submittedReceiptsList.filter(r => 
-      r.status === 'APPROVED' && 
+    const approvedReceipts = submittedReceiptsList.filter(r =>
+      r.status === 'APPROVED' &&
       r.donorAadhaar === user.aadhaar
     );
 
     return (
       <div className="p-6">
         <h3 className="text-xl font-bold text-[#8a3324] mb-6 border-b border-gray-200 pb-2">Running Sahyog</h3>
-        
+
         {approvedReceipts.length === 0 ? (
           <div className="bg-white rounded-xl p-8 border border-gray-200 shadow-sm text-center">
             <ReceiptIcon className="w-10 h-10 text-gray-400 mx-auto mb-3" />
@@ -1145,8 +1156,8 @@ const UserDashboard = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {approvedReceipts.map((receipt) => (
-              <div 
-                key={receipt.id} 
+              <div
+                key={receipt.id}
                 className="bg-white p-5 relative rounded shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between"
                 style={{ border: '2px dashed red', minHeight: '380px' }}
               >
@@ -1158,7 +1169,9 @@ const UserDashboard = () => {
                 <div>
                   {/* Header */}
                   <div className="text-center pb-3 mb-3 border-b border-gray-100">
-                    <img src={logoBase64} alt="Logo" className="w-12 h-12 object-contain mx-auto mb-1" />
+                    <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center overflow-hidden mx-auto mb-1 p-0.5 border border-gray-200 shadow-sm">
+                      <img src={logoBase64} alt="Logo" className="w-full h-full object-contain" style={{ transform: 'scale(1.44)' }} />
+                    </div>
                     <h1 className="text-xs font-black uppercase text-red-600 tracking-tight leading-tight">
                       SILENT HELP CHARITABLE TRUST
                     </h1>
@@ -1204,7 +1217,7 @@ const UserDashboard = () => {
                   <div className="text-center font-bold text-red-600 text-xs tracking-wide">
                     Thank You For Your Donation
                   </div>
-                  <button 
+                  <button
                     onClick={() => triggerDownload(receipt, 'beti')}
                     className="bg-[#f0ad4e] hover:bg-[#ec971f] text-white px-4 py-2 rounded-lg text-xs font-bold transition-colors w-full shadow-sm mt-1"
                   >
@@ -1222,12 +1235,12 @@ const UserDashboard = () => {
   const UploadNidhanReceiptView = () => {
     const activeGroupAlerts = activeAlerts;
     const [selectedAlert, setSelectedAlert] = useState(selectedAlertForReceipt || (activeGroupAlerts.length > 0 ? activeGroupAlerts[0] : null));
-    
+
     const [txnId, setTxnId] = useState('');
     const [txnDate, setTxnDate] = useState(new Date().toISOString().split('T')[0]);
     const [amount, setAmount] = useState('50');
     const [receiptImg, setReceiptImg] = useState('');
-    
+
     const [isUploading, setIsUploading] = useState(false);
     const [uploadSuccess, setUploadSuccess] = useState(false);
 
@@ -1301,17 +1314,17 @@ const UserDashboard = () => {
         await addNidhanSahyogReceipt(submissionData);
         setIsUploading(false);
         setUploadSuccess(true);
-        
+
         // Refresh local data list
         const receipts = await getNidhanSahyogReceipts();
         setSubmittedNidhanReceiptsList(receipts);
 
         setTimeout(() => {
           setUploadSuccess(false);
-          setSelectedAlertForReceipt(null); 
+          setSelectedAlertForReceipt(null);
           setTxnId('');
           setReceiptImg('');
-          setActiveTab('dashboard'); 
+          setActiveTab('dashboard');
         }, 3000);
       } catch (err) {
         console.error(err);
@@ -1328,7 +1341,7 @@ const UserDashboard = () => {
             <ReceiptIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
             <p className="text-gray-500 font-extrabold text-lg">Not Any Sahyog Receipt</p>
             <p className="text-gray-400 text-sm mt-1">वर्तमान में आपके ग्रुप ({user.group}) के लिए कोई सहयोग अलर्ट सक्रिय नहीं है।</p>
-            <button 
+            <button
               onClick={() => setActiveTab('dashboard')}
               className="mt-6 bg-[#087889] text-white px-6 py-2 rounded shadow hover:bg-[#06616e] transition-colors font-bold"
             >
@@ -1352,7 +1365,7 @@ const UserDashboard = () => {
             </div>
           ) : (
             <form onSubmit={handleSubmitReceipt} className="space-y-6 text-sm font-semibold">
-              
+
               {/* Beneficiary Details Section */}
               <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="col-span-full font-bold text-[#087889] border-b border-blue-200 pb-1.5">
@@ -1361,15 +1374,15 @@ const UserDashboard = () => {
                 <div>
                   <label className="block text-gray-600 mb-1">सहयोग प्राप्तकर्ता</label>
                   {selectedAlertForReceipt ? (
-                    <input 
-                      type="text" 
-                      disabled 
-                      value={`${selectedAlert.member} (${selectedAlert.uniqueId})`} 
+                    <input
+                      type="text"
+                      disabled
+                      value={`${selectedAlert.member} (${selectedAlert.uniqueId})`}
                       className="w-full px-3 py-2 bg-gray-100 border rounded-lg text-gray-500 cursor-not-allowed"
                     />
                   ) : (
-                    <select 
-                      value={selectedAlert ? selectedAlert.id : ''} 
+                    <select
+                      value={selectedAlert ? selectedAlert.id : ''}
                       onChange={handleSelectAlert}
                       className="w-full px-3 py-2 bg-white border rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#087889]"
                     >
@@ -1404,32 +1417,32 @@ const UserDashboard = () => {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-gray-700 mb-1">ट्रांजेक्शन आईडी (Txn ID) <span className="text-red-500">*</span></label>
-                  <input 
-                    type="text" 
-                    required 
-                    value={txnId} 
-                    onChange={(e) => setTxnId(e.target.value)} 
+                  <input
+                    type="text"
+                    required
+                    value={txnId}
+                    onChange={(e) => setTxnId(e.target.value)}
                     placeholder="UPI Txn ID / Ref ID"
                     className="w-full px-3 py-2 bg-white border rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#087889]"
                   />
                 </div>
                 <div>
                   <label className="block text-gray-700 mb-1">सहयोग तिथि <span className="text-red-500">*</span></label>
-                  <input 
-                    type="date" 
-                    required 
-                    value={txnDate} 
-                    onChange={(e) => setTxnDate(e.target.value)} 
+                  <input
+                    type="date"
+                    required
+                    value={txnDate}
+                    onChange={(e) => setTxnDate(e.target.value)}
                     className="w-full px-3 py-2 bg-white border rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#087889]"
                   />
                 </div>
                 <div>
                   <label className="block text-gray-700 mb-1">सहयोग राशि (₹) <span className="text-red-500">*</span></label>
-                  <input 
-                    type="number" 
-                    required 
-                    value={amount} 
-                    onChange={(e) => setAmount(e.target.value)} 
+                  <input
+                    type="number"
+                    required
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
                     className="w-full px-3 py-2 bg-white border rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#087889]"
                   />
                 </div>
@@ -1438,11 +1451,11 @@ const UserDashboard = () => {
               {/* Upload Screenshot */}
               <div>
                 <label className="block text-gray-700 mb-1">भुगतान रसीद / स्क्रीनशॉट अपलोड करें <span className="text-red-500">*</span></label>
-                <input 
-                  type="file" 
-                  accept="image/*" 
-                  required 
-                  onChange={handleFileChange} 
+                <input
+                  type="file"
+                  accept="image/*"
+                  required
+                  onChange={handleFileChange}
                   className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#087889] file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-[#087889] hover:file:bg-teal-100 transition-colors cursor-pointer text-sm text-gray-600"
                 />
                 {receiptImg && <span className="text-xs text-green-600 font-bold block mt-1 flex items-center gap-1"><CheckIcon className="w-3.5 h-3.5" /> रसीद संलग्न कर दी गई है</span>}
@@ -1450,8 +1463,8 @@ const UserDashboard = () => {
 
               {/* Submit Button */}
               <div className="text-right border-t border-gray-100 pt-4">
-                <button 
-                  type="submit" 
+                <button
+                  type="submit"
                   disabled={isUploading}
                   className="px-8 py-3 rounded-lg text-white font-bold text-base shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 w-full sm:w-auto"
                   style={{ backgroundColor: '#f08519' }}
@@ -1467,15 +1480,15 @@ const UserDashboard = () => {
   };
 
   const ViewAllNidhanSahyogList = () => {
-    const approvedReceipts = submittedNidhanReceiptsList.filter(r => 
-      r.status === 'APPROVED' && 
+    const approvedReceipts = submittedNidhanReceiptsList.filter(r =>
+      r.status === 'APPROVED' &&
       r.donorAadhaar === user.aadhaar
     );
 
     return (
       <div className="p-6">
         <h3 className="text-xl font-bold text-[#8a3324] mb-6 border-b border-gray-200 pb-2">Running Sahyog</h3>
-        
+
         {approvedReceipts.length === 0 ? (
           <div className="bg-white rounded-xl p-8 border border-gray-200 shadow-sm text-center">
             <ReceiptIcon className="w-10 h-10 text-gray-400 mx-auto mb-3" />
@@ -1484,8 +1497,8 @@ const UserDashboard = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {approvedReceipts.map((receipt) => (
-              <div 
-                key={receipt.id} 
+              <div
+                key={receipt.id}
                 className="bg-white p-5 relative rounded shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between"
                 style={{ border: '2px dashed red', minHeight: '380px' }}
               >
@@ -1497,7 +1510,9 @@ const UserDashboard = () => {
                 <div>
                   {/* Header */}
                   <div className="text-center pb-3 mb-3 border-b border-gray-100">
-                    <img src={logoBase64} alt="Logo" className="w-12 h-12 object-contain mx-auto mb-1" />
+                    <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center overflow-hidden mx-auto mb-1 p-0.5 border border-gray-200 shadow-sm">
+                      <img src={logoBase64} alt="Logo" className="w-full h-full object-contain" style={{ transform: 'scale(1.44)' }} />
+                    </div>
                     <h1 className="text-xs font-black uppercase text-red-600 tracking-tight leading-tight">
                       SILENT HELP CHARITABLE TRUST
                     </h1>
@@ -1543,7 +1558,7 @@ const UserDashboard = () => {
                   <div className="text-center font-bold text-red-600 text-xs tracking-wide">
                     Thank You For Your Donation
                   </div>
-                  <button 
+                  <button
                     onClick={() => triggerDownload(receipt, 'nidhan')}
                     className="bg-[#f0ad4e] hover:bg-[#ec971f] text-white px-4 py-2 rounded-lg text-xs font-bold transition-colors w-full shadow-sm mt-1"
                   >
@@ -1604,7 +1619,7 @@ const UserDashboard = () => {
         <div className="bg-white rounded-2xl p-6 md:p-8 shadow-md border border-gray-100 relative overflow-hidden">
           {/* Background Decorative Circles */}
           <div className="absolute top-0 right-0 w-24 h-24 bg-[#087889] opacity-5 rounded-bl-full -z-10"></div>
-          
+
           <h3 className="text-xl font-bold text-gray-800 mb-2 flex items-center gap-2">
             <LockIcon className="w-5 h-5 text-gray-700" /> पासवर्ड बदलें (Change Password)
           </h3>
@@ -1627,7 +1642,7 @@ const UserDashboard = () => {
               <label className="block text-sm font-bold text-gray-700 mb-1">
                 नया पासवर्ड (New Password) <span className="text-red-500">*</span>
               </label>
-              <input 
+              <input
                 type="password"
                 required
                 value={newPassword}
@@ -1641,7 +1656,7 @@ const UserDashboard = () => {
               <label className="block text-sm font-bold text-gray-700 mb-1">
                 नया पासवर्ड पुष्टि करें (Confirm New Password) <span className="text-red-500">*</span>
               </label>
-              <input 
+              <input
                 type="password"
                 required
                 value={confirmPassword}
@@ -1651,14 +1666,13 @@ const UserDashboard = () => {
               />
             </div>
 
-            <button 
+            <button
               type="submit"
               disabled={isUpdating}
-              className={`w-full py-3 px-4 rounded-xl text-white font-bold tracking-wide transition-all shadow-md flex items-center justify-center gap-2 ${
-                isUpdating 
-                  ? 'bg-gray-400 cursor-not-allowed' 
-                  : 'bg-[#087889] hover:bg-[#06616e] active:scale-[0.98]'
-              }`}
+              className={`w-full py-3 px-4 rounded-xl text-white font-bold tracking-wide transition-all shadow-md flex items-center justify-center gap-2 ${isUpdating
+                ? 'bg-gray-400 cursor-not-allowed'
+                : 'bg-[#087889] hover:bg-[#06616e] active:scale-[0.98]'
+                }`}
             >
               {isUpdating ? (
                 <>
@@ -1681,7 +1695,7 @@ const UserDashboard = () => {
       <div className="bg-white p-12 text-center rounded-lg shadow-sm border border-gray-200 border-dashed">
         <AlertCircleIcon className="w-12 h-12 text-amber-500 mx-auto mb-4" />
         <p className="text-gray-500 font-medium">This section is currently under development.</p>
-        <button 
+        <button
           onClick={() => setActiveTab('dashboard')}
           className="mt-6 bg-[#2c3e50] text-white px-6 py-2 rounded shadow hover:bg-[#1a252f] transition-colors"
         >
@@ -1713,7 +1727,7 @@ const UserDashboard = () => {
 
   return (
     <div className="flex h-screen bg-[#f4f6f9] font-sans overflow-hidden">
-      
+
       {/* SIDEBAR */}
       <div className="w-64 bg-[#2f3d4a] text-gray-300 flex flex-col h-full shrink-0 shadow-xl z-20 overflow-y-auto">
         {/* Sidebar Logo */}
@@ -1722,7 +1736,7 @@ const UserDashboard = () => {
             SHCT
           </span>
         </div>
-        
+
         {/* Menu Section Label */}
         <div className="px-5 py-3 text-[10px] font-bold tracking-wider text-gray-500 mt-2">
           MAIN
@@ -1735,11 +1749,10 @@ const UserDashboard = () => {
             <li>
               <button
                 onClick={() => setActiveTab('dashboard')}
-                className={`w-full flex items-center gap-3 px-5 py-3 text-sm font-medium transition-colors ${
-                  activeTab === 'dashboard' 
-                    ? 'bg-[#1e2730] text-white border-l-4 border-white' 
-                    : 'hover:bg-[#384857] hover:text-white border-l-4 border-transparent'
-                }`}
+                className={`w-full flex items-center gap-3 px-5 py-3 text-sm font-medium transition-colors ${activeTab === 'dashboard'
+                  ? 'bg-[#1e2730] text-white border-l-4 border-white'
+                  : 'hover:bg-[#384857] hover:text-white border-l-4 border-transparent'
+                  }`}
               >
                 <ChartBarIcon className="w-5 h-5 opacity-85 shrink-0" />
                 <span className="text-left flex-1">Dashboard</span>
@@ -1750,11 +1763,10 @@ const UserDashboard = () => {
             <li>
               <button
                 onClick={() => setActiveTab('profile')}
-                className={`w-full flex items-center gap-3 px-5 py-3 text-sm font-medium transition-colors ${
-                  activeTab === 'profile' 
-                    ? 'bg-[#1e2730] text-white border-l-4 border-white' 
-                    : 'hover:bg-[#384857] hover:text-white border-l-4 border-transparent'
-                }`}
+                className={`w-full flex items-center gap-3 px-5 py-3 text-sm font-medium transition-colors ${activeTab === 'profile'
+                  ? 'bg-[#1e2730] text-white border-l-4 border-white'
+                  : 'hover:bg-[#384857] hover:text-white border-l-4 border-transparent'
+                  }`}
               >
                 <UserIcon className="w-5 h-5 opacity-85 shrink-0" />
                 <span className="text-left flex-1">Profile</span>
@@ -1765,11 +1777,10 @@ const UserDashboard = () => {
             <li>
               <button
                 onClick={() => setActiveTab('idcard')}
-                className={`w-full flex items-center gap-3 px-5 py-3 text-sm font-medium transition-colors ${
-                  activeTab === 'idcard' 
-                    ? 'bg-[#1e2730] text-white border-l-4 border-white' 
-                    : 'hover:bg-[#384857] hover:text-white border-l-4 border-transparent'
-                }`}
+                className={`w-full flex items-center gap-3 px-5 py-3 text-sm font-medium transition-colors ${activeTab === 'idcard'
+                  ? 'bg-[#1e2730] text-white border-l-4 border-white'
+                  : 'hover:bg-[#384857] hover:text-white border-l-4 border-transparent'
+                  }`}
               >
                 <CreditCardIcon className="w-5 h-5 opacity-85 shrink-0" />
                 <span className="text-left flex-1">ID Card</span>
@@ -1779,7 +1790,7 @@ const UserDashboard = () => {
             {/* AAVEDAN FORM ACCORDION */}
             <li>
               <div>
-                <button 
+                <button
                   onClick={() => setIsAavedanMenuOpen(!isAavedanMenuOpen)}
                   className="w-full flex items-center justify-between px-5 py-3 text-sm font-medium transition-colors hover:bg-[#384857] hover:text-white border-l-4 border-transparent"
                 >
@@ -1789,16 +1800,16 @@ const UserDashboard = () => {
                   </div>
                   <svg className={`w-4 h-4 transition-transform ${isAavedanMenuOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
                 </button>
-                
+
                 {isAavedanMenuOpen && (
                   <div className="mt-0.5 space-y-0.5 pl-4 border-l-2 border-gray-600/50 ml-6">
-                    <Link 
+                    <Link
                       to="/beti-sahayog-form"
                       className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-xs font-medium text-gray-400 hover:bg-[#1e2730] hover:text-white transition-all"
                     >
                       <WeddingIcon className="w-4 h-4 text-pink-400 shrink-0" /> <span className="text-left flex-1">Beti Aavedan Form</span>
                     </Link>
-                    <Link 
+                    <Link
                       to="/nidhan-sahayog-form"
                       className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-xs font-medium text-gray-400 hover:bg-[#1e2730] hover:text-white transition-all"
                     >
@@ -1813,11 +1824,10 @@ const UserDashboard = () => {
             <li>
               <button
                 onClick={() => setActiveTab('upload_death')}
-                className={`w-full flex items-center gap-3 px-5 py-3 text-sm font-medium transition-colors ${
-                  activeTab === 'upload_death' 
-                    ? 'bg-[#1e2730] text-white border-l-4 border-white' 
-                    : 'hover:bg-[#384857] hover:text-white border-l-4 border-transparent'
-                }`}
+                className={`w-full flex items-center gap-3 px-5 py-3 text-sm font-medium transition-colors ${activeTab === 'upload_death'
+                  ? 'bg-[#1e2730] text-white border-l-4 border-white'
+                  : 'hover:bg-[#384857] hover:text-white border-l-4 border-transparent'
+                  }`}
               >
                 <DownloadIcon className="w-5 h-5 opacity-85 shrink-0 rotate-180" />
                 <span className="text-left flex-1">Upload Nidhan Receipt</span>
@@ -1828,11 +1838,10 @@ const UserDashboard = () => {
             <li>
               <button
                 onClick={() => setActiveTab('view_sahyog')}
-                className={`w-full flex items-center gap-3 px-5 py-3 text-sm font-medium transition-colors ${
-                  activeTab === 'view_sahyog' 
-                    ? 'bg-[#1e2730] text-white border-l-4 border-white' 
-                    : 'hover:bg-[#384857] hover:text-white border-l-4 border-transparent'
-                }`}
+                className={`w-full flex items-center gap-3 px-5 py-3 text-sm font-medium transition-colors ${activeTab === 'view_sahyog'
+                  ? 'bg-[#1e2730] text-white border-l-4 border-white'
+                  : 'hover:bg-[#384857] hover:text-white border-l-4 border-transparent'
+                  }`}
               >
                 <ReceiptIcon className="w-5 h-5 opacity-85 shrink-0" />
                 <span className="text-left flex-1">View All Nidhan / Sahyog List</span>
@@ -1843,11 +1852,10 @@ const UserDashboard = () => {
             <li>
               <button
                 onClick={() => setActiveTab('upload_beti')}
-                className={`w-full flex items-center gap-3 px-5 py-3 text-sm font-medium transition-colors ${
-                  activeTab === 'upload_beti' 
-                    ? 'bg-[#1e2730] text-white border-l-4 border-white' 
-                    : 'hover:bg-[#384857] hover:text-white border-l-4 border-transparent'
-                }`}
+                className={`w-full flex items-center gap-3 px-5 py-3 text-sm font-medium transition-colors ${activeTab === 'upload_beti'
+                  ? 'bg-[#1e2730] text-white border-l-4 border-white'
+                  : 'hover:bg-[#384857] hover:text-white border-l-4 border-transparent'
+                  }`}
               >
                 <DownloadIcon className="w-5 h-5 opacity-85 shrink-0 rotate-180" />
                 <span className="text-left flex-1">Upload Beti Vivah Sahyog Receipt</span>
@@ -1858,11 +1866,10 @@ const UserDashboard = () => {
             <li>
               <button
                 onClick={() => setActiveTab('view_beti')}
-                className={`w-full flex items-center gap-3 px-5 py-3 text-sm font-medium transition-colors ${
-                  activeTab === 'view_beti' 
-                    ? 'bg-[#1e2730] text-white border-l-4 border-white' 
-                    : 'hover:bg-[#384857] hover:text-white border-l-4 border-transparent'
-                }`}
+                className={`w-full flex items-center gap-3 px-5 py-3 text-sm font-medium transition-colors ${activeTab === 'view_beti'
+                  ? 'bg-[#1e2730] text-white border-l-4 border-white'
+                  : 'hover:bg-[#384857] hover:text-white border-l-4 border-transparent'
+                  }`}
               >
                 <ReceiptIcon className="w-5 h-5 opacity-85 shrink-0" />
                 <span className="text-left flex-1">View All Beti Vivah Sahyog List</span>
@@ -1873,11 +1880,10 @@ const UserDashboard = () => {
             <li>
               <button
                 onClick={() => setActiveTab('upload_varshik')}
-                className={`w-full flex items-center gap-3 px-5 py-3 text-sm font-medium transition-colors ${
-                  activeTab === 'upload_varshik' 
-                    ? 'bg-[#1e2730] text-white border-l-4 border-white' 
-                    : 'hover:bg-[#384857] hover:text-white border-l-4 border-transparent'
-                }`}
+                className={`w-full flex items-center gap-3 px-5 py-3 text-sm font-medium transition-colors ${activeTab === 'upload_varshik'
+                  ? 'bg-[#1e2730] text-white border-l-4 border-white'
+                  : 'hover:bg-[#384857] hover:text-white border-l-4 border-transparent'
+                  }`}
               >
                 <DownloadIcon className="w-5 h-5 opacity-85 shrink-0 rotate-180" />
                 <span className="text-left flex-1">Upload Varshik Dan</span>
@@ -1888,11 +1894,10 @@ const UserDashboard = () => {
             <li>
               <button
                 onClick={() => setActiveTab('view_varshik')}
-                className={`w-full flex items-center gap-3 px-5 py-3 text-sm font-medium transition-colors ${
-                  activeTab === 'view_varshik' 
-                    ? 'bg-[#1e2730] text-white border-l-4 border-white' 
-                    : 'hover:bg-[#384857] hover:text-white border-l-4 border-transparent'
-                }`}
+                className={`w-full flex items-center gap-3 px-5 py-3 text-sm font-medium transition-colors ${activeTab === 'view_varshik'
+                  ? 'bg-[#1e2730] text-white border-l-4 border-white'
+                  : 'hover:bg-[#384857] hover:text-white border-l-4 border-transparent'
+                  }`}
               >
                 <ReceiptIcon className="w-5 h-5 opacity-85 shrink-0" />
                 <span className="text-left flex-1">View All Varshik Dan Suchi</span>
@@ -1903,11 +1908,10 @@ const UserDashboard = () => {
             <li>
               <button
                 onClick={() => setActiveTab('referral')}
-                className={`w-full flex items-center gap-3 px-5 py-3 text-sm font-medium transition-colors ${
-                  activeTab === 'referral' 
-                    ? 'bg-[#1e2730] text-white border-l-4 border-white' 
-                    : 'hover:bg-[#384857] hover:text-white border-l-4 border-transparent'
-                }`}
+                className={`w-full flex items-center gap-3 px-5 py-3 text-sm font-medium transition-colors ${activeTab === 'referral'
+                  ? 'bg-[#1e2730] text-white border-l-4 border-white'
+                  : 'hover:bg-[#384857] hover:text-white border-l-4 border-transparent'
+                  }`}
               >
                 <HandshakeIcon className="w-5 h-5 opacity-85 shrink-0" />
                 <span className="text-left flex-1">Referral Points</span>
@@ -1918,11 +1922,10 @@ const UserDashboard = () => {
             <li>
               <button
                 onClick={() => setActiveTab('password')}
-                className={`w-full flex items-center gap-3 px-5 py-3 text-sm font-medium transition-colors ${
-                  activeTab === 'password' 
-                    ? 'bg-[#1e2730] text-white border-l-4 border-white' 
-                    : 'hover:bg-[#384857] hover:text-white border-l-4 border-transparent'
-                }`}
+                className={`w-full flex items-center gap-3 px-5 py-3 text-sm font-medium transition-colors ${activeTab === 'password'
+                  ? 'bg-[#1e2730] text-white border-l-4 border-white'
+                  : 'hover:bg-[#384857] hover:text-white border-l-4 border-transparent'
+                  }`}
               >
                 <KeyIcon className="w-5 h-5 opacity-85 shrink-0" />
                 <span className="text-left flex-1">Update Password</span>
@@ -1934,7 +1937,7 @@ const UserDashboard = () => {
 
       {/* MAIN CONTENT AREA */}
       <div className="flex-1 flex flex-col h-full overflow-hidden">
-        
+
         {/* HEADER */}
         <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 shrink-0 z-10 shadow-sm">
           <div className="flex items-center gap-3 text-lg font-medium text-gray-600">
@@ -1948,13 +1951,13 @@ const UserDashboard = () => {
             )}
           </div>
           <div className="flex items-center gap-3">
-            <Link 
-              to="/" 
+            <Link
+              to="/"
               className="flex items-center gap-1.5 text-sm font-semibold text-[#087889] hover:text-[#06616e] bg-teal-50 hover:bg-teal-100 px-3 py-1.5 rounded-lg border border-teal-200 transition-all"
             >
               <HomeIcon className="w-4 h-4" /> <span className="hidden sm:inline">Home Website</span>
             </Link>
-            <button 
+            <button
               onClick={handleLogout}
               className="flex items-center gap-1.5 text-sm text-red-500 hover:text-red-700 font-medium transition-colors"
             >
@@ -1971,17 +1974,17 @@ const UserDashboard = () => {
       </div>
 
       {/* Central hidden templates at root body layer */}
-      <div 
-        style={{ 
-          position: 'absolute', 
-          left: '-9999px', 
-          top: 0, 
+      <div
+        style={{
+          position: 'absolute',
+          left: '-9999px',
+          top: 0,
           width: '450px',
           overflow: 'hidden'
         }}
       >
         {/* Beti template */}
-        <div 
+        <div
           id="printable-donation-receipt"
           className="w-[450px] bg-white p-6 font-sans text-gray-800 relative"
           style={{ border: '2px dashed red' }}
@@ -1993,7 +1996,9 @@ const UserDashboard = () => {
 
           {/* Header */}
           <div className="text-center pb-4 mb-4">
-            <img src={logoBase64} alt="Logo" className="w-16 h-16 object-contain mx-auto mb-2" />
+            <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center overflow-hidden mx-auto mb-2 p-1 border border-gray-200 shadow-sm">
+              <img src={logoBase64} alt="Logo" className="w-full h-full object-contain" style={{ transform: 'scale(1.44)' }} />
+            </div>
             <h1 className="text-lg font-black uppercase text-red-600 tracking-tight leading-tight">
               SILENT HELP CHARITABLE TRUST
             </h1>
@@ -2047,7 +2052,7 @@ const UserDashboard = () => {
         </div>
 
         {/* Nidhan template */}
-        <div 
+        <div
           id="printable-donation-receipt-nidhan"
           className="w-[450px] bg-white p-6 font-sans text-gray-800 relative"
           style={{ border: '2px dashed red' }}
@@ -2059,7 +2064,9 @@ const UserDashboard = () => {
 
           {/* Header */}
           <div className="text-center pb-4 mb-4">
-            <img src={logoBase64} alt="Logo" className="w-16 h-16 object-contain mx-auto mb-2" />
+            <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center overflow-hidden mx-auto mb-2 p-1 border border-gray-200 shadow-sm">
+              <img src={logoBase64} alt="Logo" className="w-full h-full object-contain" style={{ transform: 'scale(1.44)' }} />
+            </div>
             <h1 className="text-lg font-black uppercase text-red-600 tracking-tight leading-tight">
               SILENT HELP CHARITABLE TRUST
             </h1>
@@ -2113,7 +2120,7 @@ const UserDashboard = () => {
         </div>
 
         {/* Varshik Template */}
-        <div 
+        <div
           id="printable-donation-receipt-varshik"
           className="w-[450px] bg-white p-6 font-sans text-gray-800 relative"
           style={{ border: '2px dashed #8a3324' }}
@@ -2125,7 +2132,9 @@ const UserDashboard = () => {
 
           {/* Header */}
           <div className="text-center pb-3 border-b border-gray-100">
-            <img src={logoBase64} alt="Logo" className="w-16 h-16 object-contain mx-auto mb-2" />
+            <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center overflow-hidden mx-auto mb-2 p-1 border border-gray-200 shadow-sm">
+              <img src={logoBase64} alt="Logo" className="w-full h-full object-contain" style={{ transform: 'scale(1.44)' }} />
+            </div>
             <h1 className="text-lg font-black uppercase text-[#8a3324] tracking-tight leading-tight">
               SILENT HELP CHARITABLE TRUST
             </h1>
@@ -2154,8 +2163,8 @@ const UserDashboard = () => {
             <div className="flex items-start justify-between gap-2">
               <span className="text-gray-500 w-[50%]">Purpose of Sahyog :</span>
               <span className="text-gray-900 text-right w-[50%]">
-                {selectedDownloadReceipt && selectedDownloadReceipt.isRenewal 
-                  ? 'Annual Renewal (वार्षिक नवीनीकरण)' 
+                {selectedDownloadReceipt && selectedDownloadReceipt.isRenewal
+                  ? 'Annual Renewal (वार्षिक नवीनीकरण)'
                   : 'Membership Registration (सदस्यता पंजीकरण)'}
               </span>
             </div>

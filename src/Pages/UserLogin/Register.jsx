@@ -20,9 +20,9 @@ const Register = () => {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
-    name: '', aadhaar: '', fatherName: '', dob: '', password: '', mobile: '',
+    name: '', aadhaar: '', pan: '', fatherName: '', dob: '', password: '', mobile: '',
     gender: '', occupation: '', state: 'Uttar Pradesh', district: '', block: '', email: '', address: '',
-    nomineeName: '', nomineeRelation: '', nomineeMobile: '', transactionId: '',
+    nomineeName: '', nomineeRelation: '', nomineeMobile: '', nomineeAadhaar: '', transactionId: '',
     referralCode: '', receiptUrl: ''
   });
   const [showPassword, setShowPassword] = useState(false);
@@ -184,6 +184,18 @@ const Register = () => {
                     </select>
                   </div>
                 </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">पैन कार्ड नंबर (वैकल्पिक)</label>
+                  <input 
+                    type="text" 
+                    name="pan" 
+                    value={formData.pan} 
+                    onChange={(e) => setFormData({ ...formData, pan: e.target.value.toUpperCase() })} 
+                    maxLength="10" 
+                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#087889] focus:border-[#087889] transition-colors uppercase font-mono" 
+                    placeholder="10 अंकों का पैन नंबर (वैकल्पिक)" 
+                  />
+                </div>
               </div>
             </div>
 
@@ -249,7 +261,11 @@ const Register = () => {
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1">नॉमिनी का मोबाइल नंबर <span className="text-red-500">*</span></label>
-                  <input type="tel" name="nomineeMobile" value={formData.nomineeMobile} onChange={handleChange} required className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#087889] focus:border-[#087889] transition-colors" placeholder="नॉमिनी का मोबाइल नंबर" />
+                  <input type="tel" name="nomineeMobile" value={formData.nomineeMobile} onChange={handleChange} required className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#087889] focus:border-[#087889] transition-colors" placeholder="नॉमिनी का 10 अंकों का मोबाइल नंबर" />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">नॉमिनी का आधार कार्ड नंबर <span className="text-red-500">*</span></label>
+                  <input type="text" name="nomineeAadhaar" value={formData.nomineeAadhaar} onChange={handleChange} required maxLength="12" className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#087889] focus:border-[#087889] transition-colors" placeholder="12 अंकों का आधार नंबर" />
                 </div>
               </div>
             </div>

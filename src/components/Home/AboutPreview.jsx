@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import logoImg from '../../assets/shct.png';
 import { ArrowRightIcon } from '../common/Icons';
@@ -11,6 +11,34 @@ import rajeshImg from '../../assets/राजेश.jpeg';
 import alamgirAnsariImg from '../../assets/आलमगीर अंसारी.jpeg';
 
 const AboutPreview = () => {
+  const leadersRef = useRef(null);
+  const membersRef = useRef(null);
+  const [leadersInView, setLeadersInView] = useState(false);
+  const [membersInView, setMembersInView] = useState(false);
+
+  useEffect(() => {
+    const observerOptions = { threshold: 0.15 };
+
+    const leadersObserver = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        setLeadersInView(true);
+      }
+    }, observerOptions);
+
+    const membersObserver = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        setMembersInView(true);
+      }
+    }, observerOptions);
+
+    if (leadersRef.current) leadersObserver.observe(leadersRef.current);
+    if (membersRef.current) membersObserver.observe(membersRef.current);
+
+    return () => {
+      leadersObserver.disconnect();
+      membersObserver.disconnect();
+    };
+  }, []);
   const leaders = [
     {
       name: "आरिफ ब्रॉडवे",
@@ -61,19 +89,19 @@ const AboutPreview = () => {
 
   const members = [
     {
-      name: "राजेश",
-      role: "सदस्य",
-      desc: "ट्रस्ट के समर्पित सदस्य के रूप में समाज सेवा गतिविधियों में सक्रिय भागीदार।",
-      img: rajeshImg,
+      name: "आलमगीर अंसारी",
+      role: "नगर अध्यक्ष - SHCT मगहर इकाई",
+      desc: "Silent Help Charitable Trust के मगहर इकाई के नगर अध्यक्ष।",
+      img: alamgirAnsariImg,
       bgGrad: "from-teal-100/20 to-emerald-100/20",
       ringColor: "ring-teal-500/20 group-hover:ring-teal-500/50",
       textColor: "text-[#087889]"
     },
     {
-      name: "आलमगीर अंसारी",
-      role: "नगर अध्यक्ष - SHCT मगहर इकाई",
-      desc: "Silent Help Charitable Trust के मगहर इकाई के नगर अध्यक्ष।",
-      img: alamgirAnsariImg,
+      name: "राजेश",
+      role: "सदस्य",
+      desc: "ट्रस्ट के समर्पित सदस्य के रूप में समाज सेवा गतिविधियों में सक्रिय भागीदार।",
+      img: rajeshImg,
       bgGrad: "from-teal-100/20 to-emerald-100/20",
       ringColor: "ring-teal-500/20 group-hover:ring-teal-500/50",
       textColor: "text-[#087889]"
@@ -121,7 +149,7 @@ const AboutPreview = () => {
           </div>
 
           {/* Leaders Marquee Container */}
-          <div className="w-full overflow-hidden relative mask-gradient">
+          <div ref={leadersRef} className="w-full overflow-hidden relative mask-gradient">
             <style>{`
               @keyframes marquee {
                 0% { transform: translateX(0); }
@@ -130,11 +158,11 @@ const AboutPreview = () => {
               .animate-marquee {
                 display: flex;
                 gap: 1.5rem;
-                animation: marquee 30s linear infinite;
+                animation: marquee 35s linear infinite;
                 width: max-content;
               }
               .animate-marquee:hover {
-                animation-play-state: paused;
+                animation-play-state: paused !important;
               }
               /* Fade effect on edges */
               .mask-gradient::before,
@@ -157,23 +185,13 @@ const AboutPreview = () => {
               }
             `}</style>
 
-            <div className="animate-marquee py-4">
-              {/* Original List */}
-              {leaders.map((member, index) => (
-                <div key={`orig-leader-${index}`} className="w-64 sm:w-80 bg-white rounded-3xl p-5 sm:p-6 shadow-md border border-gray-100 hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 flex flex-col items-center text-center relative overflow-hidden group shrink-0">
-                  <div className={`absolute top-0 right-0 w-24 h-24 sm:w-28 sm:h-28 bg-gradient-to-br ${member.bgGrad} rounded-bl-full -z-10 transition-all duration-500 group-hover:scale-110`}></div>
-                  <div className={`w-28 h-36 sm:w-36 sm:h-44 rounded-xl md:rounded-2xl bg-gradient-to-tr from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden relative shadow-inner ring-2 md:ring-4 ${member.ringColor} group-hover:ring-offset-2 transition-all duration-500 mb-4 shrink-0 mx-auto`}>
-                    <img src={member.img} className="w-full h-full object-cover rounded-xl md:rounded-2xl group-hover:scale-105 transition-transform duration-500" alt={member.name} />
-                  </div>
-                  <h4 className="text-sm sm:text-base md:text-lg font-black text-gray-800 tracking-tight mt-1.5 md:mt-2 mb-0.5 truncate w-full">{member.name}</h4>
-                  <p className={`text-[10px] sm:text-xs font-black uppercase tracking-wider ${member.textColor} truncate w-full`}>{member.role}</p>
-                  <p className="text-[10px] sm:text-xs text-gray-500 mt-2.5 font-medium leading-relaxed block w-full px-2">{member.desc}</p>
-                </div>
-              ))}
-
-              {/* Duplicated List for Infinite Loop */}
-              {leaders.map((member, index) => (
-                <div key={`dup-leader-${index}`} className="w-64 sm:w-80 bg-white rounded-3xl p-5 sm:p-6 shadow-md border border-gray-100 hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 flex flex-col items-center text-center relative overflow-hidden group shrink-0">
+            <div 
+              className="animate-marquee py-4"
+              style={{ animationPlayState: leadersInView ? 'running' : 'paused' }}
+            >
+              {/* 4 sets of leaders for infinite continuous loop starting with Arif Broadway */}
+              {[...leaders, ...leaders, ...leaders, ...leaders].map((member, index) => (
+                <div key={`leader-${index}`} className="w-64 sm:w-80 bg-white rounded-3xl p-5 sm:p-6 shadow-md border border-gray-100 hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 flex flex-col items-center text-center relative overflow-hidden group shrink-0">
                   <div className={`absolute top-0 right-0 w-24 h-24 sm:w-28 sm:h-28 bg-gradient-to-br ${member.bgGrad} rounded-bl-full -z-10 transition-all duration-500 group-hover:scale-110`}></div>
                   <div className={`w-28 h-36 sm:w-36 sm:h-44 rounded-xl md:rounded-2xl bg-gradient-to-tr from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden relative shadow-inner ring-2 md:ring-4 ${member.ringColor} group-hover:ring-offset-2 transition-all duration-500 mb-4 shrink-0 mx-auto`}>
                     <img src={member.img} className="w-full h-full object-cover rounded-xl md:rounded-2xl group-hover:scale-105 transition-transform duration-500" alt={member.name} />
@@ -198,10 +216,13 @@ const AboutPreview = () => {
           </div>
 
           {/* Members Marquee Container */}
-          <div className="w-full overflow-hidden relative mask-gradient">
-            <div className="animate-marquee py-4">
-              {/* List repeated 4 times for infinite loop and desktop width coverage */}
-              {[...members, ...members, ...members, ...members].map((member, index) => (
+          <div ref={membersRef} className="w-full overflow-hidden relative mask-gradient">
+            <div 
+              className="animate-marquee py-4"
+              style={{ animationPlayState: membersInView ? 'running' : 'paused' }}
+            >
+              {/* List repeated 6 times for infinite loop starting with Alamgir Ansari */}
+              {[...members, ...members, ...members, ...members, ...members, ...members].map((member, index) => (
                 <div key={`member-${index}`} className="w-64 sm:w-80 bg-white rounded-3xl p-5 sm:p-6 shadow-md border border-gray-100 hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 flex flex-col items-center text-center relative overflow-hidden group shrink-0">
                   <div className={`absolute top-0 right-0 w-24 h-24 sm:w-28 sm:h-28 bg-gradient-to-br ${member.bgGrad} rounded-bl-full -z-10 transition-all duration-500 group-hover:scale-110`}></div>
                   <div className={`w-28 h-36 sm:w-36 sm:h-44 rounded-xl md:rounded-2xl bg-gradient-to-tr from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden relative shadow-inner ring-2 md:ring-4 ${member.ringColor} group-hover:ring-offset-2 transition-all duration-500 mb-4 shrink-0 mx-auto`}>

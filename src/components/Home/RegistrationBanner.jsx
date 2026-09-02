@@ -35,7 +35,7 @@ const RegistrationBanner = () => {
       if (!startTimestamp) startTimestamp = timestamp;
       const progress = Math.min((timestamp - startTimestamp) / duration, 1);
       setDisplayCount(Math.floor(progress * memberCount));
-      
+
       if (progress < 1) {
         window.requestAnimationFrame(step);
       }
@@ -116,12 +116,12 @@ const RegistrationBanner = () => {
 
           {/* Dynamic Registered Members Counter Section */}
           <div className="mt-12 pt-10 border-t border-slate-800/60 flex flex-col items-center justify-center">
-            
+
             {/* Custom Banner UI */}
             <div className="flex items-center justify-between w-full max-w-4xl bg-[#080c16] rounded-3xl p-8 sm:p-12 px-8 sm:px-16 shadow-2xl border border-slate-800/80 mb-10 transition-all duration-300 hover:scale-[1.01] hover:border-[#f08519]/30 mx-auto select-none">
               <div className="text-left">
                 <span className="block text-3xl sm:text-5xl lg:text-6xl font-black text-[#f08519] tracking-wide uppercase leading-none font-sans">
-                  MEMBER
+                  MEMBERS
                 </span>
                 <span className="block text-2xl sm:text-4xl lg:text-5xl font-semibold text-white mt-4 sm:mt-6 leading-none font-sans">
                   Register Till now

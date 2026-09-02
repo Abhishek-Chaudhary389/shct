@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { signInWithEmailAndPassword, sendPasswordResetEmail, signOut, onAuthStateChanged } from 'firebase/auth';
+import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../../firebase';
 import { verifyAdminRole } from '../../services/adminAuth';
 import logoImg from '../../assets/shct.png';
@@ -25,12 +25,6 @@ const AdminLogin = () => {
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   
-  // Forgot Password modal state
-  const [isResetModalOpen, setIsResetModalOpen] = useState(false);
-  const [resetEmail, setResetEmail] = useState('');
-  const [isResetting, setIsResetting] = useState(false);
-  const [resetStatus, setResetStatus] = useState({ type: '', message: '' });
-
   const navigate = useNavigate();
 
   // If already logged in and verified as admin, navigate to dashboard
@@ -108,37 +102,6 @@ const AdminLogin = () => {
     }
   };
 
-  const handlePasswordReset = async (e) => {
-    e.preventDefault();
-    if (!resetEmail.trim()) {
-      setResetStatus({ type: 'error', message: 'कृपया अपना पंजीकृत ईमेल दर्ज करें।' });
-      return;
-    }
-
-    setIsResetting(true);
-    setResetStatus({ type: '', message: '' });
-
-    try {
-      await sendPasswordResetEmail(auth, resetEmail.trim());
-      setResetStatus({ 
-        type: 'success', 
-        message: 'पासवर्ड रीसेट लिंक आपके ईमेल पर भेज दिया गया है। कृपया अपना इनबॉक्स / स्पैम फोल्डर चेक करें।' 
-      });
-    } catch (err) {
-      console.error("Password reset error:", err);
-      setResetStatus({ 
-        type: 'error', 
-        message: err.code === 'auth/user-not-found' 
-          ? 'इस ईमेल से कोई खाता पंजीकृत नहीं है।' 
-          : err.code === 'auth/invalid-email'
-          ? 'अमान्य ईमेल पता!'
-          : 'पासवर्ड रीसेट लिंक भेजने में समस्या आई।' 
-      });
-    } finally {
-      setIsResetting(false);
-    }
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-950 flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans relative overflow-hidden">
       
@@ -202,22 +165,9 @@ const AdminLogin = () => {
 
             {/* Password Input */}
             <div>
-              <div className="flex justify-between items-center mb-1.5">
-                <label className="block text-xs font-black text-gray-700 uppercase tracking-wider">
-                  Admin Password (पासवर्ड) <span className="text-red-500">*</span>
-                </label>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setResetEmail(email);
-                    setResetStatus({ type: '', message: '' });
-                    setIsResetModalOpen(true);
-                  }}
-                  className="text-xs font-bold text-[#087889] hover:text-[#f08519] transition-colors cursor-pointer"
-                >
-                  पासवर्ड भूल गए?
-                </button>
-              </div>
+              <label className="block text-xs font-black text-gray-700 uppercase tracking-wider mb-1.5">
+                Admin Password (पासवर्ड) <span className="text-red-500">*</span>
+              </label>
               <div className="relative rounded-xl shadow-sm">
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
                   <KeyIcon className="w-5 h-5" />
@@ -275,74 +225,6 @@ const AdminLogin = () => {
 
         </div>
       </div>
-
-      {/* ================= FORGOT PASSWORD MODAL ================= */}
-      {isResetModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl border border-gray-100 relative">
-            <div className="flex justify-between items-center border-b border-gray-100 pb-3 mb-4">
-              <h4 className="text-base font-black text-gray-800 flex items-center gap-2">
-                <KeyIcon className="w-5 h-5 text-[#087889]" /> पासवर्ड रीसेट करें (Reset Password)
-              </h4>
-              <button 
-                onClick={() => setIsResetModalOpen(false)}
-                className="text-gray-400 hover:text-gray-700 p-1.5 rounded-full hover:bg-gray-100 transition-colors cursor-pointer"
-              >
-                <CloseIcon className="w-4 h-4" />
-              </button>
-            </div>
-
-            <p className="text-xs text-gray-600 mb-4 font-medium">
-              अपना पंजीकृत ईमेल पता दर्ज करें। हम आपको पासवर्ड रीसेट करने का लिंक भेजेंगे।
-            </p>
-
-            {resetStatus.message && (
-              <div className={`mb-4 p-3 text-xs font-bold rounded-xl border flex items-center gap-2 ${
-                resetStatus.type === 'success' 
-                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200' 
-                  : 'bg-red-50 text-red-700 border-red-200'
-              }`}>
-                {resetStatus.type === 'success' ? <CheckCircleIcon className="w-4 h-4 shrink-0" /> : <AlertTriangleIcon className="w-4 h-4 shrink-0" />}
-                <span>{resetStatus.message}</span>
-              </div>
-            )}
-
-            <form onSubmit={handlePasswordReset} className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1">
-                  ईमेल पता (Email Address)
-                </label>
-                <input 
-                  type="email" 
-                  required
-                  value={resetEmail}
-                  onChange={(e) => setResetEmail(e.target.value)}
-                  placeholder="admin@example.com"
-                  className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-semibold focus:ring-2 focus:ring-[#087889] outline-none"
-                />
-              </div>
-
-              <div className="flex justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setIsResetModalOpen(false)}
-                  className="px-4 py-2.5 text-xs font-bold text-gray-600 hover:bg-gray-100 rounded-xl transition-colors cursor-pointer"
-                >
-                  रद्द करें (Cancel)
-                </button>
-                <button
-                  type="submit"
-                  disabled={isResetting}
-                  className="px-5 py-2.5 text-xs font-black text-white bg-[#087889] hover:bg-[#06616e] rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-60"
-                >
-                  {isResetting ? <RefreshIcon className="w-3.5 h-3.5 animate-spin" /> : null}
-                  रीसेट लिंक भेजें
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
     </div>
   );

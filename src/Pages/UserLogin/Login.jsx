@@ -33,8 +33,8 @@ const Login = () => {
       
       {/* Top Header / Logo Section */}
       <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
-        <div className="mx-auto h-24 w-24 bg-white rounded-full p-2 shadow-lg border border-gray-100 flex items-center justify-center mb-4">
-          <img src={logoImg} alt="SHCT Logo" className="h-full w-full object-contain" />
+        <div className="mx-auto h-20 w-20 bg-white rounded-full p-1.5 shadow-md border border-gray-200 flex items-center justify-center mb-4 overflow-hidden">
+          <img src={logoImg} alt="SHCT Logo" className="h-full w-full object-contain" style={{ transform: 'scale(1.44)' }} />
         </div>
         <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight">
           Welcome Back!
